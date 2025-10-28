@@ -13,7 +13,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Home Route  
-Route::get('/home', [HomeController::class, 'index'])->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Public Route
 Route::get('/', function () {
