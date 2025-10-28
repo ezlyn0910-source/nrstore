@@ -1,0 +1,296 @@
+/* Minimalist Color Theme */
+:root {
+    --primary-dark: #1a2412;
+    --primary-green: #2d4a35;
+    --accent-gold: #DAA112;
+    --light-bone: #f8f9fa;
+    --dark-text: #1a2412;
+    --light-text: #6b7c72;
+    --white: #ffffff;
+    --border-light: #e9ecef;
+}
+
+
+/* Minimalist Navbar */
+.navbar {
+    background: var(--light-bone) !important;
+    padding: 1rem 0;
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+    margin-bottom: -1rem;
+}
+
+.navbar.scrolled {
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Brand */
+.navbar-brand {
+    color: var(--primary-dark) !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+    color: var(--accent-gold) !important;
+    transform: translateX(2px);
+}
+
+/* Navigation Links */
+.navbar-nav .nav-link {
+    color: var(--dark-text) !important;
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    margin: 0 0.25rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.navbar-nav .nav-link:hover {
+    color: var(--primary-green) !important;
+    background: var(--light-bone);
+}
+
+.navbar-nav .nav-link.active {
+    color: var(--accent-gold) !important;
+    background: var(--light-bone);
+}
+
+/* Special Bid Button */
+.nav-bid {
+    background: var(--accent-gold);
+    color: var(--white) !important;
+    font-weight: 600 !important;
+    border-radius: 8px;
+    padding: 0.6rem 1.5rem !important;
+    margin: 0 0.5rem;
+    border: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(218, 161, 18, 0.2);
+}
+
+.nav-bid:hover {
+    background: var(--primary-green);
+    color: var(--white) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(218, 161, 18, 0.3);
+}
+
+/* Action Buttons - Minimalist */
+.nav-action-btn {
+    background: transparent;
+    border: 1.5px solid var(--border-light);
+    color: var(--dark-text);
+    border-radius: 8px;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.2s ease;
+    margin: 0 0.25rem;
+    text-decoration: none;
+}
+
+.nav-action-btn:hover {
+    background: var(--light-bone);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+    transform: translateY(-1px);
+}
+
+.action-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--accent-gold);
+    color: var(--white);
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+/* Dropdown Menu - Minimalist */
+.dropdown-menu {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    min-width: 200px;
+}
+
+.dropdown-item {
+    color: var(--dark-text);
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.dropdown-item:hover {
+    background: var(--light-bone);
+    color: var(--accent-gold);
+    transform: none;
+}
+
+/* Toggle Button */
+.navbar-toggler {
+    border: 1.5px solid var(--border-light);
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.navbar-toggler:hover {
+    border-color: var(--accent-gold);
+    background: var(--light-bone);
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%231a2412' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    width: 1.2em;
+    height: 1.2em;
+}
+
+/* Mobile Responsive Design */
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        background: var(--white);
+        border-radius: 12px;
+        margin-top: 1rem;
+        padding: 1rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-light);
+    }
+    
+    .navbar-nav .nav-link {
+        margin: 0.25rem 0;
+        padding: 0.75rem 1rem !important;
+        justify-content: flex-start;
+    }
+    
+    .nav-bid {
+        margin: 0.5rem 0;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .nav-action-btn {
+        margin: 0.5rem 0.25rem;
+        display: inline-flex;
+    }
+    
+    .navbar-nav.ms-auto {
+        flex-direction: row;
+        justify-content: center;
+        padding: 1rem 0 0 0;
+        border-top: 1px solid var(--border-light);
+        margin-top: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar-custom {
+        padding: 0.75rem 0;
+    }
+    
+    .navbar-brand {
+        font-size: 1.3rem !important;
+    }
+    
+    .container {
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .navbar-nav .nav-link {
+        font-size: 0.9rem;
+        padding: 0.6rem 0.75rem !important;
+    }
+    
+    .nav-bid {
+        padding: 0.5rem 1.25rem !important;
+        font-size: 0.9rem;
+    }
+    
+    .nav-action-btn {
+        width: 38px;
+        height: 38px;
+    }
+}
+
+/* Utility Classes */
+.text-minimal {
+    color: var(--light-text);
+}
+
+.bg-minimal {
+    background: var(--light-bone);
+}
+
+.border-minimal {
+    border-color: var(--border-light);
+}
+
+/* Smooth Scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Focus States for Accessibility */
+.nav-link:focus,
+.nav-action-btn:focus,
+.dropdown-item:focus {
+    outline: 2px solid var(--accent-gold);
+    outline-offset: 2px;
+}
+
+/* Loading Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.navbar-collapse.show {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Icon Sizing */
+.navbar-nav .nav-link i {
+    font-size: 0.9em;
+    width: 16px;
+    text-align: center;
+}
