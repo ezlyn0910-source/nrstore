@@ -11,6 +11,8 @@
     @vite(['resources/sass/app.scss', 'resources/css/adminbase.css', 'resources/js/app.js'])
     @vite(['resources/sass/app.scss', 'resources/css/admindashboard.css', 'resources/js/app.js'])
 
+    @yield('styles')
+
 </head>
 
 <body>
@@ -19,8 +21,8 @@
         <h2>Admin Panel</h2>
         <ul class="nav-links">
             <li><a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Dashboard</a></li>
-            <li><a href="#">User Management</a></li>
-            <li><a href="#">Product Management</a></li>
+            <li><a href="{{ route('products.index')}}" class="{{ request()->routeIs('products.index') ? 'active' : '' }}">User Management</a></li>
+            <li><a href="{{ route('products.index')}}" class="{{ request()->routeIs('products.index') ? 'active' : '' }}">Product Management</a></li>
             <li><a href="#">Order Management</a></li>
             <li><a href="#">Reports</a></li>
         </ul>

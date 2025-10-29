@@ -1,6 +1,10 @@
 @extends('admin.adminbase')
 @section('title', 'Add New Product')
 
+@section('styles')
+    @vite(['resources/sass/app.scss', 'resources/css/manage_product/create.css', 'resources/js/app.js'])
+@endsection
+
 @section('content')
 <div class="container">
     <div class="row">
@@ -507,82 +511,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<style>
-.variation-item {
-    border-left: 4px solid #007bff;
-    transition: all 0.3s ease;
-}
 
-.variation-item:hover {
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.nav-tabs .nav-link.active {
-    font-weight: bold;
-    border-bottom: 2px solid #007bff;
-    color: #007bff;
-}
-
-.image-preview {
-    text-align: center;
-}
-
-.variation-image-upload {
-    border: 2px dashed #dee2e6;
-    padding: 15px;
-    border-radius: 8px;
-    background-color: #f8f9fa;
-    transition: border-color 0.3s ease;
-}
-
-.variation-image-upload:hover {
-    border-color: #007bff;
-}
-
-.image-gallery-preview .position-relative {
-    transition: transform 0.2s ease;
-}
-
-.image-gallery-preview .position-relative:hover {
-    transform: scale(1.05);
-}
-
-.btn-success {
-    background: linear-gradient(45deg, #28a745, #20c997);
-    border: none;
-}
-
-.btn-primary {
-    background: linear-gradient(45deg, #007bff, #0056b3);
-    border: none;
-}
-
-.card {
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    border: none;
-    border-radius: 10px;
-}
-
-.card-header {
-    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
-    border-bottom: 1px solid #dee2e6;
-    border-radius: 10px 10px 0 0 !important;
-}
-
-.alert-info {
-    background: linear-gradient(45deg, #d1ecf1, #bee5eb);
-    border: 1px solid #b6d4fe;
-    border-radius: 8px;
-}
-
-.form-control:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-.form-check-input:checked {
-    background-color: #007bff;
-    border-color: #007bff;
-}
-</style>
 @endsection

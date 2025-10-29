@@ -1,6 +1,10 @@
 @extends('admin.adminbase')
 @section('title', 'Product Details')
 
+@section('styles')
+    @vite(['resources/sass/app.scss', 'resources/css/manage_product/show.css', 'resources/js/app.js'])
+@endsection
+
 @section('content')
 <div class="container">
     <div class="row">

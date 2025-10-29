@@ -1,6 +1,10 @@
 @extends('admin.adminbase')
 @section('title', 'Manage Products')
 
+@section('styles')
+    @vite(['resources/sass/app.scss', 'resources/css/manage_product/index.css', 'resources/js/app.js'])
+@endsection
+
 @section('content')
 <div class="container-fluid">
     <!-- Page Header -->
@@ -298,53 +302,6 @@
     </div>
 </div>
 @endsection
-
-@push('styles')
-<style>
-.card {
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.1);
-}
-
-.table th {
-    border-top: none;
-    font-weight: 600;
-    color: #495057;
-    background-color: #f8f9fa;
-}
-
-.product-row:hover {
-    background-color: #f8f9fa;
-    transform: translateY(-1px);
-    transition: all 0.2s ease;
-}
-
-.badge {
-    font-size: 0.75em;
-}
-
-.btn-group .btn {
-    border-radius: 6px !important;
-    margin: 0 2px;
-}
-
-.alert {
-    border: none;
-    border-radius: 8px;
-    border-left: 4px solid;
-}
-
-.border-left-primary { border-left-color: #4e73df !important; }
-.border-left-success { border-left-color: #1cc88a !important; }
-.border-left-info { border-left-color: #36b9cc !important; }
-.border-left-warning { border-left-color: #f6c23e !important; }
-
-.shadow {
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
-}
-</style>
-@endpush
 
 @push('scripts')
 <script>
