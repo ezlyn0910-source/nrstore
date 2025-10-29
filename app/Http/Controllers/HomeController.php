@@ -30,6 +30,6 @@ class HomeController extends Controller
         }
         
         // For customers and other roles, show the normal home page
-        return redirect('home'); // Make sure you have a home view
+        return redirect('/'); // Make sure you have a home view
     }
 }
