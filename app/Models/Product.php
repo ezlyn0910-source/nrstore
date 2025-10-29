@@ -18,6 +18,16 @@ class Product extends Model
         'total_stock',
         'category_id',
         'main_image',
+        'has_variations',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'has_variations' => 'boolean',
     ];
 
     /**
