@@ -23,8 +23,8 @@
                     </div>
                 </div>
 
-                <!-- Filters and Products -->
-                <div class="layout">
+                <!-- Two Column Layout -->
+                <div class="two-column-layout">
                     <!-- Filters Sidebar -->
                     <div class="filters-sidebar">
                         <div class="filter-section">
@@ -67,8 +67,8 @@
                             <div class="product-card">
                                 <div class="product-image-container">
                                     <img src="{{ asset('storage/' . $product->image) }}" 
-                                         alt="{{ $product->name }}" 
-                                         class="product-image">
+                                        alt="{{ $product->name }}" 
+                                        class="product-image">
                                 </div>
                                 <div class="product-info">
                                     <h3 class="product-name line-clamp-2">{{ $product->name }}</h3>
@@ -93,7 +93,7 @@
                         <div class="pagination">
                             <button class="pagination-btn">Previous</button>
                             <div class="pagination-numbers">
-                                @for($i = 1; $i <= 8; $i++)
+                                @for($i = 1; $i <= 6; $i++)
                                 <button class="pagination-btn {{ $i == 1 ? 'active' : '' }}">{{ $i }}</button>
                                 @endfor
                             </div>
@@ -102,7 +102,7 @@
                     </div>
                 </div>
 
-                <!-- Recommendations inside same white box -->
+                <!-- Recommendations Section -->
                 <div class="recommendations-section-boxed">
                     <div class="recommendations-header">
                         <h2 class="recommendations-title">Explore our recommendations</h2>
@@ -125,8 +125,8 @@
                         <div class="recommendation-card">
                             <div class="recommendation-image-container">
                                 <img src="{{ asset('storage/' . $product->image) }}" 
-                                     alt="{{ $product->name }}" 
-                                     class="recommendation-image">
+                                    alt="{{ $product->name }}" 
+                                    class="recommendation-image">
                             </div>
                             <div class="recommendation-info">
                                 <h3 class="recommendation-name line-clamp-2">{{ $product->name }}</h3>
