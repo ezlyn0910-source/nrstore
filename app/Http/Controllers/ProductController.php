@@ -58,7 +58,6 @@ class ProductController extends Controller
         // Get categories for filter
         $categories = Category::all();
 
-        // Return the productpage view (now in root of views folder)
         return view('productpage', compact('products', 'recommendedProducts', 'categories'));
     }
 
@@ -70,8 +69,6 @@ class ProductController extends Controller
                                 ->limit(4)
                                 ->get();
 
-        // If you create a detail page later, you can use:
-        // return view('productdetail', compact('product', 'relatedProducts'));
         return view('productpage', compact('product', 'relatedProducts'));
     }
 }
