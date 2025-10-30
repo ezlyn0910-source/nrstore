@@ -3,35 +3,38 @@
 @section('content')
 <div class="product-page">
     <!-- Hero Section -->
-    <section class="hero-section">
-        <img src="{{ asset('storage/images/productbanner.png') }}" alt="Products Banner" class="hero-image">
-        <div class="hero-content">
-            <h1 class="hero-title">Product</h1>
+    <section class="hero-section" style="position: relative; height: 400px; background-color: #1f2937; overflow: hidden; margin-bottom: 2rem;">
+        <img src="{{ asset('storage/images/productbanner.png') }}" alt="Products Banner" 
+            style="width: 100%; height: 100%; object-fit: cover; opacity: 1;">
+        <div style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center;">
+            <h1 style="font-size: 10rem; font-weight: bold; color: white; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7); margin: 0;">
+                Product
+            </h1>
         </div>
     </section>
 
     <!-- White Box Container -->
-    <section class="main-content">
-        <div class="container">
-            <div class="main-content-box">
+    <section style="padding: 2rem 0;">
+        <div style="max-width: 1200px; margin: 0 auto; padding: 0 1rem;">
+            <div style="background: white; border-radius: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); padding: 2rem;">
                 
                 <!-- Header Row -->
-                <div class="header-row">
-                    <h2 class="page-title">Give All You Need</h2>
-                    <div class="search-container">
-                        <input type="text" placeholder="Search products..." class="search-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e5e7eb;">
+                    <h2 style="font-size: 1.75rem; font-weight: 600; color: #1f2937;">Give All You Need</h2>
+                    <div style="width: 300px;">
+                        <input type="text" placeholder="Search products..." style="width: 100%; padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; outline: none;">
                     </div>
                 </div>
 
                 <!-- Two Column Layout -->
-                <div class="two-column-layout">
+                <div style="display: flex; gap: 2rem;">
                     <!-- Filters Sidebar -->
-                    <div class="filters-sidebar">
-                        <div class="filter-section">
-                            <h3 class="filter-title">Category</h3>
-                            <div class="filter-options">
+                    <div style="width: 25%;">
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.875rem; text-transform: uppercase;">Category</h3>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                                 @foreach($categories as $category)
-                                <label class="filter-option">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
                                     <input type="checkbox" name="category" value="{{ $category->slug }}">
                                     <span>{{ $category->name }}</span>
                                 </label>
@@ -39,18 +42,18 @@
                             </div>
                         </div>
 
-                        <div class="filter-section">
-                            <h3 class="filter-title">Price</h3>
-                            <select class="filter-select">
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.875rem; text-transform: uppercase;">Price</h3>
+                            <select style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; outline: none;">
                                 <option>Default Sorting</option>
                                 <option>Price: Low to High</option>
                                 <option>Price: High to Low</option>
                             </select>
                         </div>
 
-                        <div class="filter-section">
-                            <h3 class="filter-title">Brand</h3>
-                            <select class="filter-select">
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.875rem; text-transform: uppercase;">Brand</h3>
+                            <select style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; outline: none;">
                                 <option>All Brands</option>
                                 <option>HP</option>
                                 <option>Dell</option>
@@ -61,84 +64,84 @@
                     </div>
 
                     <!-- Products Main -->
-                    <div class="products-main">
-                        <div class="products-grid">
+                    <div style="width: 75%;">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
                             @foreach($products as $product)
-                            <div class="product-card">
-                                <div class="product-image-container">
+                            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden;">
+                                <div style="width: 100%; height: 150px; background-color: #f3f4f6; overflow: hidden;">
                                     <img src="{{ asset('storage/' . $product->image) }}" 
                                         alt="{{ $product->name }}" 
-                                        class="product-image">
+                                        style="width: 100%; height: 100%; object-fit: cover;">
                                 </div>
-                                <div class="product-info">
-                                    <h3 class="product-name line-clamp-2">{{ $product->name }}</h3>
-                                    <p class="product-price">${{ number_format($product->price, 2) }}</p>
-                                    <div class="product-buttons">
-                                        <button class="btn-cart">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div style="padding: 0.75rem;">
+                                    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; font-size: 0.875rem; line-height: 1.25;">{{ $product->name }}</h3>
+                                    <p style="font-weight: bold; color: #1f2937; margin-bottom: 0.75rem; font-size: 1rem;">${{ number_format($product->price, 2) }}</p>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button style="flex: 1; border: 1px solid #1f2937; background: white; color: #1f2937; padding: 0.4rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem;">
+                                            <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                             </svg>
                                             Cart
                                         </button>
-                                        <button class="btn-buy">Buy Now</button>
+                                        <button style="flex: 1; background: #1f2937; color: white; padding: 0.4rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; border: none;">Buy Now</button>
                                     </div>
                                 </div>
                             </div>
                             @endforeach
                         </div>
 
-                        <div class="divider"></div>
+                        <div style="border-top: 1px solid #e5e7eb; margin: 2rem 0;"></div>
 
                         <!-- Pagination -->
-                        <div class="pagination">
-                            <button class="pagination-btn">Previous</button>
-                            <div class="pagination-numbers">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <button style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; background: white;">Previous</button>
+                            <div style="display: flex; gap: 0.5rem;">
                                 @for($i = 1; $i <= 6; $i++)
-                                <button class="pagination-btn {{ $i == 1 ? 'active' : '' }}">{{ $i }}</button>
+                                <button style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; background: {{ $i == 1 ? '#1f2937' : 'white' }}; color: {{ $i == 1 ? 'white' : '#1f2937' }};">{{ $i }}</button>
                                 @endfor
                             </div>
-                            <button class="pagination-btn">Next</button>
+                            <button style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; background: white;">Next</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Recommendations Section -->
-                <div class="recommendations-section-boxed">
-                    <div class="recommendations-header">
-                        <h2 class="recommendations-title">Explore our recommendations</h2>
-                        <div class="recommendations-controls">
-                            <button class="slider-btn recommendations-prev">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e5e7eb;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="font-size: 1.5rem; font-weight: bold; color: #1f2937;">Explore our recommendations</h2>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button style="width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; border: 1px solid #d1d5db; border-radius: 50%; background: white;">
+                                <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                                 </svg>
                             </button>
-                            <button class="slider-btn recommendations-next">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button style="width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; border: 1px solid #d1d5db; border-radius: 50%; background: white;">
+                                <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
                             </button>
                         </div>
                     </div>
 
-                    <div class="recommendations-slider scrollbar-hide" id="recommendations-slider">
+                    <div style="display: flex; overflow-x: auto; gap: 1rem; padding-bottom: 1rem;">
                         @foreach($recommendedProducts as $product)
-                        <div class="recommendation-card">
-                            <div class="recommendation-image-container">
+                        <div style="flex: 0 0 auto; width: 200px; background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden;">
+                            <div style="width: 100%; height: 120px; background-color: #f3f4f6; overflow: hidden;">
                                 <img src="{{ asset('storage/' . $product->image) }}" 
                                     alt="{{ $product->name }}" 
-                                    class="recommendation-image">
+                                    style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
-                            <div class="recommendation-info">
-                                <h3 class="recommendation-name line-clamp-2">{{ $product->name }}</h3>
-                                <p class="recommendation-price">${{ number_format($product->price, 2) }}</p>
-                                <div class="recommendation-buttons">
-                                    <button class="btn-recommendation-cart">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div style="padding: 0.75rem;">
+                                <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; font-size: 0.75rem;">{{ $product->name }}</h3>
+                                <p style="font-weight: bold; color: #1f2937; margin-bottom: 0.5rem; font-size: 0.875rem;">${{ number_format($product->price, 2) }}</p>
+                                <div style="display: flex; gap: 0.25rem;">
+                                    <button style="flex: 1; border: 1px solid #1f2937; background: white; color: #1f2937; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.625rem; display: flex; align-items: center; justify-content: center; gap: 0.125rem;">
+                                        <svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                         </svg>
                                         Cart
                                     </button>
-                                    <button class="btn-recommendation-buy">Buy Now</button>
+                                    <button style="flex: 1; background: #1f2937; color: white; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.625rem; border: none;">Buy Now</button>
                                 </div>
                             </div>
                         </div>
