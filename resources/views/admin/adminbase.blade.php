@@ -22,7 +22,7 @@
         <ul class="nav-links">
             <li><a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Dashboard</a></li>
             <li><a href="{{ route('manageuser.index') }}" class="{{ request()->routeIs('manageuser.*') ? 'active' : '' }}">User Management</a></li>
-            <li><a href="{{ route('products.index')}}" class="{{ request()->routeIs('products.index') ? 'active' : '' }}">Product Management</a></li>
+            <li><a href="{{ route('manageproducts.index2')}}" class="{{ request()->routeIs('manageproducts.index2') ? 'active' : '' }}">Product Management</a></li>
             <li><a href="#">Order Management</a></li>
             <li><a href="#">Reports</a></li>
         </ul>

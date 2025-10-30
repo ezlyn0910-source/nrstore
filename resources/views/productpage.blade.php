@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('styles')
+    @vite(['resources/sass/app.scss', 'resources/css/productpage.css', 'resources/js/app.js'])
+@endsection
+
 @section('content')
 <div class="product-page">
     <!-- Hero Section -->

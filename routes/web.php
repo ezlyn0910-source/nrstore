@@ -22,12 +22,12 @@ Route::get('/', function () {
 });
 
 // Product Routes
-Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/manageproducts', [ProductController::class, 'index'])->name('manageproducts.index2');
+Route::get('/manageproducts/{id}', [ProductController::class, 'show'])->name('manageproducts.show');
 
 // Category-based filtering
-Route::get('/categories/{category}', [ProductController::class, 'index'])->name('products.by_category');
-Route::resource('products', ProductController::class);
+Route::get('/categories/{category}', [ProductController::class, 'index'])->name('manageproducts.by_category');
+Route::resource('manageproducts', ProductController::class);
 
 // Manageuser Routes with additional custom routes
 Route::resource('manageuser', ManageUserController::class);
