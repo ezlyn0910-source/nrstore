@@ -13,8 +13,8 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title">Product Details</h3>
                     <div>
-                        <a href="{{ route('products.edit', $product) }}" class="btn btn-warning btn-sm">Edit</a>
-                        <a href="{{ route('products.index') }}" class="btn btn-secondary btn-sm">Back to List</a>
+                        <a href="{{ route('admin.manageproduct.edit', $product) }}" class="btn btn-warning btn-sm">Edit</a>
+                        <a href="{{ route('admin.manageproduct.index') }}" class="btn btn-secondary btn-sm">Back to List</a>
                     </div>
                 </div>
                 <div class="card-body">

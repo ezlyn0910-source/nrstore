@@ -3,64 +3,6 @@
 
 @section('styles')
     @vite(['resources/sass/app.scss', 'resources/css/manage_product/create.css', 'resources/js/app.js'])
-    <style>
-        .image-preview-container {
-            border: 2px dashed #dee2e6;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            background: #f8f9fa;
-            min-height: 150px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .image-preview {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 6px;
-        }
-        .variation-card {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            background: #fff;
-        }
-        .variation-header {
-            background: #f8f9fa;
-            padding: 10px 15px;
-            border-bottom: 1px solid #dee2e6;
-            border-radius: 8px 8px 0 0;
-        }
-        .gallery-thumbnail {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 6px;
-            margin: 5px;
-        }
-        .remove-image-btn {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #dc3545;
-            border: none;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            color: white;
-            font-size: 12px;
-            line-height: 1;
-            cursor: pointer;
-        }
-        .tab-pane {
-            padding: 20px 0;
-        }
-        .required-field::after {
-            content: " *";
-            color: #dc3545;
-        }
-    </style>
 @endsection
 
 @section('content')
@@ -74,7 +16,7 @@
                     </h3>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" id="productForm">
+                    <form action="{{ route('admin.manageproduct.store') }}" method="POST" enctype="multipart/form-data" id="productForm">
                         @csrf
                         
                         <!-- Success/Error Messages -->
@@ -113,12 +55,12 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label for="product_name" class="form-label required-field">Product Name</label>
-                                            <input type="text" class="form-control @error('product_name') is-invalid @enderror" 
-                                                   id="product_name" name="product_name" 
-                                                   value="{{ old('product_name') }}" 
+                                            <label for="name" class="form-label required-field">Product Name</label>
+                                            <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                                                   id="name" name="name" 
+                                                   value="{{ old('name') }}" 
                                                    placeholder="Enter product name" required>
-                                            @error('product_name')
+                                            @error('name')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
@@ -134,9 +76,9 @@
                                         </div>
 
                                         <div class="mb-3">
-                                            <label for="category_id" class="form-label">Category</label>
+                                            <label for="category_id" class="form-label required-field">Category</label>
                                             <select class="form-control @error('category_id') is-invalid @enderror" 
-                                                    id="category_id" name="category_id">
+                                                    id="category_id" name="category_id" required>
                                                 <option value="">Select Category</option>
                                                 @foreach($categories as $category)
                                                     <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
@@ -148,30 +90,81 @@
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
+
+                                        <div class="mb-3">
+                                            <label for="brand" class="form-label">Brand</label>
+                                            <input type="text" class="form-control @error('brand') is-invalid @enderror" 
+                                                   id="brand" name="brand" 
+                                                   value="{{ old('brand') }}" 
+                                                   placeholder="Enter brand name">
+                                            @error('brand')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
                                     </div>
 
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label for="base_price" class="form-label">Base Price (RM)</label>
-                                            <input type="number" step="0.01" min="0" class="form-control @error('base_price') is-invalid @enderror" 
-                                                   id="base_price" name="base_price" 
-                                                   value="{{ old('base_price') }}" 
-                                                   placeholder="0.00">
-                                            @error('base_price')
+                                            <label for="price" class="form-label required-field">Price (RM)</label>
+                                            <input type="number" step="0.01" min="0" class="form-control @error('price') is-invalid @enderror" 
+                                                   id="price" name="price" 
+                                                   value="{{ old('price') }}" 
+                                                   placeholder="0.00" required>
+                                            @error('price')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
 
                                         <div class="mb-3">
-                                            <label for="total_stock" class="form-label">Total Stock</label>
-                                            <input type="number" min="0" class="form-control @error('total_stock') is-invalid @enderror" 
-                                                   id="total_stock" name="total_stock" 
-                                                   value="{{ old('total_stock', 0) }}">
-                                            @error('total_stock')
+                                            <label for="stock_quantity" class="form-label required-field">Stock Quantity</label>
+                                            <input type="number" min="0" class="form-control @error('stock_quantity') is-invalid @enderror" 
+                                                   id="stock_quantity" name="stock_quantity" 
+                                                   value="{{ old('stock_quantity', 0) }}" required>
+                                            @error('stock_quantity')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
 
+                                        <!-- Technical Specifications -->
+                                        <div class="mb-3">
+                                            <label for="processor" class="form-label">Processor</label>
+                                            <input type="text" class="form-control @error('processor') is-invalid @enderror" 
+                                                   id="processor" name="processor" 
+                                                   value="{{ old('processor') }}" 
+                                                   placeholder="Enter processor details">
+                                            @error('processor')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="ram" class="form-label">RAM</label>
+                                                    <input type="text" class="form-control @error('ram') is-invalid @enderror" 
+                                                           id="ram" name="ram" 
+                                                           value="{{ old('ram') }}" 
+                                                           placeholder="e.g., 8GB">
+                                                    @error('ram')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="storage" class="form-label">Storage</label>
+                                                    <input type="text" class="form-control @error('storage') is-invalid @enderror" 
+                                                           id="storage" name="storage" 
+                                                           value="{{ old('storage') }}" 
+                                                           placeholder="e.g., 512GB SSD">
+                                                    @error('storage')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Variations Toggle -->
                                         <div class="form-check form-switch mb-3">
                                             <input type="checkbox" class="form-check-input" id="has_variations" name="has_variations" value="1" {{ old('has_variations') ? 'checked' : '' }}>
                                             <label class="form-check-label" for="has_variations">
@@ -256,8 +249,8 @@
 
                                 <!-- Variation Template (Hidden) -->
                                 <div id="variation-template" class="d-none">
-                                    <div class="variation-card">
-                                        <div class="variation-header d-flex justify-content-between align-items-center">
+                                    <div class="variation-card card mb-3">
+                                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
                                             <h6 class="mb-0 text-primary">
                                                 <i class="fas fa-cube me-2"></i>Variation <span class="variation-number">1</span>
                                             </h6>
@@ -322,15 +315,15 @@
                                                         <div class="col-md-6">
                                                             <div class="mb-3">
                                                                 <label class="form-label">RAM (GB)</label>
-                                                                <input type="number" min="0" class="form-control variation-ram" 
-                                                                       name="variations[INDEX][ram]" placeholder="0">
+                                                                <input type="text" class="form-control variation-ram" 
+                                                                       name="variations[INDEX][ram]" placeholder="e.g., 8GB">
                                                             </div>
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="mb-3">
                                                                 <label class="form-label">Storage (GB)</label>
-                                                                <input type="number" min="0" class="form-control variation-storage" 
-                                                                       name="variations[INDEX][storage]" placeholder="0">
+                                                                <input type="text" class="form-control variation-storage" 
+                                                                       name="variations[INDEX][storage]" placeholder="e.g., 512GB">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -381,7 +374,7 @@
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <a href="{{ route('products.index') }}" class="btn btn-secondary">
+                                    <a href="{{ route('admin.manageproduct.index') }}" class="btn btn-secondary">
                                         <i class="fas fa-arrow-left me-2"></i>Cancel
                                     </a>
                                     <button type="submit" class="btn btn-primary btn-lg" id="submitButton">
@@ -419,11 +412,36 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Form submission started');
             
             // Basic validation
-            const productName = document.getElementById('product_name');
+            const productName = document.getElementById('name');
+            const productPrice = document.getElementById('price');
+            const productStock = document.getElementById('stock_quantity');
+            const productCategory = document.getElementById('category_id');
+            
             if (!productName.value.trim()) {
                 e.preventDefault();
                 productName.focus();
                 alert('Please enter a product name');
+                return false;
+            }
+
+            if (!productPrice.value || productPrice.value < 0) {
+                e.preventDefault();
+                productPrice.focus();
+                alert('Please enter a valid price');
+                return false;
+            }
+
+            if (!productStock.value || productStock.value < 0) {
+                e.preventDefault();
+                productStock.focus();
+                alert('Please enter a valid stock quantity');
+                return false;
+            }
+
+            if (!productCategory.value) {
+                e.preventDefault();
+                productCategory.focus();
+                alert('Please select a category');
                 return false;
             }
 
@@ -475,9 +493,16 @@ document.addEventListener('DOMContentLoaded', function() {
         mainImageInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
+                // Validate file size
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('File size must be less than 2MB');
+                    this.value = '';
+                    return;
+                }
+
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    mainImagePreview.innerHTML = `<img src="${e.target.result}" class="image-preview" alt="Main Image Preview">`;
+                    mainImagePreview.innerHTML = `<img src="${e.target.result}" class="image-preview" alt="Main Image Preview" style="max-width: 200px; max-height: 200px;">`;
                 };
                 reader.readAsDataURL(file);
             } else {
@@ -499,6 +524,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
+                    
+                    // Validate file size
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert(`File "${file.name}" is too large. Must be less than 2MB.`);
+                        continue;
+                    }
+
                     const reader = new FileReader();
                     
                     reader.onload = function(e) {
@@ -508,12 +540,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         const img = document.createElement('img');
                         img.src = e.target.result;
                         img.className = 'gallery-thumbnail';
+                        img.style.width = '100px';
+                        img.style.height = '100px';
+                        img.style.objectFit = 'cover';
                         img.alt = `Gallery image ${i + 1}`;
                         
                         const removeBtn = document.createElement('button');
                         removeBtn.type = 'button';
-                        removeBtn.className = 'remove-image-btn';
+                        removeBtn.className = 'btn btn-danger btn-sm position-absolute top-0 end-0';
                         removeBtn.innerHTML = '×';
+                        removeBtn.style.transform = 'translate(50%, -50%)';
                         removeBtn.onclick = function() {
                             imgContainer.remove();
                             // Update file input
@@ -581,12 +617,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Validate file
                     if (file.size > 2 * 1024 * 1024) {
                         alert('File size must be less than 2MB');
+                        this.value = '';
                         return;
                     }
                     
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        imagePreview.innerHTML = `<img src="${e.target.result}" class="image-preview" alt="Variation Image">`;
+                        imagePreview.innerHTML = `<img src="${e.target.result}" class="image-preview" alt="Variation Image" style="max-width: 150px; max-height: 150px;">`;
                         imageData.value = e.target.result;
                     };
                     reader.readAsDataURL(file);
@@ -651,4 +688,61 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('All event listeners attached successfully');
 });
 </script>
+
+<style>
+.required-field::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.image-preview-container {
+    border: 2px dashed #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-preview {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 0.375rem;
+}
+
+.gallery-thumbnail {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+}
+
+.variation-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+}
+
+.variation-header {
+    background-color: #f8f9fa;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.remove-image-btn {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+}
+</style>
 @endsection

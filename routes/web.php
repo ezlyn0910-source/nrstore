@@ -10,26 +10,42 @@ use Illuminate\Support\Facades\Route;
 // Authentication Routes
 Auth::routes();
 
+// Public Routes
+Route::get('/', function () {
+    return view('homepage');
+});
+
+// Public Product Routes (for customers)
+// Public Product Routes
+Route::get('/products', [ProductController::class, 'index'])->name('productpage');
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products/{product}/slug', [ProductController::class, 'showBySlug'])->name('products.show.slug');
+
 // Admin Routes
 Route::middleware(['auth'])->prefix('admin')->group(function () {
     // Dashboard
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 });
 
-// Public and Home Route
-Route::get('/', function () {
-    return view('homepage');
+// Admin Product Routes
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/products', [ProductController::class, 'index'])->name('manageproduct.index');
+    Route::get('/products/create', [ProductController::class, 'create'])->name('manageproduct.create');
+    Route::post('/products', [ProductController::class, 'store'])->name('manageproduct.store');
+    Route::get('/products/{product}', [ProductController::class, 'show'])->name('manageproduct.show');
+    Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('manageproduct.edit');
+    Route::put('/products/{product}', [ProductController::class, 'update'])->name('manageproduct.update');
+    Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('manageproduct.destroy');
+
+    // Bulk actions
+    Route::post('/products/bulk-action', [ProductController::class, 'bulkAction'])->name('products.bulk-action');
+    Route::put('/products/{product}/status', [ProductController::class, 'updateStatus'])->name('products.update-status');
+    Route::delete('/product-images/{image}', [ProductController::class, 'deleteImage'])->name('products.delete-image');
 });
 
-// Product Routes
-Route::get('/manageproduct', [ProductController::class, 'index'])->name('manageproduct.index');
-Route::get('/manageproduct/{id}', [ProductController::class, 'show'])->name('manageproduct.show');
 
-// Category-based filtering
-Route::get('/categories/{category}', [ProductController::class, 'index'])->name('manageproduct.by_category');
-Route::resource('manageproduct', ProductController::class);
 
-// Manageuser Routes with additional custom routes
+// Manageuser Routes
 Route::resource('manageuser', ManageUserController::class);
 
 // Additional manageuser routes
@@ -38,16 +54,5 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{manageuser}/suspend', [ManageUserController::class, 'suspend'])->name('manageuser.suspend');
         Route::post('/{manageuser}/activate', [ManageUserController::class, 'activate'])->name('manageuser.activate');
         Route::post('/bulk-action', [ManageUserController::class, 'bulkAction'])->name('manageuser.bulk-action');
-    });
-});
-
-// Variation Routes
-Route::middleware(['auth'])->group(function () {
-    Route::prefix('manageproduct/{product}')->group(function () {
-        Route::get('/variations/create', [ProductController::class, 'createVariation'])->name('manageproduct.variations.create');
-        Route::post('/variations', [ProductController::class, 'storeVariation'])->name('manageproduct.variations.store');
-        Route::get('/variations/{variation}/edit', [ProductController::class, 'editVariation'])->name('manageproduct.variations.edit');
-        Route::put('/variations/{variation}', [ProductController::class, 'updateVariation'])->name('manageproduct.variations.update');
-        Route::delete('/variations/{variation}', [ProductController::class, 'destroyVariation'])->name('manageproduct.variations.destroy');
     });
 });

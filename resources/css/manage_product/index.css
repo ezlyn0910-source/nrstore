@@ -1,42 +1,121 @@
-.card {
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+/* Product Management Styles */
+.products-table img {
+    transition: transform 0.2s ease-in-out;
 }
 
-.table th {
-    border-top: none;
-    font-weight: 600;
-    color: #495057;
-    background-color: #f8f9fa;
+.products-table img:hover {
+    transform: scale(1.1);
 }
 
-.product-row:hover {
-    background-color: #f8f9fa;
-    transform: translateY(-1px);
-    transition: all 0.2s ease;
+.stock-progress {
+    height: 6px;
+    border-radius: 3px;
 }
 
 .badge {
     font-size: 0.75em;
 }
 
-.btn-group .btn {
-    border-radius: 6px !important;
-    margin: 0 2px;
+.btn-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
 }
 
-.alert {
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.025);
+}
+
+.card {
     border: none;
-    border-radius: 8px;
-    border-left: 4px solid;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
 }
 
-.border-left-primary { border-left-color: #4e73df !important; }
-.border-left-success { border-left-color: #1cc88a !important; }
-.border-left-info { border-left-color: #36b9cc !important; }
-.border-left-warning { border-left-color: #f6c23e !important; }
+.card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+}
 
-.shadow {
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+.progress {
+    background-color: #eaecf4;
+}
+
+/* Bulk actions */
+.bulk-actions {
+    background-color: #f8f9fa;
+    border: 1px solid #e3e6f0;
+    border-radius: 0.35rem;
+    padding: 1rem;
+}
+
+/* Status badges */
+.badge.bg-success { background-color: #1cc88a !important; }
+.badge.bg-warning { background-color: #f6c23e !important; }
+.badge.bg-danger { background-color: #e74a3b !important; }
+.badge.bg-secondary { background-color: #858796 !important; }
+.badge.bg-info { background-color: #36b9cc !important; }
+
+/* Border colors for statistics cards */
+.border-left-primary { border-left: 0.25rem solid #4e73df !important; }
+.border-left-success { border-left: 0.25rem solid #1cc88a !important; }
+.border-left-info { border-left: 0.25rem solid #36b9cc !important; }
+.border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
+.border-left-danger { border-left: 0.25rem solid #e74a3b !important; }
+.border-left-secondary { border-left: 0.25rem solid #858796 !important; }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 0.25rem;
+        border-radius: 0.35rem !important;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Animation for alerts */
+.alert {
+    animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Custom checkbox styling */
+.form-check-input:checked {
+    background-color: #4e73df;
+    border-color: #4e73df;
+}
+
+/* Hover effects */
+.btn {
+    transition: all 0.15s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Table row highlights */
+.table-warning {
+    background-color: rgba(253, 236, 234, 0.5) !important;
 }

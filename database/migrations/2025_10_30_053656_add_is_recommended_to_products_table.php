@@ -8,17 +8,21 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::table('products', function (Blueprint $table) {
-            if (!Schema::hasColumn('products', 'is_recommended')) {
+        // Only add the column if it doesn't exist
+        if (!Schema::hasColumn('products', 'is_recommended')) {
+            Schema::table('products', function (Blueprint $table) {
                 $table->boolean('is_recommended')->default(false);
-            }
-        });
+            });
+        }
     }
 
     public function down()
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->dropColumn('is_recommended');
-        });
+        // Only drop the column if it exists
+        if (Schema::hasColumn('products', 'is_recommended')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->dropColumn('is_recommended');
+            });
+        }
     }
 };
