@@ -6,12 +6,14 @@
 
 @section('content')
 <div class="product-page">
+
+<div class="product-page">
     <!-- Hero Section with Overlap -->
-    <section class="hero-section" style="position: relative; height: 400px; background-color: #1f2937; overflow: hidden; margin-bottom: 0;">
+    <section class="hero-section" style="position: relative; height: 450px; background-color: #1f2937; overflow: hidden; margin-bottom: 0;">
         <img src="{{ asset('storage/images/productbanner.png') }}" alt="Products Banner" 
             style="width: 100%; height: 100%; object-fit: cover; opacity: 1;">
-        <div style="position: absolute; bottom: 15px; left: 0; right: 0; text-align: center;">
-            <h1 style="font-size: 15rem; font-weight: bold; color: white; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7); margin: 0;">
+        <div style="position: absolute; bottom: -14px; left: 0; right: 0; text-align: center;">
+            <h1 style="font-size: 18rem; font-weight: bold; color: white; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7); margin: 0;">
                 Product
             </h1>
         </div>
@@ -34,142 +36,123 @@
                 <div style="display: flex; gap: 2rem;">
                     <!-- Filters Sidebar -->
                     <div style="width: 25%;">
-                        <!-- Brand Filter (previously Category) -->
-                        <div style="margin-bottom: 1.5rem;">
-                            <h3 style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.875rem; text-transform: uppercase;">Brand</h3>
-                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
-                                    <input type="checkbox" name="brand" value="all" checked>
-                                    <span>All Brands</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
-                                    <input type="checkbox" name="brand" value="hp">
-                                    <span>HP</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
-                                    <input type="checkbox" name="brand" value="dell">
-                                    <span>Dell</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
-                                    <input type="checkbox" name="brand" value="lenovo">
-                                    <span>Lenovo</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
-                                    <input type="checkbox" name="brand" value="apple">
-                                    <span>Apple</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
-                                    <input type="checkbox" name="brand" value="asus">
-                                    <span>ASUS</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
-                                    <input type="checkbox" name="brand" value="microsoft">
-                                    <span>Microsoft</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
-                                    <input type="checkbox" name="brand" value="msi">
-                                    <span>MSI</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Price Filter -->
-                        <div style="margin-bottom: 1.5rem;">
-                            <h3 style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.875rem; text-transform: uppercase;">Price</h3>
-                            <select style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; outline: none;">
-                                <option>Default Sorting</option>
-                                <option>Price: Low to High</option>
-                                <option>Price: High to Low</option>
-                            </select>
-                        </div>
-
-                        <!-- Type Filter (previously Brand) -->
-                        <div style="margin-bottom: 1.5rem;">
-                            <h3 style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.875rem; text-transform: uppercase;">Type</h3>
-                            
-                            <!-- Laptop Type -->
-                            <div style="margin-bottom: 1rem;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                    <input type="checkbox" id="laptop-type" name="device-type" value="laptop">
-                                    <label for="laptop-type" style="font-weight: 500; color: #374151; font-size: 0.875rem;">Laptop Type</label>
-                                </div>
-                                <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-left: 1.5rem;">
-                                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
-                                        <input type="checkbox" name="laptop-type" value="all-type" disabled>
-                                        <span style="color: #6b7280;">All Type</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
-                                        <input type="checkbox" name="laptop-type" value="2-in-1" disabled>
-                                        <span style="color: #6b7280;">2-in-1</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
-                                        <input type="checkbox" name="laptop-type" value="notebook" disabled>
-                                        <span style="color: #6b7280;">Notebook</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
-                                        <input type="checkbox" name="laptop-type" value="ultrabook" disabled>
-                                        <span style="color: #6b7280;">Ultrabook</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
-                                        <input type="checkbox" name="laptop-type" value="gaming-laptop" disabled>
-                                        <span style="color: #6b7280;">Gaming Laptop</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
-                                        <input type="checkbox" name="laptop-type" value="mobile-workstation" disabled>
-                                        <span style="color: #6b7280;">Mobile Workstation</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
-                                        <input type="checkbox" name="laptop-type" value="business-laptop" disabled>
-                                        <span style="color: #6b7280;">Business Laptop</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
-                                        <input type="checkbox" name="laptop-type" value="student-laptop" disabled>
-                                        <span style="color: #6b7280;">Student Laptop</span>
-                                    </label>
-                                </div>
+                        <form method="GET" action="{{ url('/products') }}">
+                            <!-- Brand Filter -->
+                            <div style="margin-bottom: 1.5rem;">
+                                <h3 style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.875rem; text-transform: uppercase;">Brand</h3>
+                                <select name="brand" style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; outline: none;">
+                                    <option value="">All Brands</option>
+                                    @foreach($brandsList as $brand)
+                                    <option value="{{ $brand }}" {{ request('brand') == $brand ? 'selected' : '' }}>
+                                        {{ $brand }}
+                                    </option>
+                                    @endforeach
+                                </select>
                             </div>
 
-                            <!-- Desktop Type -->
-                            <div>
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                    <input type="checkbox" id="desktop-type" name="device-type" value="desktop">
-                                    <label for="desktop-type" style="font-weight: 500; color: #374151; font-size: 0.875rem;">Desktop Type</label>
+                            <!-- Price Filter -->
+                            <div style="margin-bottom: 1.5rem;">
+                                <h3 style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.875rem; text-transform: uppercase;">Price</h3>
+                                <select name="sort" style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; outline: none;">
+                                    <option value="default" {{ request('sort') == 'default' ? 'selected' : '' }}>Default Sorting</option>
+                                    <option value="price_low_high" {{ request('sort') == 'price_low_high' ? 'selected' : '' }}>Price: Low to High</option>
+                                    <option value="price_high_low" {{ request('sort') == 'price_high_low' ? 'selected' : '' }}>Price: High to Low</option>
+                                </select>
+                            </div>
+
+                            <!-- Type Filter -->
+                            <div style="margin-bottom: 1.5rem;">
+                                <h3 style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.875rem; text-transform: uppercase;">Type</h3>
+                                
+                                <!-- Laptop Type -->
+                                <div style="margin-bottom: 1rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                        <input type="checkbox" id="laptop-type" name="laptop_type_main" value="laptop">
+                                        <label for="laptop-type" style="font-weight: 500; color: #374151; font-size: 0.875rem;">Laptop Type</label>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-left: 1.5rem;">
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
+                                            <input type="checkbox" name="laptop_type[]" value="all-type" disabled>
+                                            <span style="color: #6b7280;">All Type</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
+                                            <input type="checkbox" name="laptop_type[]" value="2-in-1" disabled>
+                                            <span style="color: #6b7280;">2-in-1</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
+                                            <input type="checkbox" name="laptop_type[]" value="notebook" disabled>
+                                            <span style="color: #6b7280;">Notebook</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
+                                            <input type="checkbox" name="laptop_type[]" value="ultrabook" disabled>
+                                            <span style="color: #6b7280;">Ultrabook</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
+                                            <input type="checkbox" name="laptop_type[]" value="gaming-laptop" disabled>
+                                            <span style="color: #6b7280;">Gaming Laptop</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
+                                            <input type="checkbox" name="laptop_type[]" value="mobile-workstation" disabled>
+                                            <span style="color: #6b7280;">Mobile Workstation</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
+                                            <input type="checkbox" name="laptop_type[]" value="business-laptop" disabled>
+                                            <span style="color: #6b7280;">Business Laptop</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
+                                            <input type="checkbox" name="laptop_type[]" value="student-laptop" disabled>
+                                            <span style="color: #6b7280;">Student Laptop</span>
+                                        </label>
+                                    </div>
                                 </div>
-                                <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-left: 1.5rem;">
-                                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
-                                        <input type="checkbox" name="desktop-type" value="all-type" disabled>
-                                        <span style="color: #6b7280;">All Type</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
-                                        <input type="checkbox" name="desktop-type" value="aio" disabled>
-                                        <span style="color: #6b7280;">All-in-One (AIO) Desktop</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
-                                        <input type="checkbox" name="desktop-type" value="gaming-desktop" disabled>
-                                        <span style="color: #6b7280;">Gaming Desktop</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
-                                        <input type="checkbox" name="desktop-type" value="workstation-desktop" disabled>
-                                        <span style="color: #6b7280;">Workstation Desktop</span>
-                                    </label>
+
+                                <!-- Desktop Type -->
+                                <div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                        <input type="checkbox" id="desktop-type" name="desktop_type_main" value="desktop">
+                                        <label for="desktop-type" style="font-weight: 500; color: #374151; font-size: 0.875rem;">Desktop Type</label>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-left: 1.5rem;">
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
+                                            <input type="checkbox" name="desktop_type[]" value="all-type" disabled>
+                                            <span style="color: #6b7280;">All Type</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
+                                            <input type="checkbox" name="desktop_type[]" value="aio" disabled>
+                                            <span style="color: #6b7280;">All-in-One (AIO) Desktop</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
+                                            <input type="checkbox" name="desktop_type[]" value="gaming-desktop" disabled>
+                                            <span style="color: #6b7280;">Gaming Desktop</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
+                                            <input type="checkbox" name="desktop_type[]" value="workstation-desktop" disabled>
+                                            <span style="color: #6b7280;">Workstation Desktop</span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" style="width: 100%; padding: 0.75rem; background: #1f2937; color: white; border: none; border-radius: 0.5rem; margin-top: 1rem;">
+                                Apply Filters
+                            </button>
+                        </form>
                     </div>
 
                     <!-- Products Main -->
                     <div style="width: 75%;">
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-                            @foreach($products as $product)
-                            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden; transition: all 0.3s ease;" class="product-card">
-                                <div style="width: 100%; height: 150px; background-color: #f3f4f6; overflow: hidden;">
-                                    <img src="{{ asset('storage/' . $product->image) }}" 
+                            @foreach($products as $product)                       
+                            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; transition: all 0.3s ease; padding: 0; margin: 0;" class="product-card">
+                                <div style="width: 100%; height: 150px; background-color: #f3f4f6; overflow: hidden; margin: 0; padding: 0; border-radius: 0.5rem 0.5rem 0 0;">
+                                    <img src="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"    
                                         alt="{{ $product->name }}" 
-                                        style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+                                        style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; margin: 0; padding: 0; display: block; border-radius: 0.5rem 0.5rem 0 0;">
                                 </div>
                                 <div style="padding: 0.75rem;">
                                     <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; font-size: 0.875rem; line-height: 1.25;">{{ $product->name }}</h3>
-                                    <p style="font-weight: bold; color: #1f2937; margin-bottom: 0.75rem; font-size: 1rem;">${{ number_format($product->price, 2) }}</p>
+                                    <p style="font-weight: bold; color: #1f2937; margin-bottom: 0.75rem; font-size: 1rem;">RM{{ number_format($product->price, 2) }}</p>
                                     <div style="display: flex; gap: 0.5rem;">
                                         <button style="flex: 1; border: 1px solid #1f2937; background: white; color: #1f2937; padding: 0.4rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem; transition: all 0.2s ease;">
                                             <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,23 +202,23 @@
 
                     <div style="display: flex; overflow-x: auto; gap: 1rem; padding-bottom: 1rem; scrollbar-width: none;">
                         @foreach($recommendedProducts as $product)
-                        <div style="flex: 0 0 auto; width: 200px; background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden; transition: all 0.3s ease;">
-                            <div style="width: 100%; height: 120px; background-color: #f3f4f6; overflow: hidden;">
-                                <img src="{{ asset('storage/' . $product->image) }}" 
+                        <div style="flex: 0 0 auto; width: 300px; background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden; transition: all 0.3s ease;">
+                            <div style="width: 100%; height: 200px; background-color: #f3f4f6; overflow: hidden; margin: 0; padding: 0;">
+                                <img src="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"    
                                     alt="{{ $product->name }}" 
-                                    style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+                                    style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; margin: 0; padding: 0; display: block;">
                             </div>
                             <div style="padding: 0.75rem;">
-                                <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; font-size: 0.75rem;">{{ $product->name }}</h3>
-                                <p style="font-weight: bold; color: #1f2937; margin-bottom: 0.5rem; font-size: 0.875rem;">${{ number_format($product->price, 2) }}</p>
+                                <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; font-size: 1rem;">{{ $product->name }}</h3>
+                                <p style="font-weight: bold; color: #1f2937; margin-bottom: 0.5rem; font-size: 1rem;">RM{{ number_format($product->price, 2) }}</p>
                                 <div style="display: flex; gap: 0.25rem;">
-                                    <button style="flex: 1; border: 1px solid #1f2937; background: white; color: #1f2937; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.625rem; display: flex; align-items: center; justify-content: center; gap: 0.125rem; transition: all 0.2s ease;">
+                                    <button style="flex: 1; border: 1px solid #1f2937; background: white; color: #1f2937; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.8; display: flex; align-items: center; justify-content: center; gap: 0.125rem; transition: all 0.2s ease;">
                                         <svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                         </svg>
                                         Cart
                                     </button>
-                                    <button style="flex: 1; background: #1f2937; color: white; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.625rem; border: none; transition: all 0.2s ease;">Buy Now</button>
+                                    <button style="flex: 1; background: #1f2937; color: white; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.8rem; border: none; transition: all 0.2s ease;">Buy Now</button>
                                 </div>
                             </div>
                         </div>
@@ -333,8 +316,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Type filter functionality
     const laptopTypeCheckbox = document.getElementById('laptop-type');
     const desktopTypeCheckbox = document.getElementById('desktop-type');
-    const laptopSubOptions = document.querySelectorAll('input[name="laptop-type"]');
-    const desktopSubOptions = document.querySelectorAll('input[name="desktop-type"]');
+    const laptopSubOptions = document.querySelectorAll('input[name="laptop_type[]"]');
+    const desktopSubOptions = document.querySelectorAll('input[name="desktop_type[]"]');
 
     // Enable/disable sub-options based on main type selection
     function toggleSubOptions(mainCheckbox, subOptions) {
@@ -355,27 +338,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Laptop type toggle
     laptopTypeCheckbox.addEventListener('change', function() {
         toggleSubOptions(laptopTypeCheckbox, laptopSubOptions);
-        
-        // If laptop is selected, deselect desktop
-        if (this.checked && desktopTypeCheckbox.checked) {
-            desktopTypeCheckbox.checked = false;
-            toggleSubOptions(desktopTypeCheckbox, desktopSubOptions);
-        }
     });
 
     // Desktop type toggle
     desktopTypeCheckbox.addEventListener('change', function() {
         toggleSubOptions(desktopTypeCheckbox, desktopSubOptions);
-        
-        // If desktop is selected, deselect laptop
-        if (this.checked && laptopTypeCheckbox.checked) {
-            laptopTypeCheckbox.checked = false;
-            toggleSubOptions(laptopTypeCheckbox, laptopSubOptions);
-        }
     });
 
     // All-type selection for laptop
-    const laptopAllType = document.querySelector('input[name="laptop-type"][value="all-type"]');
+    const laptopAllType = document.querySelector('input[name="laptop_type[]"][value="all-type"]');
     laptopAllType.addEventListener('change', function() {
         if (this.checked) {
             laptopSubOptions.forEach(option => {
@@ -393,7 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // All-type selection for desktop
-    const desktopAllType = document.querySelector('input[name="desktop-type"][value="all-type"]');
+    const desktopAllType = document.querySelector('input[name="desktop_type[]"][value="all-type"]');
     desktopAllType.addEventListener('change', function() {
         if (this.checked) {
             desktopSubOptions.forEach(option => {

@@ -24,6 +24,7 @@ Route::get('/', function () {
 // Product Routes
 Route::get('/manageproducts', [ProductController::class, 'index'])->name('manageproducts.index2');
 Route::get('/manageproducts/{id}', [ProductController::class, 'show'])->name('manageproducts.show');
+Route::get('/products', [ProductController::class, 'index'])->name('products.index'); // User Product Page
 
 // Category-based filtering
 Route::get('/categories/{category}', [ProductController::class, 'index'])->name('manageproducts.by_category');

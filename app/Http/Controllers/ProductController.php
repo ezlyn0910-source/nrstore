@@ -10,29 +10,39 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        // Get filter parameters
-        $category = $request->get('category');
+        // Get filter parameters - use singular 'brand' to match your current code
         $brand = $request->get('brand');
-        $sort = $request->get('sort', 'name');
+        $laptopTypes = $request->get('laptop_type', []);
+        $desktopTypes = $request->get('desktop_type', []);
+        $sort = $request->get('sort', 'default');
         $minPrice = $request->get('min_price');
         $maxPrice = $request->get('max_price');
 
         // Start query
-        $query = Product::with('category');
+        $query = Product::query();
 
-        // Apply filters
-        if ($category) {
-            $query->whereHas('category', function($q) use ($category) {
-                $q->where('slug', $category);
-            });
-        }
-
+        // Apply brand filter - single brand selection
         if ($brand) {
             $query->where('brand', $brand);
         }
 
-        if ($minPrice && $maxPrice) {
-            $query->whereBetween('price', [$minPrice, $maxPrice]);
+        // Apply type filters
+        if (!empty($laptopTypes)) {
+            $query->where('type', 'laptop')
+                  ->whereIn('sub_type', $laptopTypes);
+        }
+
+        if (!empty($desktopTypes)) {
+            $query->where('type', 'desktop')
+                  ->whereIn('sub_type', $desktopTypes);
+        }
+
+        // Apply price range filter
+        if ($minPrice) {
+            $query->where('price', '>=', $minPrice);
+        }
+        if ($maxPrice) {
+            $query->where('price', '<=', $maxPrice);
         }
 
         // Apply sorting
@@ -43,9 +53,8 @@ class ProductController extends Controller
             case 'price_high_low':
                 $query->orderBy('price', 'desc');
                 break;
-            case 'name':
             default:
-                $query->orderBy('name', 'asc');
+                $query->orderBy('created_at', 'desc');
                 break;
         }
 
@@ -53,22 +62,25 @@ class ProductController extends Controller
         $products = $query->paginate(9);
 
         // Get recommended products
-        $recommendedProducts = Product::recommended()->get();
+        $recommendedProducts = Product::inRandomOrder()->limit(8)->get();
 
-        // Get categories for filter
+        // Get categories
         $categories = Category::all();
 
-        return view('productpage', compact('products', 'recommendedProducts', 'categories'));
+        // Get unique brands for filter dropdown
+        $brandsList = Product::select('brand')->distinct()->pluck('brand')->filter();
+
+        return view('productpage', compact('products', 'recommendedProducts', 'categories', 'brandsList'));
     }
 
     public function show($id)
     {
-        $product = Product::with('category')->findOrFail($id);
-        $relatedProducts = Product::where('category_id', $product->category_id)
+        $product = Product::findOrFail($id);
+        $relatedProducts = Product::where('brand', $product->brand)
                                 ->where('id', '!=', $id)
                                 ->limit(4)
                                 ->get();
 
-        return view('productpage', compact('product', 'relatedProducts'));
+        return view('products.show', compact('product', 'relatedProducts'));
     }
 }
