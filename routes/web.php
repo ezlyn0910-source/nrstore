@@ -43,6 +43,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::delete('/product-images/{image}', [ProductController::class, 'deleteImage'])->name('products.delete-image');
 });
 
+// Product Routes
+Route::get('/manageproducts', [ProductController::class, 'index'])->name('manageproducts.index2');
+Route::get('/manageproducts/{id}', [ProductController::class, 'show'])->name('manageproducts.show');
 
 
 // Manageuser Routes
