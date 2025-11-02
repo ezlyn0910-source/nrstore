@@ -30,9 +30,9 @@ class Product extends Model
 
     protected $casts = [
         // Remove until columns exist:
-        // 'is_featured' => 'boolean',
-        // 'is_recommended' => 'boolean',
-        // 'is_active' => 'boolean',
+        'is_featured' => 'boolean',
+        'is_recommended' => 'boolean',
+        'is_active' => 'boolean',
         'price' => 'decimal:2',
         'stock_quantity' => 'integer'
     ];
