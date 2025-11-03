@@ -27,8 +27,8 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 });
 
-// Admin Product Routes
-Route::prefix('admin')->name('admin.')->group(function () {
+// Admin Product Routes - Make sure these are properly grouped
+Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
     Route::get('/products', [ProductController::class, 'index'])->name('manageproduct.index');
     Route::get('/products/create', [ProductController::class, 'create'])->name('manageproduct.create');
     Route::post('/products', [ProductController::class, 'store'])->name('manageproduct.store');
@@ -43,11 +43,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::delete('/product-images/{image}', [ProductController::class, 'deleteImage'])->name('products.delete-image');
 });
 
-// Product Routes
-Route::get('/manageproducts', [ProductController::class, 'index'])->name('manageproducts.index2');
-Route::get('/manageproducts/{id}', [ProductController::class, 'show'])->name('manageproducts.show');
-
-
+// Public Product Routes
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 // Manageuser Routes
 Route::resource('manageuser', ManageUserController::class);
 

@@ -25,16 +25,31 @@ class Product extends Model
         'is_featured',
         'is_recommended', 
         'is_active',
+        'has_variations',
         'slug',
+        'type',
+        'sub_type'
     ];
 
     protected $casts = [
-        // Remove until columns exist:
         'is_featured' => 'boolean',
         'is_recommended' => 'boolean',
         'is_active' => 'boolean',
+        'has_variations' => 'boolean',
         'price' => 'decimal:2',
         'stock_quantity' => 'integer'
+    ];
+
+    // Add these attributes to be included in JSON responses
+    protected $appends = [
+        'main_image_url',
+        'total_stock',
+        'stock_status',
+        'stock_status_label',
+        'in_stock',
+        'formatted_price',
+        'min_price',
+        'max_price'
     ];
 
     public function category(): BelongsTo
@@ -57,7 +72,7 @@ class Product extends Model
         return $this->hasOne(ProductImage::class)->where('is_primary', true);
     }
 
-    // Basic scopes without is_active, is_featured, etc.
+    // Basic scopes
     public function scopeByCategory($query, $categoryId)
     {
         return $query->where('category_id', $categoryId);
@@ -82,10 +97,35 @@ class Product extends Model
         });
     }
 
-    // Accessors - remove references to missing columns
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeFeatured($query)
+    {
+        return $query->where('is_featured', true);
+    }
+
+    public function scopeRecommended($query)
+    {
+        return $query->where('is_recommended', true);
+    }
+
+    public function scopeWithVariations($query)
+    {
+        return $query->where('has_variations', true);
+    }
+
+    public function scopeWithoutVariations($query)
+    {
+        return $query->where('has_variations', false);
+    }
+
+    // Accessors
     public function getTotalStockAttribute()
     {
-        if ($this->relationLoaded('variations') && $this->variations->isNotEmpty()) {
+        if ($this->has_variations && $this->relationLoaded('variations')) {
             return $this->variations->sum('stock');
         }
         return $this->stock_quantity;
@@ -93,7 +133,7 @@ class Product extends Model
 
     public function getHasVariationsAttribute()
     {
-        return $this->relationLoaded('variations') && $this->variations->isNotEmpty();
+        return $this->attributes['has_variations'] ?? false;
     }
 
     public function getMainImageUrlAttribute()
@@ -107,6 +147,12 @@ class Product extends Model
             if ($primaryImage) {
                 return $primaryImage->image_url;
             }
+            
+            // Fallback to any image
+            $firstImage = $this->images->first();
+            if ($firstImage) {
+                return $firstImage->image_url;
+            }
         }
         
         return asset('images/default-product.png');
@@ -114,7 +160,7 @@ class Product extends Model
 
     public function getMinPriceAttribute()
     {
-        if ($this->relationLoaded('variations') && $this->variations->isNotEmpty()) {
+        if ($this->has_variations && $this->relationLoaded('variations') && $this->variations->isNotEmpty()) {
             $minPrice = $this->variations->min('price');
             return $minPrice ?? $this->price;
         }
@@ -123,7 +169,7 @@ class Product extends Model
 
     public function getMaxPriceAttribute()
     {
-        if ($this->relationLoaded('variations') && $this->variations->isNotEmpty()) {
+        if ($this->has_variations && $this->relationLoaded('variations') && $this->variations->isNotEmpty()) {
             $maxPrice = $this->variations->max('price');
             return $maxPrice ?? $this->price;
         }
@@ -171,5 +217,58 @@ class Product extends Model
     public function getFormattedPriceAttribute()
     {
         return 'RM ' . number_format($this->price, 2);
+    }
+
+    /**
+     * Get gallery images (non-primary)
+     */
+    public function getGalleryImagesAttribute()
+    {
+        if ($this->relationLoaded('images')) {
+            return $this->images->where('is_primary', false);
+        }
+        return collect();
+    }
+
+    /**
+     * Check if product has gallery images
+     */
+    public function getHasGalleryImagesAttribute()
+    {
+        return $this->gallery_images->isNotEmpty();
+    }
+
+    /**
+     * Boot method for automatic slug generation
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($product) {
+            if (empty($product->slug)) {
+                $product->slug = Str::slug($product->name);
+                
+                // Ensure slug is unique
+                $originalSlug = $product->slug;
+                $count = 1;
+                while (static::where('slug', $product->slug)->exists()) {
+                    $product->slug = $originalSlug . '-' . $count++;
+                }
+            }
+        });
+
+        static::updating(function ($product) {
+            if ($product->isDirty('name') && empty($product->slug)) {
+                $product->slug = Str::slug($product->name);
+                
+                // Ensure slug is unique
+                $originalSlug = $product->slug;
+                $count = 1;
+                while (static::where('slug', $product->slug)->where('id', '!=', $product->id)->exists()) {
+                    $product->slug = $originalSlug . '-' . $count++;
+                }
+            }
+        });
     }
 }

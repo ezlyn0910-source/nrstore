@@ -10,7 +10,7 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header">
                     <h3 class="card-title mb-0">
                         <i class="fas fa-plus-circle me-2"></i>Add New Product
                     </h3>
@@ -20,6 +20,12 @@
                         @csrf
                         
                         <!-- Success/Error Messages -->
+                        @if(session('success'))
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                            </div>
+                        @endif
+
                         @if($errors->any())
                             <div class="alert alert-danger">
                                 <ul class="mb-0">
@@ -82,7 +88,7 @@
                                                 <option value="">Select Category</option>
                                                 @foreach($categories as $category)
                                                     <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                                        {{ $category->category_name }}
+                                                        {{ $category->name }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -164,6 +170,26 @@
                                             </div>
                                         </div>
 
+                                        <!-- Featured & Recommended Toggles -->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-check form-switch mb-3">
+                                                    <input type="checkbox" class="form-check-input" id="is_featured" name="is_featured" value="1" {{ old('is_featured') ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="is_featured">
+                                                        Featured Product
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check form-switch mb-3">
+                                                    <input type="checkbox" class="form-check-input" id="is_recommended" name="is_recommended" value="1" {{ old('is_recommended') ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="is_recommended">
+                                                        Recommended Product
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <!-- Variations Toggle -->
                                         <div class="form-check form-switch mb-3">
                                             <input type="checkbox" class="form-check-input" id="has_variations" name="has_variations" value="1" {{ old('has_variations') ? 'checked' : '' }}>
@@ -214,7 +240,7 @@
                                             </div>
                                             <input type="file" class="form-control @error('product_images') is-invalid @enderror" 
                                                    id="product_images" name="product_images[]" multiple accept="image/*">
-                                            <small class="text-muted">You can select multiple images. Hold Ctrl/Cmd to select multiple files.</small>
+                                            <small class="text-muted">You can select multiple images. Max 5 images, 2MB each.</small>
                                             @error('product_images')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -273,11 +299,7 @@
                                                                     <p class="text-muted mb-0">No image selected</p>
                                                                 </div>
                                                             </div>
-                                                            <input type="file" class="form-control variation-image-input d-none" accept="image/*">
-                                                            <input type="hidden" class="variation-image-data" name="variations[INDEX][image]">
-                                                            <button type="button" class="btn btn-outline-primary btn-sm w-100 variation-image-upload-btn">
-                                                                <i class="fas fa-upload me-2"></i>Upload Image
-                                                            </button>
+                                                            <input type="file" class="form-control variation-image-input" accept="image/*">
                                                             <small class="text-muted">Optional: Specific image for this variation</small>
                                                         </div>
                                                     </div>
@@ -406,7 +428,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const productForm = document.getElementById('productForm');
     const submitButton = document.getElementById('submitButton');
 
-    // ===== FORM SUBMISSION - SIMPLIFIED =====
+    // ===== FORM SUBMISSION - ENHANCED =====
     if (productForm) {
         productForm.addEventListener('submit', function(e) {
             console.log('Form submission started');
@@ -442,6 +464,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.preventDefault();
                 productCategory.focus();
                 alert('Please select a category');
+                return false;
+            }
+
+            // Validate variations if has_variations is checked
+            if (hasVariationsCheckbox.checked && variationCount === 0) {
+                e.preventDefault();
+                alert('Please add at least one variation since "This product has variations" is checked.');
                 return false;
             }
 
@@ -522,7 +551,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (files.length > 0) {
                 galleryPreview.innerHTML = '';
                 
-                for (let i = 0; i < files.length; i++) {
+                // Limit to 5 images
+                if (files.length > 5) {
+                    alert('Maximum 5 images allowed. Only the first 5 will be selected.');
+                }
+                
+                for (let i = 0; i < Math.min(files.length, 5); i++) {
                     const file = files[i];
                     
                     // Validate file size
@@ -598,9 +632,8 @@ document.addEventListener('DOMContentLoaded', function() {
             variationNumber.textContent = variationCount + 1;
         }
 
-        // Variation image handling
+        // Variation image handling - FIXED: Use file input instead of base64
         const imageInput = newVariation.querySelector('.variation-image-input');
-        const imageData = newVariation.querySelector('.variation-image-data');
         const imagePreview = newVariation.querySelector('.variation-image-preview');
         const uploadBtn = newVariation.querySelector('.variation-image-upload-btn');
 
@@ -610,7 +643,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        if (imageInput && imagePreview && imageData) {
+        if (imageInput && imagePreview) {
+            // Change the name to use image_file instead of image for file upload
+            imageInput.setAttribute('name', `variations[${variationCount}][image_file]`);
+            
             imageInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
@@ -624,7 +660,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         imagePreview.innerHTML = `<img src="${e.target.result}" class="image-preview" alt="Variation Image" style="max-width: 150px; max-height: 150px;">`;
-                        imageData.value = e.target.result;
                     };
                     reader.readAsDataURL(file);
                 }
@@ -744,5 +779,23 @@ document.addEventListener('DOMContentLoaded', function() {
     line-height: 1;
     cursor: pointer;
 }
+
+.nav-tabs .nav-link.active {
+    font-weight: bold;
+    border-bottom: 3px solid #007bff;
+    color: #007bff;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(45deg, #0056b3, #004085);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
 </style>
+
 @endsection

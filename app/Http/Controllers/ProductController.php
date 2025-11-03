@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
@@ -96,6 +97,7 @@ class ProductController extends Controller
 
     public function create()
     {
+        // FIXED: Remove the status condition since categories table doesn't have status column
         $categories = Category::all();
         return view('manageproduct.create', compact('categories'));
     }
@@ -105,7 +107,8 @@ class ProductController extends Controller
         DB::beginTransaction();
         
         try {
-            $validated = $request->validate([
+            // Enhanced validation with better error messages
+            $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'price' => 'required|numeric|min:0',
@@ -118,14 +121,13 @@ class ProductController extends Controller
                 'is_featured' => 'boolean',
                 'is_recommended' => 'boolean',
                 'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-                'product_images' => 'nullable|array',
+                'product_images' => 'nullable|array|max:5',
                 'product_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
                 'has_variations' => 'boolean',
                 'variations' => 'nullable|array',
-                'variations.*.sku' => 'required_if:has_variations,1|string|max:100',
+                'variations.*.sku' => 'required_if:has_variations,1|string|max:100|distinct',
                 'variations.*.price' => 'nullable|numeric|min:0',
                 'variations.*.stock' => 'required_if:has_variations,1|integer|min:0',
-                'variations.*.image' => 'nullable|string',
                 'variations.*.model' => 'nullable|string|max:255',
                 'variations.*.processor' => 'nullable|string|max:255',
                 'variations.*.ram' => 'nullable|string|max:100',
@@ -136,12 +138,27 @@ class ProductController extends Controller
                 'variations.*.os' => 'nullable|string|max:255',
                 'variations.*.warranty' => 'nullable|string|max:100',
                 'variations.*.voltage' => 'nullable|string|max:50',
+            ], [
+                'variations.*.sku.required_if' => 'SKU is required for all variations when variations are enabled.',
+                'variations.*.sku.distinct' => 'Duplicate SKU found. Each variation must have a unique SKU.',
+                'variations.*.stock.required_if' => 'Stock is required for all variations when variations are enabled.',
+                'product_images.max' => 'You can upload maximum 5 additional images.',
+                'product_images.*.max' => 'Each image must be less than 2MB.',
             ]);
 
-            // Create product
+            if ($validator->fails()) {
+                return redirect()->back()
+                    ->withErrors($validator)
+                    ->withInput()
+                    ->with('error', 'Please fix the validation errors below.');
+            }
+
+            $validated = $validator->validated();
+
+            // Create product with all necessary fields
             $product = Product::create([
                 'name' => $validated['name'],
-                'description' => $validated['description'],
+                'description' => $validated['description'] ?? null,
                 'price' => $validated['price'],
                 'category_id' => $validated['category_id'],
                 'brand' => $validated['brand'] ?? null,
@@ -151,14 +168,20 @@ class ProductController extends Controller
                 'stock_quantity' => $validated['stock_quantity'],
                 'is_featured' => $validated['is_featured'] ?? false,
                 'is_recommended' => $validated['is_recommended'] ?? false,
+                'has_variations' => $validated['has_variations'] ?? false,
+                'is_active' => true,
             ]);
 
-            // Handle main image
+            // Handle main image upload
             if ($request->hasFile('main_image')) {
-                $imagePath = $request->file('main_image')->store('products', 'public');
+                $mainImage = $request->file('main_image');
+                $imageName = 'product_' . $product->id . '_main_' . time() . '.' . $mainImage->getClientOriginalExtension();
+                $imagePath = $mainImage->storeAs('products', $imageName, 'public');
+                
+                // Update product with main image
                 $product->update(['image' => $imagePath]);
                 
-                // Create primary product image
+                // Create primary product image record
                 ProductImage::create([
                     'product_id' => $product->id,
                     'image_path' => $imagePath,
@@ -167,10 +190,14 @@ class ProductController extends Controller
                 ]);
             }
 
-            // Handle additional images
+            // Handle additional product images
             if ($request->hasFile('product_images')) {
                 foreach ($request->file('product_images') as $index => $image) {
-                    $imagePath = $image->store('products/gallery', 'public');
+                    if ($index >= 5) break; // Limit to 5 images
+                    
+                    $imageName = 'product_' . $product->id . '_gallery_' . ($index + 1) . '_' . time() . '.' . $image->getClientOriginalExtension();
+                    $imagePath = $image->storeAs('products/gallery', $imageName, 'public');
+                    
                     ProductImage::create([
                         'product_id' => $product->id,
                         'image_path' => $imagePath,
@@ -180,9 +207,16 @@ class ProductController extends Controller
                 }
             }
 
-            // Handle variations
-            if ($request->has_variations && !empty($validated['variations'])) {
-                foreach ($validated['variations'] as $variationData) {
+            // Handle product variations
+            $hasVariations = $request->has('has_variations') && $request->has_variations;
+            
+            if ($hasVariations && $request->has('variations') && is_array($request->variations)) {
+                foreach ($request->variations as $variationIndex => $variationData) {
+                    // Skip if essential data is missing
+                    if (empty($variationData['sku']) || !isset($variationData['stock'])) {
+                        continue;
+                    }
+
                     $variation = Variation::create([
                         'product_id' => $product->id,
                         'sku' => $variationData['sku'],
@@ -201,24 +235,35 @@ class ProductController extends Controller
                         'is_active' => true,
                     ]);
 
-                    // Handle variation image (base64)
-                    if (!empty($variationData['image'])) {
-                        $imageData = $variationData['image'];
-                        if (Str::startsWith($imageData, 'data:image')) {
-                            $imagePath = $this->saveBase64Image($imageData, "variations/{$variation->id}");
-                            $variation->update(['image' => $imagePath]);
-                        }
+                    // Handle variation image upload if provided
+                    if (isset($variationData['image_file']) && $variationData['image_file'] instanceof \Illuminate\Http\UploadedFile) {
+                        $variationImage = $variationData['image_file'];
+                        $imageName = 'variation_' . $variation->id . '_' . time() . '.' . $variationImage->getClientOriginalExtension();
+                        $imagePath = $variationImage->storeAs('products/variations', $imageName, 'public');
+                        
+                        $variation->update(['image' => $imagePath]);
                     }
                 }
+                
+                // Update product to indicate it has variations
+                $product->update(['has_variations' => true]);
+                
+                // Update total stock based on variations
+                $totalVariationStock = Variation::where('product_id', $product->id)->sum('stock');
+                $product->update(['stock_quantity' => $totalVariationStock]);
             }
 
             DB::commit();
 
-            return redirect()->route('admin.products.index')
+            return redirect()->route('admin.manageproduct.index')
                 ->with('success', 'Product created successfully!');
 
         } catch (\Exception $e) {
             DB::rollBack();
+            
+            \Log::error('Product creation failed: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
             return redirect()->back()
                 ->with('error', 'Failed to create product: ' . $e->getMessage())
                 ->withInput();
@@ -299,7 +344,7 @@ class ProductController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.products.index')
+            return redirect()->route('admin.manageproduct.index')
                 ->with('success', 'Product updated successfully!');
 
         } catch (\Exception $e) {
@@ -336,7 +381,7 @@ class ProductController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.products.index')
+            return redirect()->route('admin.manageproduct.index')
                 ->with('success', 'Product deleted successfully!');
 
         } catch (\Exception $e) {
@@ -386,7 +431,7 @@ class ProductController extends Controller
                     break;
             }
 
-            return redirect()->route('admin.products.index')->with('success', $message);
+            return redirect()->route('admin.manageproduct.index')->with('success', $message);
 
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to perform bulk action: ' . $e->getMessage());
@@ -490,6 +535,4 @@ class ProductController extends Controller
 
         return view('productpage', compact('products', 'recommendedProducts', 'categories', 'brandsList'));
     }
-
-
 }
