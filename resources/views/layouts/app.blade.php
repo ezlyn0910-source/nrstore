@@ -17,8 +17,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <!-- Scripts -->
-    @vite(['resources/sass/app.scss', 'resources/css/home.css', 'resources/js/app.js']) 
-    @vite(['resources/sass/app.scss', 'resources/css/homepage.css', 'resources/js/app.js'])
+    @vite(['resources/sass/app.scss', 'resources/css/home.css', 'resources/css/homepage.css', 'resources/js/app.js'])
+
+    @yield('styles')
 </head>
 <body>
     <div id="app">

@@ -5,6 +5,9 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ManageUserController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 // Authentication Routes
@@ -20,6 +23,30 @@ Route::get('/', function () {
 Route::get('/products', [ProductController::class, 'index'])->name('productpage');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products/{product}/slug', [ProductController::class, 'showBySlug'])->name('products.show.slug');
+
+// Order Routes
+//Route::middleware(['auth'])->group(function () {
+    //Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    //Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    //Route::get('/orders/{order}/details', [OrderController::class, 'details'])->name('orders.details');
+    //Route::post('/orders/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::get('/orders/{order}/details', [OrderController::class, 'details'])->name('orders.details');
+    Route::post('/orders/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+
+    // Checkout Routes
+    //Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
+    //Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('checkout.place-order');
+    //Route::post('/apply-promo-code', [CheckoutController::class, 'applyPromoCode'])->name('checkout.apply-promo');
+    Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
+    Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('checkout.place-order');
+    Route::post('/apply-promo-code', [CheckoutController::class, 'applyPromoCode'])->name('checkout.apply-promo');
+
+    // Review Routes
+    //Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+//});
 
 // Admin Routes
 Route::middleware(['auth'])->prefix('admin')->group(function () {
