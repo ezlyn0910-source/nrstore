@@ -14,7 +14,7 @@
             <p class="text-muted">Manage your product inventory and variations</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('admin.manageproduct.create') }}" class="btn btn-primary">
+            <a href="{{ route('manageproduct.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>Add New Product
             </a>
             <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#importModal">
@@ -26,7 +26,7 @@
     <!-- Enhanced Filter Section -->
     <div class="card shadow mb-4">
         <div class="card-body">
-            <form action="{{ route('admin.manageproduct.index') }}" method="GET" id="filterForm">
+            <form action="{{ route('manageproduct.index') }}" method="GET" id="filterForm">
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label for="search" class="form-label">Search</label>
