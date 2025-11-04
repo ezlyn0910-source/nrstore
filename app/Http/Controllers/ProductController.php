@@ -468,7 +468,6 @@ class ProductController extends Controller
 
     private function publicIndex(Request $request)
     {
-        // Existing public index logic
         $category = $request->get('category');
         // Get filter parameters - use singular 'brand' to match your current code
         $brand = $request->get('brand');
@@ -478,8 +477,19 @@ class ProductController extends Controller
         $minPrice = $request->get('min_price');
         $maxPrice = $request->get('max_price');
 
-        $query = Product::query()->where('is_active', true);
+        $query = Product::query();
 
+        //Search
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%")
+                ->orWhere('brand', 'like', "%{$search}%");
+            });
+        }
+
+        //Category
         if ($category) {
             $query->whereHas('category', function($q) use ($category) {
                 $q->where('slug', $category);
