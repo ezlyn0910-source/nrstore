@@ -52,32 +52,32 @@ Route::get('/products/{product}/slug', [ProductController::class, 'showBySlug'])
 Route::middleware(['auth'])->prefix('admin')->group(function () {
     // Dashboard
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-});
+    
+    // Admin Product Management Routes
+    Route::prefix('products')->name('manageproduct.')->group(function () {
+        Route::get('/', [ManageProductController::class, 'index'])->name('index');
+        Route::get('/create', [ManageProductController::class, 'create'])->name('create');
+        Route::post('/', [ManageProductController::class, 'store'])->name('store');
+        Route::get('/{product}', [ManageProductController::class, 'show'])->name('show');
+        Route::get('/{product}/edit', [ManageProductController::class, 'edit'])->name('edit');
+        Route::put('/{product}', [ManageProductController::class, 'update'])->name('update');
+        Route::delete('/{product}', [ManageProductController::class, 'destroy'])->name('destroy');
+        
+        // Additional product actions
+        Route::post('/{product}/toggle-featured', [ManageProductController::class, 'toggleFeatured'])->name('toggle-featured');
+        Route::post('/{product}/toggle-active', [ManageProductController::class, 'toggleActive'])->name('toggle-active');
+        Route::get('/search', [ManageProductController::class, 'search'])->name('search');
+        
+        // Bulk actions
+        Route::post('/bulk-action', [ManageProductController::class, 'bulkAction'])->name('bulk-action');
+        Route::put('/{product}/status', [ManageProductController::class, 'updateStatus'])->name('update-status');
+        Route::delete('/product-images/{image}', [ManageProductController::class, 'deleteImage'])->name('delete-image');
+    });
 
-// Admin Product Routes - Make sure these are properly grouped
-Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
-    Route::get('/products', [ProductController::class, 'index'])->name('manageproduct.index');
-    Route::get('/products/create', [ProductController::class, 'create'])->name('manageproduct.create');
-    Route::post('/products', [ProductController::class, 'store'])->name('manageproduct.store');
-    Route::get('/products/{product}', [ProductController::class, 'show'])->name('manageproduct.show');
-    Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('manageproduct.edit');
-    Route::put('/products/{product}', [ProductController::class, 'update'])->name('manageproduct.update');
-    Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('manageproduct.destroy');
-
-    // Bulk actions
-    Route::post('/products/bulk-action', [ProductController::class, 'bulkAction'])->name('products.bulk-action');
-    Route::put('/products/{product}/status', [ProductController::class, 'updateStatus'])->name('products.update-status');
-    Route::delete('/product-images/{image}', [ProductController::class, 'deleteImage'])->name('products.delete-image');
-});
-
-// Public Product Routes
-Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
-// Manageuser Routes
-Route::resource('manageuser', ManageUserController::class);
-
-// Additional manageuser routes
-Route::middleware(['auth'])->group(function () {
+    // Manageuser Routes
+    Route::resource('manageuser', ManageUserController::class);
+    
+    // Additional manageuser routes
     Route::prefix('manageuser')->group(function () {
         Route::post('/{manageuser}/suspend', [ManageUserController::class, 'suspend'])->name('manageuser.suspend');
         Route::post('/{manageuser}/activate', [ManageUserController::class, 'activate'])->name('manageuser.activate');
