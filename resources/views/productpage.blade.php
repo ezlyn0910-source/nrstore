@@ -273,7 +273,7 @@
     </section>
 
     <!-- Footer -->
-    <footer class="footer-minimal">
+    <footer class="footer-dark">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
@@ -837,12 +837,12 @@ function showProductPopup(product) {
 }
 
 /* Footer Styles - Matching Minimalist Theme */
-.footer-minimal {
-    background: var(--light-bone);
-    color: var(--dark-text);
+.footer-dark {
+    background: #1a1a1a;
+    color: #e5e7eb;
     padding: 3rem 0 1rem;
     margin-top: 4rem;
-    border-top: 1px solid var(--border-light);
+    border-top: 1px solid #374151;
 }
 
 .footer-content {
@@ -858,7 +858,7 @@ function showProductPopup(product) {
 }
 
 .footer-heading {
-    color: var(--primary-dark);
+    color: #ffffff;
     font-size: 1.1rem;
     font-weight: 600;
     margin-bottom: 1rem;
@@ -866,7 +866,7 @@ function showProductPopup(product) {
 }
 
 .footer-text {
-    color: var(--light-text);
+    color: #9ca3af;
     line-height: 1.6;
     margin-bottom: 1.5rem;
     font-size: 0.9rem;
@@ -883,18 +883,18 @@ function showProductPopup(product) {
     justify-content: center;
     width: 36px;
     height: 36px;
-    background: var(--white);
-    border: 1.5px solid var(--border-light);
+    background: #374151;
+    border: 1.5px solid #4b5563;
     border-radius: 8px;
-    color: var(--dark-text);
+    color: #e5e7eb;
     text-decoration: none;
     transition: all 0.3s ease;
 }
 
 .social-link:hover {
-    background: var(--primary-green);
-    border-color: var(--primary-green);
-    color: var(--white);
+    background: #10b981;
+    border-color: #10b981;
+    color: #ffffff;
     transform: translateY(-2px);
 }
 
@@ -909,7 +909,7 @@ function showProductPopup(product) {
 }
 
 .footer-link {
-    color: var(--light-text);
+    color: #9ca3af;
     text-decoration: none;
     font-size: 0.9rem;
     transition: all 0.2s ease;
@@ -918,7 +918,7 @@ function showProductPopup(product) {
 }
 
 .footer-link:hover {
-    color: var(--accent-gold);
+    color: #10b981;
     transform: translateX(5px);
 }
 
@@ -932,18 +932,18 @@ function showProductPopup(product) {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    color: var(--light-text);
+    color: #9ca3af;
     font-size: 0.9rem;
 }
 
 .contact-item i {
-    color: var(--accent-gold);
+    color: #10b981;
     width: 16px;
 }
 
 .footer-divider {
     height: 1px;
-    background: var(--border-light);
+    background: #374151;
     margin: 2rem 0 1.5rem;
 }
 
@@ -963,7 +963,7 @@ function showProductPopup(product) {
 }
 
 .footer-copyright p {
-    color: var(--light-text);
+    color: #9ca3af;
     font-size: 0.875rem;
     margin: 0;
 }
@@ -972,7 +972,7 @@ function showProductPopup(product) {
     display: flex;
     align-items: center;
     gap: 1rem;
-    color: var(--light-text);
+    color: #9ca3af;
     font-size: 0.875rem;
 }
 
@@ -983,12 +983,12 @@ function showProductPopup(product) {
 
 .payment-methods i {
     font-size: 1.5rem;
-    color: var(--light-text);
+    color: #9ca3af;
     transition: color 0.2s ease;
 }
 
 .payment-methods i:hover {
-    color: var(--accent-gold);
+    color: #10b981;
 }
 
 /* Filter Section Enhancements */
@@ -1211,7 +1211,7 @@ button:not(.search-button):not(.social-link):hover {
 }
 
 @media (max-width: 768px) {
-    .footer-minimal {
+    .footer-dark {
         padding: 2rem 0 1rem;
     }
     

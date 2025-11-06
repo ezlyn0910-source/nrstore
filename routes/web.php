@@ -13,10 +13,16 @@ use Illuminate\Support\Facades\Route;
 // Authentication Routes
 Auth::routes();
 
-// Public Routes
+// User Routes
+// Starter/Landing Page
 Route::get('/', function () {
+    return view('starter');
+})->name('starter');
+
+// Homepage
+Route::get('/homepage', function () {
     return view('homepage');
-});
+})->name('homepage');
 
 // Public Product Routes (for customers)
 // Public Product Routes
