@@ -3,11 +3,8 @@
 
 use App\Http\Controllers\ManageProductController;
 use App\Http\Controllers\ManageProductVariationController;
-use App\Http\Controllers\ManageUserController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\OrderController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ManageUserController;
 use App\Http\Controllers\ProductController;
@@ -33,7 +30,6 @@ Route::get('/homepage', function () {
 
 // Authentication Routes
 Auth::routes(['register' => true]); // Enable registration if needed
-})->name('homepage');
 
 // Public Product Routes (for customers)
 // Public Product Routes

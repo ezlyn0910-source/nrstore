@@ -46,11 +46,11 @@ class ManageProductController extends Controller
     public function publicIndex()
     {
         $products = Product::with(['category', 'images'])
-            ->active()
+             ->active()
             ->latest()
             ->paginate(12);
 
-        return view('products.index', compact('products'));
+        return view('manageproduct.index', compact('products'));
     }
 
     /**
@@ -63,7 +63,7 @@ class ManageProductController extends Controller
             ->where('slug', $slug)
             ->firstOrFail();
 
-        return view('products.show', compact('product'));
+        return view('manageproduct.show', compact('product'));
     }
 
     /**
@@ -72,7 +72,7 @@ class ManageProductController extends Controller
     public function showBySlug(Product $product)
     {
         $product->load(['category', 'images', 'variations']);
-        return view('products.show', compact('product'));
+        return view('manageproduct.show', compact('product'));
     }
 
     /**
@@ -115,7 +115,7 @@ class ManageProductController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.manageproduct.index')
+            return redirect()->route('manageproduct.index')
                 ->with('success', 'Product created successfully!');
 
         } catch (\Exception $e) {
@@ -138,7 +138,7 @@ class ManageProductController extends Controller
     public function show(Product $product)
     {
         $product->load(['category', 'images', 'variations']);
-        return view('admin.manageproduct.show', compact('product'));
+        return view('manageproduct.show', compact('product'));
     }
 
     /**
@@ -149,7 +149,7 @@ class ManageProductController extends Controller
         $categories = Category::all();
         $product->load(['images', 'variations']);
         
-        return view('admin.manageproduct.edit', compact('product', 'categories'));
+        return view('manageproduct.edit', compact('product', 'categories'));
     }
 
     /**
@@ -186,7 +186,7 @@ class ManageProductController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.manageproduct.index')
+            return redirect()->route('manageproduct.index')
                 ->with('success', 'Product updated successfully!');
 
         } catch (\Exception $e) {
@@ -214,7 +214,7 @@ class ManageProductController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.manageproduct.index')
+            return redirect()->route('manageproduct.index')
                 ->with('success', 'Product deleted successfully!');
 
         } catch (\Exception $e) {
@@ -534,7 +534,7 @@ class ManageProductController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('admin.manageproduct.index', compact('products'));
+        return view('manageproduct.index', compact('products'));
     }
 
     /**

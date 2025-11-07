@@ -14,7 +14,7 @@
                     <h3 class="card-title">Edit Product</h3>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('products.update', $product) }}" method="POST">
+                    <form action="{{ route('admin.manageproduct.update', $product) }}" method="POST">
                         @csrf
                         @method('PUT')
                         
@@ -80,7 +80,7 @@
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="{{ route('products.index') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                            <a href="{{ route('admin.manageproduct.index') }}" class="btn btn-secondary me-md-2">Cancel</a>
                             <button type="submit" class="btn btn-primary">Update Product</button>
                         </div>
                     </form>
