@@ -4,55 +4,98 @@
 <!-- Hero Slider Section -->
 <section class="hero-slider">
     <div class="slider-container">
-        <div class="slide active">
-            <div class="slide-content">
-                <div class="slide-buttons">
-                    <button class="btn-shop-now">Shop Now</button>
-                    <button class="btn-make-bid">Make a Bid</button>
-                </div>
-            </div>
-        </div>
+        <div class="slide active" style="background-image: url('/storage/images/banner1.png')"></div>
+        <div class="slide" style="background-image: url('/storage/images/banner2.jpg')"></div>
+        <div class="slide" style="background-image: url('/storage/images/banner3.jpg')"></div>
     </div>
     <div class="slider-indicators">
-        <span class="indicator active"></span>
-        <span class="indicator"></span>
-        <span class="indicator"></span>
+        <span class="indicator active" data-slide="0"></span>
+        <span class="indicator" data-slide="1"></span>
+        <span class="indicator" data-slide="2"></span>
     </div>
 </section>
 
 <!-- Categories Section -->
 <section class="categories-section">
     <div class="container">
+        <h2 class="section-title">Top Categories</h2>
         <div class="categories-grid">
             <div class="category-card">
-                <div class="category-image">
-                    <div class="image-placeholder">Microsoft</div>
+                <div class="category-content">
+                    <h3 class="category-name">Asus</h3>
+                    <p class="category-description">Premium gaming laptops, ROG series, and innovative computing solutions</p>
+                    <a href="#" class="explore-link">
+                        Explore category <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
-                <h3 class="category-name">Microsoft</h3>
+                <div class="category-image">
+                    <div class="image-placeholder">Asus Product</div>
+                </div>
             </div>
+
             <div class="category-card">
-                <div class="category-image">
-                    <div class="image-placeholder">Samsung</div>
+                <div class="category-content">
+                    <h3 class="category-name">Microsoft</h3>
+                    <p class="category-description">Surface devices, software, and enterprise solutions</p>
+                    <a href="#" class="explore-link">
+                        Explore category <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
-                <h3 class="category-name">Samsung</h3>
+                <div class="category-image">
+                    <div class="image-placeholder">Microsoft Product</div>
+                </div>
             </div>
+
             <div class="category-card">
-                <div class="category-image">
-                    <div class="image-placeholder">HP</div>
+                <div class="category-content">
+                    <h3 class="category-name">Dell</h3>
+                    <p class="category-description">XPS, Alienware, and reliable business computers</p>
+                    <a href="#" class="explore-link">
+                        Explore category <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
-                <h3 class="category-name">HP</h3>
+                <div class="category-image">
+                    <div class="image-placeholder">Dell Product</div>
+                </div>
             </div>
+
             <div class="category-card">
-                <div class="category-image">
-                    <div class="image-placeholder">Lenovo</div>
+                <div class="category-content">
+                    <h3 class="category-name">HP</h3>
+                    <p class="category-description">Spectre, Omen gaming, and professional workstations</p>
+                    <a href="#" class="explore-link">
+                        Explore category <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
-                <h3 class="category-name">Lenovo</h3>
+                <div class="category-image">
+                    <div class="image-placeholder">HP Product</div>
+                </div>
             </div>
+
             <div class="category-card">
-                <div class="category-image">
-                    <div class="image-placeholder">Dell</div>
+                <div class="category-content">
+                    <h3 class="category-name">Lenovo</h3>
+                    <p class="category-description">ThinkPad, Yoga, and Legion gaming series</p>
+                    <a href="#" class="explore-link">
+                        Explore category <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
-                <h3 class="category-name">Dell</h3>
+                <div class="category-image">
+                    <div class="image-placeholder">Lenovo Product</div>
+                </div>
+            </div>
+
+            <div class="category-card">
+                <div class="category-content">
+                    <h3 class="category-name">Acer</h3>
+                    <p class="category-description">Predator gaming, Swift ultrabooks, and affordable computing</p>
+                    <a href="#" class="explore-link">
+                        Explore category <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="category-image">
+                    <div class="image-placeholder">Acer Product</div>
+                </div>
             </div>
         </div>
     </div>
@@ -166,4 +209,68 @@
         </div>
     </div>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const slides = document.querySelectorAll('.slide');
+    const indicators = document.querySelectorAll('.indicator');
+    let currentSlide = 0;
+    let slideInterval;
+    
+    console.log('Slides found:', slides.length);
+    
+    function showSlide(index) {
+        console.log('Changing to slide:', index);
+        
+        // Hide all slides
+        slides.forEach(slide => {
+            slide.style.opacity = '0';
+            slide.style.zIndex = '1';
+        });
+        
+        // Remove active from all indicators
+        indicators.forEach(indicator => {
+            indicator.classList.remove('active');
+        });
+        
+        // Show current slide
+        if (slides[index]) {
+            slides[index].style.opacity = '1';
+            slides[index].style.zIndex = '2';
+        }
+        
+        // Activate current indicator
+        if (indicators[index]) {
+            indicators[index].classList.add('active');
+        }
+        
+        currentSlide = index;
+    }
+    
+    function nextSlide() {
+        let nextSlideIndex = (currentSlide + 1) % slides.length;
+        console.log('Auto advancing to slide:', nextSlideIndex);
+        showSlide(nextSlideIndex);
+    }
+    
+    // Add click events to indicators
+    indicators.forEach((indicator, index) => {
+        indicator.addEventListener('click', function() {
+            console.log('Indicator clicked, going to slide:', index);
+            clearInterval(slideInterval);
+            showSlide(index);
+            startAutoSlide();
+        });
+    });
+    
+    function startAutoSlide() {
+        slideInterval = setInterval(nextSlide, 5000);
+        console.log('Auto slide started');
+    }
+    
+    // Initialize - show first slide
+    showSlide(0);
+    startAutoSlide();
+});
+</script>
 @endsection

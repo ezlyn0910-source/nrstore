@@ -1,140 +1,72 @@
 <?php
-// Order.php
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
-
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Order extends Model
 {
     use HasFactory;
 
-    const STATUS_PENDING = 'pending';
-    const STATUS_PROCESSING = 'processing';
-    const STATUS_SHIPPED = 'shipped';
-    const STATUS_DELIVERED = 'delivered';
-    const STATUS_CANCELLED = 'cancelled';
-
     protected $fillable = [
         'user_id',
         'order_number',
-        'status',
-        'total_amount',
         'subtotal',
+        'shipping_cost',
         'tax_amount',
-        'shipping_amount',
-        'customer_email',
-        'customer_phone',
-        'shipping_address',
-        'billing_address',
-        'notes'
+        'discount_amount',
+        'total_amount',
+        'status',
+        'payment_method',
+        'payment_status',
+        'shipping_method',
+        'tracking_number',
+        'tracking_url',
+        'estimated_delivery',
+        'cancelled_at',
+        'cancel_reason',
+        'shipping_address_id',
+        'billing_address_id',
     ];
 
     protected $casts = [
-        'total_amount' => 'decimal:2',
         'subtotal' => 'decimal:2',
+        'shipping_cost' => 'decimal:2',
         'tax_amount' => 'decimal:2',
-        'shipping_amount' => 'decimal:2',
-        'shipping_address' => 'array',
-        'billing_address' => 'array'
+        'discount_amount' => 'decimal:2',
+        'total_amount' => 'decimal:2',
+        'estimated_delivery' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
-    protected $appends = [
-        'status_label',
-        'formatted_total',
-        'formatted_subtotal'
-    ];
-
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function items(): HasMany
+    public function items()
     {
         return $this->hasMany(OrderItem::class);
     }
 
-    /**
-     * Generate unique order number
-     */
-    protected static function boot()
+    public function statusHistory()
     {
-        parent::boot();
-
-        static::creating(function ($order) {
-            if (empty($order->order_number)) {
-                $order->order_number = 'ORD-' . date('Ymd') . '-' . strtoupper(Str::random(6));
-            }
-        });
+        return $this->hasMany(OrderStatusHistory::class)->orderBy('created_at', 'desc');
     }
 
-    /**
-     * Get status label
-     */
-    public function getStatusLabelAttribute()
+    public function shippingAddress()
     {
-        return ucfirst(str_replace('_', ' ', $this->status));
+        return $this->belongsTo(Address::class, 'shipping_address_id');
     }
 
-    /**
-     * Get formatted total
-     */
-    public function getFormattedTotalAttribute()
+    public function billingAddress()
     {
-        return 'RM ' . number_format($this->total_amount, 2);
+        return $this->belongsTo(Address::class, 'billing_address_id');
     }
 
-    /**
-     * Get formatted subtotal
-     */
-    public function getFormattedSubtotalAttribute()
+    public function reviews()
     {
-        return 'RM ' . number_format($this->subtotal, 2);
-    }
-
-    /**
-     * Check if order can be cancelled
-     */
-    public function canBeCancelled()
-    {
-        return in_array($this->status, [self::STATUS_PENDING, self::STATUS_PROCESSING]);
-    }
-
-    /**
-     * Calculate order totals
-     */
-    public function calculateTotals()
-    {
-        $subtotal = $this->items->sum(function ($item) {
-            return $item->quantity * $item->price;
-        });
-
-        $this->update([
-            'subtotal' => $subtotal,
-            'total_amount' => $subtotal + $this->tax_amount + $this->shipping_amount
-        ]);
-
-        return $this;
-    }
-
-    /**
-     * Scope for status
-     */
-    public function scopeStatus($query, $status)
-    {
-        return $query->where('status', $status);
-    }
-
-    /**
-     * Scope for user
-     */
-    public function scopeForUser($query, $userId)
-    {
-        return $query->where('user_id', $userId);
+        return $this->hasMany(Review::class);
     }
 }

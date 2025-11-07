@@ -1,5 +1,5 @@
 .product-page {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: #f9fafb;
 }
 
@@ -368,7 +368,8 @@
     margin-bottom: 1rem;
 }
 
-.footer-column p, .footer-column li {
+.footer-column p,
+.footer-column li {
     color: #d1d5db;
     font-size: 0.875rem;
     margin-bottom: 0.5rem;
