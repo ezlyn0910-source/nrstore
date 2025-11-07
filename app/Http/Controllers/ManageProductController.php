@@ -23,7 +23,21 @@ class ManageProductController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('manageproduct.index', compact('products'));
+        // Add these statistics
+        $totalProducts = Product::count();
+        $activeProducts = Product::where('is_active', true)->count();
+        $featuredProducts = Product::where('is_featured', true)->count();
+        $lowStockProducts = Product::where('stock_quantity', '<', 10)->count();
+        $categories = Category::all();
+
+        return view('manageproduct.index', compact(
+            'products', 
+            'totalProducts', 
+            'activeProducts', 
+            'featuredProducts', 
+            'lowStockProducts',
+            'categories'
+        ));
     }
 
     /**

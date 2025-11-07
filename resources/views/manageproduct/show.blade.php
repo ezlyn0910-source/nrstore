@@ -93,7 +93,7 @@
                     <div class="row mt-4">
                         <div class="col-12">
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline">
+                                <form action="{{ route('admin.manageproduct.destroy', $product) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger" 

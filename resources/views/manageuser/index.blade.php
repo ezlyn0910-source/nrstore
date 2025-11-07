@@ -31,7 +31,7 @@
 
     <!-- Filters and Search -->
     <div class="filter-card">
-        <form action="{{ route('manageuser.index') }}" method="GET" class="filter-form row g-3">
+        <form action="{{ route('admin.manageuser.index') }}" method="GET" class="filter-form row g-3">
             <div class="col-md-4">
                 <input type="text" name="search" class="form-control" placeholder="Search name or email..." 
                        value="{{ request('search') }}">
@@ -45,7 +45,7 @@
             </div>
             <div class="col-md-3">
                 <button type="submit" class="btn btn-primary">Filter</button>
-                <a href="{{ route('manageuser.index') }}" class="btn btn-secondary">Reset</a>
+                <a href="{{ route('admin.manageuser.index') }}" class="btn btn-secondary">Reset</a>
             </div>
         </form>
     </div>
@@ -61,7 +61,7 @@
                         Bulk Actions
                     </button>
                     <ul class="dropdown-menu">
-                        <form action="{{ route('manageuser.bulk-action') }}" method="POST" id="bulkForm">
+                        <form action="{{ route('admin.manageuser.bulk-action') }}" method="POST" id="bulkForm">
                             @csrf
                             <input type="hidden" name="user_ids" id="bulkUserIds">
                             <li><button type="submit" name="action" value="activate" class="dropdown-item">
@@ -121,14 +121,14 @@
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="{{ route('manageuser.show', $user) }}" class="btn btn-info btn-sm action-btn" title="View Details">
+                                    <a href="{{ route('admin.manageuser.show', $user) }}" class="btn btn-info btn-sm action-btn" title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('manageuser.edit', $user) }}" class="btn btn-primary btn-sm action-btn" title="Edit User">
+                                    <a href="{{ route('admin.manageuser.edit', $user) }}" class="btn btn-primary btn-sm action-btn" title="Edit User">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     @if($user->status === 'active')
-                                    <form action="{{ route('manageuser.suspend', $user) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('admin.manageuser.suspend', $user) }}" method="POST" class="d-inline">
                                         @csrf
                                         <button type="submit" class="btn btn-warning btn-sm action-btn" title="Suspend User" 
                                                 onclick="return confirm('Are you sure you want to suspend this user?')">
@@ -136,7 +136,7 @@
                                         </button>
                                     </form>
                                     @else
-                                    <form action="{{ route('manageuser.activate', $user) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('admin.manageuser.activate', $user) }}" method="POST" class="d-inline">
                                         @csrf
                                         <button type="submit" class="btn btn-success btn-sm action-btn" title="Activate User">
                                             <i class="fas fa-play"></i>
@@ -190,7 +190,7 @@
                             <td>{{ $user->created_at->format('M d, Y') }}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="{{ route('manageuser.show', $user) }}" class="btn btn-info btn-sm action-btn" title="View Details">
+                                    <a href="{{ route('admin.manageuser.show', $user) }}" class="btn btn-info btn-sm action-btn" title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>

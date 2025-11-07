@@ -1,58 +1,211 @@
 <?php
+// routes/web.php
 
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ManageProductController;
+use App\Http\Controllers\ManageProductVariationController;
 use App\Http\Controllers\ManageUserController;
-use App\Http\Controllers\ManageManageProductController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\HomeController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Authentication Routes
-Auth::routes();
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
 
 // Public Routes
 Route::get('/', function () {
     return view('homepage');
-});
+})->name('home');
+
+// Authentication Routes
+Auth::routes(['register' => true]); // Enable registration if needed
 
 // Public Product Routes (for customers)
-Route::get('/products', [ManageProductController::class, 'publicIndex'])->name('products.index');
-Route::get('/products/{slug}', [ManageProductController::class, 'publicShow'])->name('products.show');
-Route::get('/product/{product}/slug', [ManageProductController::class, 'showBySlug'])->name('products.show.slug');
+Route::controller(ProductController::class)->group(function () {
+    Route::get('/products', 'index')->name('products.index');
+    Route::get('/products/featured', 'featured')->name('products.featured');
+    Route::get('/products/recommended', 'recommended')->name('products.recommended');
+    Route::get('/products/category/{slug}', 'category')->name('products.category');
+    Route::get('/products/{slug}', 'show')->name('products.show');
+    Route::get('/product/search', 'quickSearch')->name('products.quick-search');
+});
+
+// Cart Routes (for customers)
+Route::controller(CartController::class)->group(function () {
+    Route::get('/cart', 'index')->name('cart.index');
+    Route::post('/cart/add', 'add')->name('cart.add');
+    Route::put('/cart/update/{cartItem}', 'update')->name('cart.update');
+    Route::delete('/cart/remove/{cartItem}', 'remove')->name('cart.remove');
+    Route::post('/cart/clear', 'clear')->name('cart.clear');
+    Route::get('/cart/count', 'getCartCount')->name('cart.count');
+});
+
+// Checkout & Order Routes (for customers)
+Route::middleware(['auth'])->group(function () {
+    Route::controller(OrderController::class)->group(function () {
+        Route::get('/checkout', 'checkout')->name('checkout');
+        Route::post('/checkout/process', 'processCheckout')->name('checkout.process');
+        Route::get('/orders', 'index')->name('orders.index');
+        Route::get('/orders/{order}', 'show')->name('orders.show');
+        Route::post('/orders/{order}/cancel', 'cancel')->name('orders.cancel');
+    });
+});
 
 // Admin Routes
-Route::middleware(['auth'])->prefix('admin')->group(function () {
-    // Dashboard
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    // Admin Dashboard
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     
     // Admin Product Management Routes
-    Route::prefix('products')->name('manageproduct.')->group(function () {
-        Route::get('/', [ManageProductController::class, 'index'])->name('index');
-        Route::get('/create', [ManageProductController::class, 'create'])->name('create');
-        Route::post('/', [ManageProductController::class, 'store'])->name('store');
-        Route::get('/{product}', [ManageProductController::class, 'show'])->name('show');
-        Route::get('/{product}/edit', [ManageProductController::class, 'edit'])->name('edit');
-        Route::put('/{product}', [ManageProductController::class, 'update'])->name('update');
-        Route::delete('/{product}', [ManageProductController::class, 'destroy'])->name('destroy');
+    Route::prefix('products')->name('manageproduct.')->controller(ManageProductController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{product}', 'show')->name('show');
+        Route::get('/{product}/edit', 'edit')->name('edit');
+        Route::put('/{product}', 'update')->name('update');
+        Route::delete('/{product}', 'destroy')->name('destroy');
         
         // Additional product actions
-        Route::post('/{product}/toggle-featured', [ManageProductController::class, 'toggleFeatured'])->name('toggle-featured');
-        Route::post('/{product}/toggle-active', [ManageProductController::class, 'toggleActive'])->name('toggle-active');
-        Route::get('/search', [ManageProductController::class, 'search'])->name('search');
+        Route::post('/{product}/toggle-featured', 'toggleFeatured')->name('toggle-featured');
+        Route::post('/{product}/toggle-active', 'toggleActive')->name('toggle-active');
+        Route::get('/search', 'search')->name('search');
         
         // Bulk actions
-        Route::post('/bulk-action', [ManageProductController::class, 'bulkAction'])->name('bulk-action');
-        Route::put('/{product}/status', [ManageProductController::class, 'updateStatus'])->name('update-status');
-        Route::delete('/product-images/{image}', [ManageProductController::class, 'deleteImage'])->name('delete-image');
+        Route::post('/bulkAction', 'bulkAction')->name('bulkAction');
+        Route::put('/{product}/status', 'updateStatus')->name('update-status');
+        Route::delete('/product-images/{image}', 'deleteImage')->name('delete-image');
     });
 
-    // Manageuser Routes
-    Route::resource('manageuser', ManageUserController::class);
-    
-    // Additional manageuser routes
-    Route::prefix('manageuser')->group(function () {
-        Route::post('/{manageuser}/suspend', [ManageUserController::class, 'suspend'])->name('manageuser.suspend');
-        Route::post('/{manageuser}/activate', [ManageUserController::class, 'activate'])->name('manageuser.activate');
-        Route::post('/bulk-action', [ManageUserController::class, 'bulkAction'])->name('manageuser.bulk-action');
+    // Product Variations Management
+    Route::prefix('products/{product}/variations')->name('variations.')->controller(ManageProductVariationController::class)->group(function () {
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{variation}/edit', 'edit')->name('edit');
+        Route::put('/{variation}', 'update')->name('update');
+        Route::delete('/{variation}', 'destroy')->name('destroy');
+        Route::post('/{variation}/toggle-active', 'toggleActive')->name('toggle-active');
     });
+
+    // User Management Routes
+    Route::prefix('users')->name('manageuser.')->controller(ManageUserController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{user}', 'show')->name('show');
+        Route::get('/{user}/edit', 'edit')->name('edit');
+        Route::put('/{user}', 'update')->name('update');
+        Route::delete('/{user}', 'destroy')->name('destroy');
+        
+        // Additional user actions
+        Route::post('/{user}/suspend', 'suspend')->name('suspend');
+        Route::post('/{user}/activate', 'activate')->name('activate');
+        Route::post('/bulk-action', 'bulkAction')->name('bulk-action');
+    });
+
+    // Order Management Routes (Admin)
+    Route::prefix('orders')->name('orders.')->controller(\App\Http\Controllers\Admin\OrderController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{order}', 'show')->name('show');
+        Route::put('/{order}/status', 'updateStatus')->name('update-status');
+        Route::put('/{order}/update', 'update')->name('update');
+        Route::delete('/{order}', 'destroy')->name('destroy');
+        Route::post('/bulk-action', 'bulkAction')->name('bulk-action');
+    });
+
+    // Category Management Routes
+    Route::prefix('categories')->name('categories.')->controller(\App\Http\Controllers\Admin\CategoryController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{category}/edit', 'edit')->name('edit');
+        Route::put('/{category}', 'update')->name('update');
+        Route::delete('/{category}', 'destroy')->name('destroy');
+    });
+
+    // Reports & Analytics
+    Route::prefix('reports')->name('reports.')->controller(\App\Http\Controllers\Admin\ReportController::class)->group(function () {
+        Route::get('/sales', 'sales')->name('sales');
+        Route::get('/products', 'products')->name('products');
+        Route::get('/users', 'users')->name('users');
+        Route::get('/inventory', 'inventory')->name('inventory');
+    });
+});
+
+// User Profile Routes (for authenticated users)
+Route::middleware(['auth'])->group(function () {
+    Route::prefix('profile')->name('profile.')->controller(\App\Http\Controllers\ProfileController::class)->group(function () {
+        Route::get('/', 'edit')->name('edit');
+        Route::put('/', 'update')->name('update');
+        Route::put('/password', 'updatePassword')->name('password.update');
+        Route::get('/orders', 'orders')->name('orders');
+        Route::get('/addresses', 'addresses')->name('addresses');
+        Route::post('/addresses', 'storeAddress')->name('addresses.store');
+        Route::put('/addresses/{address}', 'updateAddress')->name('addresses.update');
+        Route::delete('/addresses/{address}', 'deleteAddress')->name('addresses.delete');
+    });
+});
+
+// Wishlist Routes (for authenticated users)
+Route::middleware(['auth'])->controller(\App\Http\Controllers\WishlistController::class)->group(function () {
+    Route::get('/wishlist', 'index')->name('wishlist.index');
+    Route::post('/wishlist/add/{product}', 'add')->name('wishlist.add');
+    Route::delete('/wishlist/remove/{wishlistItem}', 'remove')->name('wishlist.remove');
+    Route::delete('/wishlist/clear', 'clear')->name('wishlist.clear');
+});
+
+// Review Routes (for authenticated users who purchased)
+Route::middleware(['auth'])->controller(\App\Http\Controllers\ReviewController::class)->group(function () {
+    Route::post('/reviews/{product}', 'store')->name('reviews.store');
+    Route::put('/reviews/{review}', 'update')->name('reviews.update');
+    Route::delete('/reviews/{review}', 'destroy')->name('reviews.destroy');
+    Route::get('/reviews/{product}/create', 'create')->name('reviews.create');
+    Route::get('/reviews/{review}/edit', 'edit')->name('reviews.edit');
+});
+
+// Static Pages
+Route::get('/about', function () {
+    return view('pages.about');
+})->name('about');
+
+Route::get('/contact', function () {
+    return view('pages.contact');
+})->name('contact');
+
+Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'store'])->name('contact.store');
+
+Route::get('/faq', function () {
+    return view('pages.faq');
+})->name('faq');
+
+Route::get('/shipping-info', function () {
+    return view('pages.shipping');
+})->name('shipping.info');
+
+Route::get('/return-policy', function () {
+    return view('pages.returns');
+})->name('return.policy');
+
+Route::get('/privacy-policy', function () {
+    return view('pages.privacy');
+})->name('privacy.policy');
+
+Route::get('/terms-conditions', function () {
+    return view('pages.terms');
+})->name('terms.conditions');
+
+// Fallback Route (404 Page)
+Route::fallback(function () {
+    return view('errors.404');
 });
