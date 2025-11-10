@@ -111,86 +111,6 @@
             </div>
         </div>
     </section>
-
-    <!-- Footer -->
-    <footer class="footer-minimal">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3 class="footer-heading">About NR Store</h3>
-                    <p class="footer-text">Your trusted partner for quality laptops and computing solutions. We provide the latest technology with exceptional service.</p>
-                    <div class="footer-social">
-                        <a href="#" class="social-link">
-                            <i class="fab fa-facebook-f"></i>
-                        </a>
-                        <a href="#" class="social-link">
-                            <i class="fab fa-twitter"></i>
-                        </a>
-                        <a href="#" class="social-link">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <a href="#" class="social-link">
-                            <i class="fab fa-linkedin-in"></i>
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="footer-section">
-                    <h3 class="footer-heading">Quick Links</h3>
-                    <ul class="footer-links">
-                        <li><a href="{{ url('/') }}" class="footer-link">Home</a></li>
-                        <li><a href="{{ url('/products') }}" class="footer-link">Products</a></li>
-                        <li><a href="{{ url('/bid') }}" class="footer-link">Bid</a></li>
-                        <li><a href="{{ url('/orders') }}" class="footer-link">Orders</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-section">
-                    <h3 class="footer-heading">Customer Service</h3>
-                    <ul class="footer-links">
-                        <li><a href="#" class="footer-link">Shipping Information</a></li>
-                        <li><a href="#" class="footer-link">Returns & Refunds</a></li>
-                        <li><a href="#" class="footer-link">Privacy Policy</a></li>
-                        <li><a href="#" class="footer-link">Terms & Conditions</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-section">
-                    <h3 class="footer-heading">Contact Info</h3>
-                    <div class="contact-info">
-                        <div class="contact-item">
-                            <i class="fas fa-envelope"></i>
-                            <span>info@nrstore.com</span>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fas fa-phone"></i>
-                            <span>+1 234 567 890</span>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>123 Tech Street, Digital City</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <div class="footer-divider"></div>
-                <div class="footer-copyright">
-                    <p>&copy; 2024 NR Store. All rights reserved.</p>
-                    <div class="footer-payment">
-                        <span>We accept:</span>
-                        <div class="payment-methods">
-                            <i class="fab fa-cc-visa"></i>
-                            <i class="fab fa-cc-mastercard"></i>
-                            <i class="fab fa-cc-paypal"></i>
-                            <i class="fab fa-cc-apple-pay"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
 </div>
 
 <!-- Order Details Modal -->
@@ -260,7 +180,120 @@ function loadOrderDetails(orderId) {
 </script>
 
 <style>
-/* Additional CSS for the new layout */
+/* Guest Empty State Styles */
+.guest-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    text-align: center;
+    padding: 3rem 2rem;
+}
+
+.guest-empty-icon {
+    font-size: 4rem;
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+    opacity: 0.7;
+}
+
+.guest-empty-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--dark-text);
+    margin-bottom: 1rem;
+}
+
+.guest-empty-description {
+    color: var(--light-text);
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    max-width: 400px;
+    line-height: 1.6;
+}
+
+.guest-auth-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.guest-btn {
+    padding: 0.75rem 2rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 2px solid transparent;
+}
+
+.guest-btn-login {
+    background: var(--primary-dark);
+    color: var(--white);
+    border-color: var(--primary-dark);
+}
+
+.guest-btn-login:hover {
+    background: var(--primary-green);
+    border-color: var(--primary-green);
+    transform: translateY(-2px);
+}
+
+.guest-btn-register {
+    background: transparent;
+    color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.guest-btn-register:hover {
+    background: var(--primary-dark);
+    color: var(--white);
+    transform: translateY(-2px);
+}
+
+.guest-shopping-option {
+    text-align: center;
+}
+
+.guest-shopping-option p {
+    color: var(--light-text);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.guest-shopping-link {
+    color: var(--accent-gold);
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.guest-shopping-link:hover {
+    color: var(--primary-green);
+    gap: 0.75rem;
+}
+
+/* Use CSS variables from home.css */
+:root {
+    --primary-dark: #1a2412;
+    --primary-green: #2d4a35;
+    --accent-gold: #daa112;
+    --light-bone: #f8f9fa;
+    --dark-text: #1a2412;
+    --light-text: #6b7c72;
+    --white: #ffffff;
+    --border-light: #e9ecef;
+}
+
 .product-name-specs {
     display: flex;
     justify-content: space-between;
@@ -352,163 +385,22 @@ function loadOrderDetails(orderId) {
     padding: 0.5rem 0 !important;
 }
 
-/* Footer Styles */
-.footer-minimal {
-    background: #f8f9fa;
-    color: #1f2937;
-    padding: 3rem 0 1rem;
-    margin-top: 4rem;
-    border-top: 1px solid #e5e7eb;
-}
-
-.footer-content {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1.5fr;
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.footer-section {
-    display: flex;
-    flex-direction: column;
-}
-
-.footer-heading {
-    color: #1f2937;
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    letter-spacing: -0.5px;
-}
-
-.footer-text {
-    color: #6b7280;
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
-    font-size: 0.9rem;
-}
-
-.footer-social {
-    display: flex;
-    gap: 0.75rem;
-}
-
-.social-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    background: white;
-    border: 1.5px solid #e5e7eb;
-    border-radius: 8px;
-    color: #1f2937;
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
-
-.social-link:hover {
-    background: #10b981;
-    border-color: #10b981;
-    color: white;
-    transform: translateY(-2px);
-}
-
-.footer-links {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.footer-links li {
-    margin-bottom: 0.75rem;
-}
-
-.footer-link {
-    color: #6b7280;
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-}
-
-.footer-link:hover {
-    color: #d97706;
-    transform: translateX(5px);
-}
-
-.contact-info {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.contact-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    color: #6b7280;
-    font-size: 0.9rem;
-}
-
-.contact-item i {
-    color: #d97706;
-    width: 16px;
-}
-
-.footer-divider {
-    height: 1px;
-    background: #e5e7eb;
-    margin: 2rem 0 1.5rem;
-}
-
-.footer-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.footer-copyright {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-
-.footer-copyright p {
-    color: #6b7280;
-    font-size: 0.875rem;
-    margin: 0;
-}
-
-.footer-payment {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    color: #6b7280;
-    font-size: 0.875rem;
-}
-
-.payment-methods {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.payment-methods i {
-    font-size: 1.5rem;
-    color: #6b7280;
-    transition: color 0.2s ease;
-}
-
-.payment-methods i:hover {
-    color: #d97706;
-}
-
 /* Responsive design */
 @media (max-width: 768px) {
+    .guest-auth-buttons {
+        flex-direction: column;
+        width: 100%;
+        max-width: 250px;
+    }
+    
+    .guest-btn {
+        justify-content: center;
+    }
+    
+    .guest-empty-state {
+        padding: 2rem 1rem;
+    }
+
     .product-name-specs {
         flex-direction: column;
         gap: 0.5rem;
@@ -521,39 +413,7 @@ function loadOrderDetails(orderId) {
     .specs-order-details-btn {
         align-self: flex-end;
     }
-
-    .footer-content {
-        grid-template-columns: 1fr 1fr;
-        gap: 2rem;
-    }
-    
-    .footer-copyright {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .footer-payment {
-        justify-content: center;
-    }
 }
 
-@media (max-width: 576px) {
-    .footer-content {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
-    
-    .footer-social {
-        justify-content: center;
-    }
-    
-    .footer-heading {
-        text-align: center;
-    }
-    
-    .footer-text {
-        text-align: center;
-    }
-}
 </style>
 @endsection

@@ -19,11 +19,11 @@
     <!-- Scripts -->
     @vite([
         'resources/sass/app.scss', 
-        'resources/css/home.css',  {{-- Global styles only --}}
+        'resources/css/home.css',  {{-- Global header/footer styles for ALL pages --}}
         'resources/js/app.js'
     ])
 
-    @yield('styles') {{-- Page-specific styles --}}
+    @yield('styles') {{-- Page-specific styles only --}}
 </head>
 <body>
     <div id="app">
@@ -148,11 +148,11 @@
                             <div class="contact-info">
                                 <div class="contact-item">
                                     <i class="fas fa-map-marker-alt"></i>
-                                    <span>123 Tech Street, Digital City</span>
+                                    <span>Lot 5-34, Imbi Plaza, 28, Jalan Imbi, Bukit Bintang, 55100 Kuala Lumpur</span>
                                 </div>
                                 <div class="contact-item">
                                     <i class="fas fa-phone"></i>
-                                    <span>+1 (555) 123-4567</span>
+                                    <span>+60 12 316 2006</span>
                                 </div>
                                 <div class="contact-item">
                                     <i class="fas fa-envelope"></i>
@@ -166,7 +166,7 @@
                     
                     <div class="footer-bottom">
                         <div class="footer-copyright">
-                            <p>&copy; 2024 NR INTELLITECH. All rights reserved.</p>
+                            <p>&copy; 2024 TECHZONE. All rights reserved.</p>
                             <div class="footer-payment">
                                 <span>We accept:</span>
                                 <div class="payment-methods">

@@ -84,8 +84,6 @@ Route::middleware(['auth'])->group(function () {
     Route::controller(OrderController::class)->group(function () {
         Route::get('/checkout', 'checkout')->name('checkout');
         Route::post('/checkout/process', 'processCheckout')->name('checkout.process');
-        Route::get('/orders', 'index')->name('orders.index');
-        Route::get('/orders/{order}', 'show')->name('orders.show');
         Route::post('/orders/{order}/cancel', 'cancel')->name('orders.cancel');
     });
 });
