@@ -1,12 +1,10 @@
 @extends('layouts.app')
 
 @section('styles')
-    @vite(['resources/sass/app.scss', 'resources/css/productpage.css', 'resources/js/app.js'])
+    @vite('resources/css/productpage.css')
 @endsection
 
 @section('content')
-<div class="product-page">
-
 <div class="product-page">
     <!-- Hero Section with Overlap -->
     <section class="hero-section" style="position: relative; height: 450px; background-color: #1f2937; overflow: hidden; margin-bottom: 0;">
@@ -271,86 +269,6 @@
             </div>
         </div>
     </section>
-
-    <!-- Footer -->
-    <footer class="footer-dark">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3 class="footer-heading">About NR Store</h3>
-                    <p class="footer-text">Your trusted partner for quality laptops and computing solutions. We provide the latest technology with exceptional service.</p>
-                    <div class="footer-social">
-                        <a href="#" class="social-link">
-                            <i class="fab fa-facebook-f"></i>
-                        </a>
-                        <a href="#" class="social-link">
-                            <i class="fab fa-twitter"></i>
-                        </a>
-                        <a href="#" class="social-link">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <a href="#" class="social-link">
-                            <i class="fab fa-linkedin-in"></i>
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="footer-section">
-                    <h3 class="footer-heading">Quick Links</h3>
-                    <ul class="footer-links">
-                        <li><a href="{{ url('/') }}" class="footer-link">Home</a></li>
-                        <li><a href="{{ url('/products') }}" class="footer-link">Products</a></li>
-                        <li><a href="{{ url('/bid') }}" class="footer-link">Bid</a></li>
-                        <li><a href="{{ url('/orders') }}" class="footer-link">Orders</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-section">
-                    <h3 class="footer-heading">Customer Service</h3>
-                    <ul class="footer-links">
-                        <li><a href="#" class="footer-link">Shipping Information</a></li>
-                        <li><a href="#" class="footer-link">Returns & Refunds</a></li>
-                        <li><a href="#" class="footer-link">Privacy Policy</a></li>
-                        <li><a href="#" class="footer-link">Terms & Conditions</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-section">
-                    <h3 class="footer-heading">Contact Info</h3>
-                    <div class="contact-info">
-                        <div class="contact-item">
-                            <i class="fas fa-envelope"></i>
-                            <span>info@nrstore.com</span>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fas fa-phone"></i>
-                            <span>+1 234 567 890</span>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>123 Tech Street, Digital City</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <div class="footer-divider"></div>
-                <div class="footer-copyright">
-                    <p>&copy; 2024 NR Store. All rights reserved.</p>
-                    <div class="footer-payment">
-                        <span>We accept:</span>
-                        <div class="payment-methods">
-                            <i class="fab fa-cc-visa"></i>
-                            <i class="fab fa-cc-mastercard"></i>
-                            <i class="fab fa-cc-paypal"></i>
-                            <i class="fab fa-cc-apple-pay"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
 </div>
 
 <!-- JavaScript -->

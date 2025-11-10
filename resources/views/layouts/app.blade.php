@@ -17,24 +17,26 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <!-- Scripts -->
-    @vite(['resources/sass/app.scss', 'resources/css/home.css', 'resources/css/homepage.css', 'resources/js/app.js'])
+    @vite([
+        'resources/sass/app.scss', 
+        'resources/css/home.css',  {{-- Global styles only --}}
+        'resources/js/app.js'
+    ])
 
-    @yield('styles')
+    @yield('styles') {{-- Page-specific styles --}}
 </head>
 <body>
     <div id="app">
         @if (!request()->is('login') && !request()->is('register'))
-        <!-- New Two-Header Design -->
-        <header class="main-header">
+            <!-- Global Header (from home.css) -->
             <!-- First Header -->
             <div class="header-top">
                 <div class="container">
                     <div class="header-top-content">
-                        <!-- Left Section -->
                         <div class="header-left">
                             <div class="language-dropdown">
                                 <button class="language-btn">
-                                    English <i class="fas fa-chevron-down"></i>
+                                    EN <i class="fas fa-chevron-down"></i>
                                 </button>
                                 <div class="dropdown-content">
                                     <a href="#" class="dropdown-item">English</a>
@@ -42,41 +44,20 @@
                                 </div>
                             </div>
                             <div class="divider"></div>
-                            <span class="warranty-text">Warranty 3 Months for Every Product Purchase</span>
+                            <div class="warranty-text">3 Months Warranty For All Products</div>
                         </div>
-
-                        <!-- Right Section -->
                         <div class="header-right">
-                            @guest
-                                @if (Route::has('login') && Route::has('register'))
-                                    <div class="auth-links">
-                                        <a href="{{ route('register') }}" class="auth-link">
-                                            <i class="fas fa-user-plus"></i>
-                                            <span>Sign Up</span>
-                                        </a>
-                                        <div class="auth-divider"></div>
-                                        <a href="{{ route('login') }}" class="auth-link">
-                                            <i class="fas fa-sign-in-alt"></i>
-                                            <span>Login</span>
-                                        </a>
-                                    </div>
-                                @endif
-                            @else
-                                <div class="user-menu">
-                                    <a href="#" class="header-link">
-                                        <i class="fas fa-user"></i>
-                                        <span>My Account</span>
-                                    </a>
-                                    <a href="#" class="header-link">
-                                        <i class="fas fa-shopping-cart"></i>
-                                        <span>Cart</span>
-                                    </a>
-                                    <a href="#" class="header-link">
-                                        <i class="fas fa-heart"></i>
-                                        <span>Favorites</span>
-                                    </a>
-                                </div>
-                            @endguest
+                            <div class="auth-links">
+                                <a href="#" class="auth-link">
+                                    <i class="fas fa-user"></i>
+                                    <span>Sign In</span>
+                                </a>
+                                <div class="auth-divider"></div>
+                                <a href="#" class="auth-link">
+                                    <i class="fas fa-user-plus"></i>
+                                    <span>Register</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -86,42 +67,120 @@
             <div class="header-bottom">
                 <div class="container">
                     <div class="header-bottom-content">
-                        <!-- Left Section -->
-                        <div class="header-left">
-                            <div class="logo">
-                                <a href="{{ url('/') }}" class="logo-link">NRStore</a>
-                            </div>
-                            <nav class="main-nav">
-                                <a href="{{ url('/') }}" class="nav-link">Home</a>
-                                <a href="{{ url('/products') }}" class="nav-link">Products</a>
-                                <a href="{{ url('/orders') }}" class="nav-link">Order</a>
-                                <a href="{{ url('/bid') }}" class="nav-link bid-link">
-                                    <i class="fas fa-gavel"></i>
-                                    Bid
-                                </a>
-                            </nav>
-                        </div>
-
-                        <!-- Right Section -->
-                        <div class="header-right">
-                            <div class="search-container">
-                                <form action="{{ url('/search') }}" method="GET" class="search-form">
-                                    <input type="text" name="q" placeholder="Search products..." class="search-input">
-                                    <button type="submit" class="search-btn">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                </form>
-                            </div>
+                        <a href="/" class="logo-link">NR INTELLITECH</a>
+                        
+                        <nav class="main-nav">
+                            <a href="/" class="nav-link">Home</a>
+                            <a href="/products" class="nav-link">Products</a>
+                            <a href="/orders" class="nav-link">Order</a>
+                            <a href="/bid" class="nav-link bid-link">
+                                <i class="fas fa-gavel"></i>
+                                <span>Bid Now</span>
+                            </a>
+                        </nav>
+                        
+                        <div class="search-container">
+                            <form class="search-form">
+                                <input type="text" class="search-input" placeholder="Search products...">
+                                <button type="submit" class="search-btn">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
-        </header>
         @endif
 
         <main>
             @yield('content')
         </main>
+
+        <!-- Global Footer -->
+        @if (!request()->is('login') && !request()->is('register'))
+            <footer class="footer-dark">
+                <div class="container">
+                    <div class="footer-content">
+                        <div class="footer-section">
+                            <h3 class="footer-heading">NR INTELLITECH</h3>
+                            <p class="footer-text">
+                                Your trusted partner for premium tech products. We offer the latest in technology with guaranteed quality and exceptional customer service.
+                            </p>
+                            <div class="footer-social">
+                                <a href="#" class="social-link">
+                                    <i class="fab fa-facebook-f"></i>
+                                </a>
+                                <a href="#" class="social-link">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="#" class="social-link">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                                <a href="#" class="social-link">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="footer-section">
+                            <h3 class="footer-heading">Quick Links</h3>
+                            <ul class="footer-links">
+                                <li><a href="/" class="footer-link">Home</a></li>
+                                <li><a href="/products" class="footer-link">Products</a></li>
+                                <li><a href="/orders" class="footer-link">Order</a></li>
+                                <li><a href="/bid" class="footer-link">Bid Now</a></li>
+                            </ul>
+                        </div>
+                        
+                        <div class="footer-section">
+                            <h3 class="footer-heading">Customer Service</h3>
+                            <ul class="footer-links">
+                                <li><a href="#" class="footer-link">Shipping Info</a></li>
+                                <li><a href="#" class="footer-link">Returns</a></li>
+                                <li><a href="#" class="footer-link">Warranty</a></li>
+                                <li><a href="#" class="footer-link">FAQ</a></li>
+                                <li><a href="#" class="footer-link">Support</a></li>
+                            </ul>
+                        </div>
+                        
+                        <div class="footer-section">
+                            <h3 class="footer-heading">Contact Info</h3>
+                            <div class="contact-info">
+                                <div class="contact-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>123 Tech Street, Digital City</span>
+                                </div>
+                                <div class="contact-item">
+                                    <i class="fas fa-phone"></i>
+                                    <span>+1 (555) 123-4567</span>
+                                </div>
+                                <div class="contact-item">
+                                    <i class="fas fa-envelope"></i>
+                                    <span>nrintellitech@gmail.com</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="footer-divider"></div>
+                    
+                    <div class="footer-bottom">
+                        <div class="footer-copyright">
+                            <p>&copy; 2024 NR INTELLITECH. All rights reserved.</p>
+                            <div class="footer-payment">
+                                <span>We accept:</span>
+                                <div class="payment-methods">
+                                    <i class="fab fa-cc-visa"></i>
+                                    <i class="fab fa-cc-mastercard"></i>
+                                    <i class="fab fa-cc-paypal"></i>
+                                    <i class="fab fa-cc-apple-pay"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        @endif
     </div>
 
     @stack('scripts')

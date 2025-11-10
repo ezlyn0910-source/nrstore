@@ -21,19 +21,18 @@ Auth::routes();
 // User Routes
 // Starter/Landing Page
 Route::get('/', function () {
-    return view('starter');
-})->name('starter');
+    return view('homepage');
+})->name('home');
 
 // Homepage
 Route::get('/homepage', function () {
     return view('homepage');
-})->name('home');
+})->name('homepage');
 
 // Authentication Routes
 Auth::routes(['register' => true]); // Enable registration if needed
 
 // Public Product Routes (for customers)
-// Public Product Routes
 Route::get('/products', [ProductController::class, 'index'])->name('productpage');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products/{product}/slug', [ProductController::class, 'showBySlug'])->name('products.show.slug');

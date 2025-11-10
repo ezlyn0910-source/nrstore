@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('styles')
+    @vite('resources/css/homepage.css')
+@endsection
+
 @section('content')
 <!-- Hero Slider Section -->
 <section class="hero-slider">
@@ -210,6 +214,86 @@
     </div>
 </section>
 
+<!-- Footer Section -->
+<footer class="footer-dark">
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3 class="footer-heading">About NR Store</h3>
+                <p class="footer-text">Your trusted partner for quality laptops and computing solutions. We provide the latest technology with exceptional service.</p>
+                <div class="footer-social">
+                    <a href="#" class="social-link">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="social-link">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="social-link">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="social-link">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h3 class="footer-heading">Quick Links</h3>
+                <ul class="footer-links">
+                    <li><a href="{{ url('/') }}" class="footer-link">Home</a></li>
+                    <li><a href="{{ url('/products') }}" class="footer-link">Products</a></li>
+                    <li><a href="{{ url('/bid') }}" class="footer-link">Bid</a></li>
+                    <li><a href="{{ url('/orders') }}" class="footer-link">Orders</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3 class="footer-heading">Customer Service</h3>
+                <ul class="footer-links">
+                    <li><a href="#" class="footer-link">Shipping Information</a></li>
+                    <li><a href="#" class="footer-link">Returns & Refunds</a></li>
+                    <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                    <li><a href="#" class="footer-link">Terms & Conditions</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3 class="footer-heading">Contact Info</h3>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>info@nrstore.com</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <span>+1 234 567 890</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>123 Tech Street, Digital City</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <div class="footer-divider"></div>
+            <div class="footer-copyright">
+                <p>&copy; 2024 NR Store. All rights reserved.</p>
+                <div class="footer-payment">
+                    <span>We accept:</span>
+                    <div class="payment-methods">
+                        <i class="fab fa-cc-visa"></i>
+                        <i class="fab fa-cc-mastercard"></i>
+                        <i class="fab fa-cc-paypal"></i>
+                        <i class="fab fa-cc-apple-pay"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const slides = document.querySelectorAll('.slide');
@@ -271,6 +355,67 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize - show first slide
     showSlide(0);
     startAutoSlide();
+
+    // Product card interactions
+    const productCards = document.querySelectorAll('.product-card');
+    const likeButtons = document.querySelectorAll('.like-btn');
+
+    // Product card hover effects
+    productCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.12)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.08)';
+        });
+    });
+
+    // Like button functionality
+    likeButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent card click event
+            const icon = this.querySelector('i');
+            if (icon.classList.contains('far')) {
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                this.style.background = '#fff5f5';
+                this.style.borderColor = '#ff6b6b';
+                this.style.color = '#ff6b6b';
+            } else {
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                this.style.background = 'var(--white)';
+                this.style.borderColor = 'var(--border-light)';
+                this.style.color = 'inherit';
+            }
+        });
+    });
+
+    // Add click events to product cards for navigation (example)
+    productCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Navigate to product detail page or show quick view
+            const productName = this.querySelector('.product-name').textContent;
+            console.log('Product clicked:', productName);
+            // You can add navigation logic here
+            // window.location.href = '/products/' + productId;
+        });
+    });
+
+    // Explore link interactions
+    const exploreLinks = document.querySelectorAll('.explore-link');
+    exploreLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const categoryName = this.closest('.category-card').querySelector('.category-name').textContent;
+            console.log('Exploring category:', categoryName);
+            // Navigate to category page
+            // window.location.href = '/products?category=' + categoryName;
+        });
+    });
 });
 </script>
 @endsection
