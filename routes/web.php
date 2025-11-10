@@ -162,6 +162,19 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::delete('/{category}', 'destroy')->name('destroy');
     });
 
+    // routes/admin.php
+    Route::prefix('bids')->name('managebid.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::get('/{bid}', 'show')->name('show');
+        Route::get('/{bid}/edit', 'edit')->name('edit');
+        Route::put('/{bid}', 'update')->name('update');
+        Route::delete('/{bid}', 'destroy')->name('destroy');
+        Route::post('/{bid}/start', 'startBid')->name('start');
+        Route::post('/{bid}/pause', 'pauseBid')->name('pause');
+        Route::post('/{bid}/complete', 'completeBid')->name('complete');
+    });
+
     // Reports & Analytics
     Route::prefix('reports')->name('reports.')->controller(\App\Http\Controllers\ReportController::class)->group(function () {
         Route::get('/sales', 'sales')->name('sales');

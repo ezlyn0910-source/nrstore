@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -81,5 +82,56 @@ class User extends Authenticatable
     public function isSuspended(): bool
     {
         return $this->status === 'suspended';
+    }
+
+    public function bidBids(): HasMany
+    {
+        return $this->hasMany(BidBid::class);
+    }
+
+    public function wonBids(): HasMany
+    {
+        return $this->hasMany(Bid::class, 'winner_id');
+    }
+
+    public function activeBidParticipation()
+    {
+        return $this->bidBids()
+                    ->whereHas('bid', function($query) {
+                        $query->active();
+                    })
+                    ->with('bid.product')
+                    ->get()
+                    ->unique('bid_id');
+    }
+
+    public function getBiddingStatsAttribute()
+    {
+        $totalBids = $this->bidBids()->count();
+        $wonBids = $this->wonBids()->count();
+        $activeBids = $this->activeBidParticipation()->count();
+
+        return [
+            'total_bids_placed' => $totalBids,
+            'bids_won' => $wonBids,
+            'active_participations' => $activeBids,
+            'success_rate' => $totalBids > 0 ? round(($wonBids / $totalBids) * 100, 2) : 0,
+        ];
+    }
+
+    /**
+     * Check if user can place bid (based on status)
+     */
+    public function canPlaceBid(): bool
+    {
+        return $this->isActive() && !$this->isSuspended();
+    }
+
+    /**
+     * Scope for users who can participate in bids
+     */
+    public function scopeCanBid($query)
+    {
+        return $query->active();
     }
 }
