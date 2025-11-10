@@ -135,11 +135,10 @@
                         <div class="footer-section">
                             <h3 class="footer-heading">Customer Service</h3>
                             <ul class="footer-links">
-                                <li><a href="#" class="footer-link">Shipping Info</a></li>
-                                <li><a href="#" class="footer-link">Returns</a></li>
-                                <li><a href="#" class="footer-link">Warranty</a></li>
-                                <li><a href="#" class="footer-link">FAQ</a></li>
-                                <li><a href="#" class="footer-link">Support</a></li>
+                                <li><a href="#" class="footer-link">Shipping Information</a></li>
+                                <li><a href="#" class="footer-link">Returns & Refunds</a></li>
+                                <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                                <li><a href="#" class="footer-link">Terms & Conditions</a></li>
                             </ul>
                         </div>
                         
@@ -166,7 +165,7 @@
                     
                     <div class="footer-bottom">
                         <div class="footer-copyright">
-                            <p>&copy; 2024 TECHZONE. All rights reserved.</p>
+                            <p>&copy; 2024 NR INTELLITECH. All rights reserved.</p>
                             <div class="footer-payment">
                                 <span>We accept:</span>
                                 <div class="payment-methods">

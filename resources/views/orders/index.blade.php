@@ -90,7 +90,7 @@
                     <div class="empty-icon">📦</div>
                     <h3>No Orders Yet</h3>
                     <p>You haven't placed any orders. Start shopping to see your orders here.</p>
-                    <a href="{{ route('products.index') }}" class="btn btn-primary">Start Shopping</a>
+                    <a href="{{ route('login') }}" class="btn btn-primary">Start Shopping</a>
                 </div>
                 @endif
 
