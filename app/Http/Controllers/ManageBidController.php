@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Bid;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Models\User;
 
-class BidController extends Controller
+class ManageBidController extends Controller
 {
     public function index()
     {
@@ -15,7 +16,7 @@ class BidController extends Controller
                     ->latest()
                     ->paginate(20);
         
-        return view('admin.bids.index', compact('bids'));
+        return view('managebid.index', compact('bids'));
     }
 
     public function create()
@@ -25,7 +26,7 @@ class BidController extends Controller
                           ->where('stock_quantity', '>', 0)
                           ->get();
         
-        return view('admin.bids.create', compact('products'));
+        return view('managebid.create', compact('products'));
     }
 
     public function store(Request $request)
@@ -47,22 +48,31 @@ class BidController extends Controller
         
         Bid::create($validated);
 
-        return redirect()->route('admin.bids.index')
+        return redirect()->route('admin.managebid.index')
                          ->with('success', 'Bid created successfully.');
     }
 
     public function show(Bid $bid)
     {
-        $bid->load(['product.images', 'bids.user', 'winner']);
+        $bid->load([
+            'product.images', 
+            'bids.user',
+            'winner'
+        ]);
         
-        return view('admin.bids.show', compact('bid'));
+        // Get users who participated in this bid
+        $participants = User::whereHas('bidBids', function($query) use ($bid) {
+            $query->where('bid_id', $bid->id);
+        })->get();
+        
+        return view('managebid.show', compact('bid', 'participants'));
     }
 
     public function edit(Bid $bid)
     {
         $products = Product::active()->get();
         
-        return view('admin.bids.edit', compact('bid', 'products'));
+        return view('managebid.edit', compact('bid', 'products'));
     }
 
     public function update(Request $request, Bid $bid)
@@ -81,7 +91,7 @@ class BidController extends Controller
 
         $bid->update($validated);
 
-        return redirect()->route('admin.bids.index')
+        return redirect()->route('managebid.index')
                          ->with('success', 'Bid updated successfully.');
     }
 
@@ -89,7 +99,7 @@ class BidController extends Controller
     {
         $bid->delete();
 
-        return redirect()->route('admin.bids.index')
+        return redirect()->route('managebid.index')
                          ->with('success', 'Bid deleted successfully.');
     }
 
@@ -123,5 +133,51 @@ class BidController extends Controller
         }
 
         return back()->with('success', 'Bid completed successfully.');
+    }
+
+    /**
+     * Manually assign winner (admin override)
+     */
+    public function assignWinner(Request $request, Bid $bid)
+    {
+        $validated = $request->validate([
+            'winner_id' => 'required|exists:users,id',
+            'winning_bid_amount' => 'required|numeric|min:' . $bid->starting_price
+        ]);
+
+        $bid->update([
+            'winner_id' => $validated['winner_id'],
+            'winning_bid_amount' => $validated['winning_bid_amount'],
+            'status' => 'completed'
+        ]);
+
+        return back()->with('success', 'Winner assigned successfully.');
+    }
+
+    /**
+     * Get bid participants
+     */
+    public function participants(Bid $bid)
+    {
+        $participants = User::whereHas('bidBids', function($query) use ($bid) {
+            $query->where('bid_id', $bid->id);
+        })->withCount(['bidBids as bids_count' => function($query) use ($bid) {
+            $query->where('bid_id', $bid->id);
+        }])->get();
+
+        return view('managebid.participants', compact('bid', 'participants'));
+    }
+
+    /**
+     * View user's bid history
+     */
+    public function userBidHistory(User $user)
+    {
+        $userBids = $user->bidBids()
+                        ->with(['bid.product'])
+                        ->orderBy('created_at', 'desc')
+                        ->paginate(20);
+
+        return view('managebid.userhistory', compact('user', 'userBids'));
     }
 }

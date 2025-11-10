@@ -7,6 +7,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ManageUserController;
 use App\Http\Controllers\ManageOrderController;
+use App\Http\Controllers\ManageBidController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CheckoutController;
@@ -152,18 +153,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::post('/bulk-action', 'bulkAction')->name('bulk-action');
     });
 
-    // Category Management Routes
-    Route::prefix('categories')->name('categories.')->controller(\App\Http\Controllers\CategoryController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/create', 'create')->name('create');
-        Route::post('/', 'store')->name('store');
-        Route::get('/{category}/edit', 'edit')->name('edit');
-        Route::put('/{category}', 'update')->name('update');
-        Route::delete('/{category}', 'destroy')->name('destroy');
-    });
-
-    // routes/admin.php
-    Route::prefix('bids')->name('managebid.')->group(function () {
+    // routes bids
+    Route::prefix('bids')->name('managebid.')->controller(\App\Http\Controllers\ManageBidController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/create', 'create')->name('create');
         Route::get('/{bid}', 'show')->name('show');
