@@ -1,12 +1,12 @@
 <?php
 // routes/web.php
 
-use App\Http\Controllers\ManageProductController;
 use App\Http\Controllers\ManageProductVariationController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ManageUserController;
+use App\Http\Controllers\ManageOrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CheckoutController;
@@ -96,7 +96,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     
     // Admin Product Management Routes
-    Route::prefix('products')->name('manageproduct.')->controller(ManageProductController::class)->group(function () {
+    Route::prefix('products')->name('manageproduct.')->controller(\App\Http\Controllers\ManageProductController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/create', 'create')->name('create');
         Route::post('/', 'store')->name('store');
@@ -117,7 +117,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     });
 
     // Product Variations Management
-    Route::prefix('products/{product}/variations')->name('variations.')->controller(ManageProductVariationController::class)->group(function () {
+    Route::prefix('products/{product}/variations')->name('variations.')->controller(\App\Http\Controllers\ManageProductVariationController::class)->group(function () {
         Route::get('/create', 'create')->name('create');
         Route::post('/', 'store')->name('store');
         Route::get('/{variation}/edit', 'edit')->name('edit');
@@ -127,7 +127,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     });
 
     // User Management Routes
-    Route::prefix('users')->name('manageuser.')->controller(ManageUserController::class)->group(function () {
+    Route::prefix('users')->name('manageuser.')->controller(\App\Http\Controllers\ManageUserController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/create', 'create')->name('create');
         Route::post('/', 'store')->name('store');
@@ -143,7 +143,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     });
 
     // Order Management Routes (Admin)
-    Route::prefix('orders')->name('orders.')->controller(\App\Http\Controllers\Admin\OrderController::class)->group(function () {
+    Route::prefix('orders')->name('manageorder.')->controller(\App\Http\Controllers\ManageOrderController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/{order}', 'show')->name('show');
         Route::put('/{order}/status', 'updateStatus')->name('update-status');
@@ -153,7 +153,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     });
 
     // Category Management Routes
-    Route::prefix('categories')->name('categories.')->controller(\App\Http\Controllers\Admin\CategoryController::class)->group(function () {
+    Route::prefix('categories')->name('categories.')->controller(\App\Http\Controllers\CategoryController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/create', 'create')->name('create');
         Route::post('/', 'store')->name('store');
@@ -163,7 +163,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     });
 
     // Reports & Analytics
-    Route::prefix('reports')->name('reports.')->controller(\App\Http\Controllers\Admin\ReportController::class)->group(function () {
+    Route::prefix('reports')->name('reports.')->controller(\App\Http\Controllers\ReportController::class)->group(function () {
         Route::get('/sales', 'sales')->name('sales');
         Route::get('/products', 'products')->name('products');
         Route::get('/users', 'users')->name('users');

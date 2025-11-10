@@ -65,7 +65,6 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 20,
                 'is_recommended' => true,
             ],
-            // Add more products as needed...
         ];
 
         foreach ($products as $product) {

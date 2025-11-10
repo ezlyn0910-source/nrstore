@@ -4,32 +4,27 @@ class ProductFormManager {
         this.currentStep = 1;
         this.totalSteps = 5;
         this.variationCounter = 0;
-        this.formData = new FormData();
+        this.removedGalleryIndexes = new Set();
         this.init();
     }
 
     init() {
-        console.log('Initializing Product Form Manager...');
+        console.log('Initializing Enhanced Product Form Manager...');
         this.bindEvents();
         this.updateNavigation();
         this.initializeCharacterCount();
         this.initializeFromOldData();
+        this.setupDragAndDrop();
     }
 
     bindEvents() {
         // Navigation
-        const nextBtn = document.getElementById('nextBtn');
-        const prevBtn = document.getElementById('prevBtn');
-        
-        if (nextBtn) nextBtn.addEventListener('click', () => this.nextStep());
-        if (prevBtn) prevBtn.addEventListener('click', () => this.prevStep());
+        document.getElementById('nextBtn')?.addEventListener('click', () => this.nextStep());
+        document.getElementById('prevBtn')?.addEventListener('click', () => this.prevStep());
 
         // Slug generation
-        const generateSlugBtn = document.getElementById('generateSlug');
-        const nameInput = document.getElementById('name');
-        
-        if (generateSlugBtn) generateSlugBtn.addEventListener('click', () => this.generateSlug());
-        if (nameInput) nameInput.addEventListener('blur', () => {
+        document.getElementById('generateSlug')?.addEventListener('click', () => this.generateSlug());
+        document.getElementById('name')?.addEventListener('blur', () => {
             const slugInput = document.getElementById('slug');
             if (slugInput && !slugInput.value) {
                 this.generateSlug();
@@ -37,25 +32,63 @@ class ProductFormManager {
         });
 
         // Image previews
-        const mainImageInput = document.getElementById('main_image');
-        const galleryInput = document.getElementById('product_images');
-        
-        if (mainImageInput) mainImageInput.addEventListener('change', (e) => this.previewImage(e, 'mainImagePreview'));
-        if (galleryInput) galleryInput.addEventListener('change', (e) => this.previewMultipleImages(e, 'galleryPreview'));
+        document.getElementById('main_image')?.addEventListener('change', (e) => this.previewImage(e, 'mainImagePreview'));
+        document.getElementById('product_images')?.addEventListener('change', (e) => this.previewMultipleImages(e, 'galleryPreview'));
 
         // Variations
-        const hasVariationsCheckbox = document.getElementById('has_variations');
-        const addVariationBtn = document.getElementById('addVariation');
-        
-        if (hasVariationsCheckbox) hasVariationsCheckbox.addEventListener('change', (e) => this.toggleVariations(e.target.checked));
-        if (addVariationBtn) addVariationBtn.addEventListener('click', () => this.addVariation());
+        document.getElementById('has_variations')?.addEventListener('change', (e) => this.toggleVariations(e.target.checked));
+        document.getElementById('addVariation')?.addEventListener('click', () => this.addVariation());
 
         // Form submission
-        const form = document.getElementById('productForm');
-        if (form) form.addEventListener('submit', (e) => this.handleSubmit(e));
+        document.getElementById('productForm')?.addEventListener('submit', (e) => this.handleSubmit(e));
 
         // Real-time validation
         this.setupRealTimeValidation();
+
+        // Price formatting
+        this.setupPriceFormatting();
+    }
+
+    setupPriceFormatting() {
+        const priceInputs = document.querySelectorAll('input[type="number"][step="0.01"]');
+        priceInputs.forEach(input => {
+            input.addEventListener('blur', (e) => {
+                const value = parseFloat(e.target.value);
+                if (!isNaN(value)) {
+                    e.target.value = value.toFixed(2);
+                }
+            });
+        });
+    }
+
+    setupDragAndDrop() {
+        const uploadAreas = document.querySelectorAll('.file-upload-area');
+        
+        uploadAreas.forEach(area => {
+            const fileInput = area.querySelector('input[type="file"]');
+            if (!fileInput) return;
+
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('drag-over');
+            });
+
+            area.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                area.classList.remove('drag-over');
+            });
+
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('drag-over');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                    const event = new Event('change', { bubbles: true });
+                    fileInput.dispatchEvent(event);
+                }
+            });
+        });
     }
 
     initializeFromOldData() {
@@ -65,8 +98,7 @@ class ProductFormManager {
             const existingVariations = variationsList.querySelectorAll('.variation-item');
             this.variationCounter = existingVariations.length;
             
-            // Add event listeners to existing variation image inputs
-            existingVariations.forEach((variation, index) => {
+            existingVariations.forEach((variation) => {
                 const variationId = variation.id.replace('variation_', '');
                 const imageInput = document.getElementById(`variations_${variationId}_image_file`);
                 if (imageInput) {
@@ -74,6 +106,39 @@ class ProductFormManager {
                 }
             });
         }
+
+        // Initialize from old form data if exists
+        this.initializeFromOldFormData();
+    }
+
+    initializeFromOldFormData() {
+        // Check if we have old form data (from validation errors)
+        const form = document.getElementById('productForm');
+        if (!form) return;
+
+        // If there are validation errors, show appropriate steps
+        const errorFields = form.querySelectorAll('.is-invalid');
+        if (errorFields.length > 0) {
+            // Find the step with the first error
+            let errorStep = 1;
+            errorFields.forEach(field => {
+                const fieldStep = this.getFieldStep(field);
+                if (fieldStep > errorStep) errorStep = fieldStep;
+            });
+            
+            // Navigate to the step with errors
+            this.currentStep = errorStep;
+            this.updateNavigation();
+        }
+    }
+
+    getFieldStep(field) {
+        // Determine which step a field belongs to
+        const formStep = field.closest('.form-step');
+        if (formStep) {
+            return parseInt(formStep.dataset.step) || 1;
+        }
+        return 1;
     }
 
     // Step Navigation
@@ -101,8 +166,7 @@ class ProductFormManager {
         });
 
         // Update form steps
-        const formSteps = document.querySelectorAll('.form-step');
-        formSteps.forEach(step => {
+        document.querySelectorAll('.form-step').forEach(step => {
             step.classList.remove('active');
         });
         
@@ -131,11 +195,12 @@ class ProductFormManager {
         const stepElement = document.querySelector(`.form-step[data-step="${step}"]`);
         if (!stepElement) return true;
 
-        const requiredFields = stepElement.querySelectorAll('[required]');
         let isValid = true;
 
+        // Validate required fields
+        const requiredFields = stepElement.querySelectorAll('[required]');
         requiredFields.forEach(field => {
-            if (!field.value.trim()) {
+            if (!field.value.trim() && field.offsetParent !== null) { // Only validate visible fields
                 this.showFieldError(field, 'This field is required');
                 isValid = false;
             } else {
@@ -161,9 +226,20 @@ class ProductFormManager {
 
         if (!isValid) {
             this.showToast('Please fix the errors before proceeding', 'error');
+            this.highlightInvalidFields(stepElement);
         }
 
         return isValid;
+    }
+
+    highlightInvalidFields(stepElement) {
+        const invalidFields = stepElement.querySelectorAll('.is-invalid');
+        if (invalidFields.length > 0) {
+            invalidFields[0].scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+        }
     }
 
     validateStep1() {
@@ -173,6 +249,9 @@ class ProductFormManager {
 
         if (name && !name.value.trim()) {
             this.showFieldError(name, 'Product name is required');
+            isValid = false;
+        } else if (name && name.value.trim().length < 2) {
+            this.showFieldError(name, 'Product name must be at least 2 characters long');
             isValid = false;
         }
 
@@ -189,13 +268,13 @@ class ProductFormManager {
         const price = document.getElementById('price');
         const stock = document.getElementById('stock_quantity');
 
-        if (price && (!price.value || parseFloat(price.value) <= 0)) {
-            this.showFieldError(price, 'Please enter a valid price');
+        if (price && (!price.value || parseFloat(price.value) < 0)) {
+            this.showFieldError(price, 'Please enter a valid price (minimum 0)');
             isValid = false;
         }
 
-        if (stock && (!stock.value || parseInt(stock.value) < 0)) {
-            this.showFieldError(stock, 'Please enter a valid stock quantity');
+        if (stock && (stock.value === '' || parseInt(stock.value) < 0)) {
+            this.showFieldError(stock, 'Please enter a valid stock quantity (minimum 0)');
             isValid = false;
         }
 
@@ -205,15 +284,35 @@ class ProductFormManager {
     validateStep4() {
         let isValid = true;
         const mainImage = document.getElementById('main_image');
+        const mainImagePreview = document.getElementById('mainImagePreview');
 
-        if (mainImage && !mainImage.files.length) {
-            this.showFieldError(mainImage, 'Main image is required');
-            isValid = false;
-        } else if (mainImage && mainImage.files.length) {
+        // Check if main image is required but not provided
+        if (mainImage && mainImage.hasAttribute('required') && !mainImage.files.length) {
+            // Check if we're editing and already have an image
+            if (!mainImagePreview.querySelector('img')) {
+                this.showFieldError(mainImage, 'Main image is required');
+                isValid = false;
+            }
+        }
+
+        // Validate main image file if provided
+        if (mainImage && mainImage.files.length > 0) {
             const file = mainImage.files[0];
             if (!this.validateImageFile(file)) {
                 this.showFieldError(mainImage, 'Please select a valid image file (JPG, PNG, max 2MB)');
                 isValid = false;
+            }
+        }
+
+        // Validate gallery images if provided
+        const galleryInput = document.getElementById('product_images');
+        if (galleryInput && galleryInput.files.length > 0) {
+            for (let file of galleryInput.files) {
+                if (!this.validateImageFile(file)) {
+                    this.showFieldError(galleryInput, 'One or more gallery images are invalid (JPG, PNG, max 2MB each)');
+                    isValid = false;
+                    break;
+                }
             }
         }
 
@@ -224,10 +323,31 @@ class ProductFormManager {
         const hasVariations = document.getElementById('has_variations');
         if (hasVariations && hasVariations.checked) {
             const variationsList = document.getElementById('variationsList');
-            if (variationsList && variationsList.children.length === 0) {
+            const variations = variationsList?.querySelectorAll('.variation-item') || [];
+            
+            if (variations.length === 0) {
                 this.showToast('Please add at least one variation when variations are enabled', 'error');
                 return false;
             }
+
+            // Validate each variation
+            let allVariationsValid = true;
+            variations.forEach((variation, index) => {
+                const skuInput = variation.querySelector('input[name*="[sku]"]');
+                const stockInput = variation.querySelector('input[name*="[stock]"]');
+                
+                if (skuInput && !skuInput.value.trim()) {
+                    this.showFieldError(skuInput, 'SKU is required for variation');
+                    allVariationsValid = false;
+                }
+                
+                if (stockInput && (!stockInput.value || parseInt(stockInput.value) < 0)) {
+                    this.showFieldError(stockInput, 'Valid stock quantity is required for variation');
+                    allVariationsValid = false;
+                }
+            });
+
+            return allVariationsValid;
         }
         return true;
     }
@@ -245,6 +365,7 @@ class ProductFormManager {
                 .replace(/[\s_-]+/g, '-')
                 .replace(/^-+|-+$/g, '');
             slugInput.value = slug;
+            this.clearFieldError(slugInput);
         }
     }
 
@@ -260,8 +381,9 @@ class ProductFormManager {
             reader.onload = (e) => {
                 previewContainer.innerHTML = `
                     <div class="image-preview-container">
-                        <img src="${e.target.result}" alt="Preview" class="img-thumbnail rounded" style="max-width: 200px; max-height: 200px; object-fit: cover;">
-                        <button type="button" class="btn-remove-image" onclick="this.closest('.image-preview-container').remove(); document.getElementById('main_image').value = '';">
+                        <img src="${e.target.result}" alt="Preview" class="img-thumbnail rounded" 
+                             style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                        <button type="button" class="btn-remove-image" onclick="productFormManager.removeMainImage()">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -272,9 +394,17 @@ class ProductFormManager {
         } else {
             previewContainer.innerHTML = '';
             if (file) {
-                this.showFieldError(event.target, 'Invalid image file');
+                this.showFieldError(event.target, 'Invalid image file. Please select JPG, PNG, or GIF under 2MB.');
             }
         }
+    }
+
+    removeMainImage() {
+        const mainImageInput = document.getElementById('main_image');
+        const previewContainer = document.getElementById('mainImagePreview');
+        
+        if (mainImageInput) mainImageInput.value = '';
+        if (previewContainer) previewContainer.innerHTML = '';
     }
 
     previewMultipleImages(event, previewContainerId) {
@@ -282,7 +412,6 @@ class ProductFormManager {
         const previewContainer = document.getElementById(previewContainerId);
         if (!previewContainer) return;
 
-        previewContainer.innerHTML = '';
         let validFiles = true;
 
         Array.from(files).forEach((file, index) => {
@@ -295,7 +424,8 @@ class ProductFormManager {
                         <div class="image-preview-container">
                             <img src="${e.target.result}" alt="Gallery image ${index + 1}" 
                                  class="img-thumbnail rounded w-100" style="height: 150px; object-fit: cover;">
-                            <button type="button" class="btn-remove-image" onclick="this.closest('.col-md-3').remove(); productFormManager.updateFileInput(${index})">
+                            <button type="button" class="btn-remove-image" 
+                                    onclick="productFormManager.removeGalleryImage(this, ${index})">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -315,10 +445,24 @@ class ProductFormManager {
         }
     }
 
-    updateFileInput(removeIndex) {
-        // Note: This is a simplified version. In production, you might want to use a more robust solution
-        // that actually updates the FileList object, which requires more complex handling.
-        console.log('File removal would be handled here for index:', removeIndex);
+    removeGalleryImage(button, index) {
+        // Mark this index for removal
+        this.removedGalleryIndexes.add(index);
+        
+        // Remove the preview
+        const previewContainer = button.closest('.col-md-3, .col-sm-4, .col-6');
+        if (previewContainer) {
+            previewContainer.remove();
+        }
+        
+        // Update the file input (this is a simplified approach)
+        this.updateFileInputAfterRemoval();
+    }
+
+    updateFileInputAfterRemoval() {
+        // In a real implementation, you would need to reconstruct the FileList
+        // This is a complex task, so we'll rely on server-side handling
+        console.log('Gallery images removed:', Array.from(this.removedGalleryIndexes));
     }
 
     validateImageFile(file) {
@@ -349,6 +493,9 @@ class ProductFormManager {
                 }
             } else {
                 container.classList.add('d-none');
+                // Clear all variations when toggled off
+                document.getElementById('variationsList').innerHTML = '';
+                this.variationCounter = 0;
             }
         }
     }
@@ -375,11 +522,15 @@ class ProductFormManager {
         if (imageInput) {
             imageInput.addEventListener('change', (e) => this.previewVariationImage(e, this.variationCounter));
         }
+
+        // Scroll to the new variation
+        variationElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     removeVariation(index) {
         const variation = document.getElementById(`variation_${index}`);
         if (variation) {
+            // Add exit animation
             variation.style.opacity = '0';
             variation.style.transform = 'translateY(-20px)';
             variation.style.transition = 'all 0.3s ease';
@@ -393,6 +544,8 @@ class ProductFormManager {
 
     renumberVariations() {
         const variations = document.querySelectorAll('.variation-item');
+        this.variationCounter = variations.length;
+        
         variations.forEach((variation, index) => {
             const numberSpan = variation.querySelector('.variation-number');
             if (numberSpan) {
@@ -413,22 +566,30 @@ class ProductFormManager {
                 previewContainer.innerHTML = `
                     <div class="image-preview-container">
                         <img src="${e.target.result}" alt="Variation Preview" 
-                             class="img-thumbnail rounded" style="max-width: 150px; max-height: 150px; object-fit: cover;">
+                             class="variation-image-preview">
                         <button type="button" class="btn-remove-image" 
-                                onclick="this.closest('.image-preview-container').remove(); 
-                                         document.getElementById('variations_${variationIndex}_image_file').value = '';">
+                                onclick="productFormManager.removeVariationImage('${variationIndex}')">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                 `;
             };
             reader.readAsDataURL(file);
+            this.clearFieldError(event.target);
         } else {
             previewContainer.innerHTML = '';
             if (file) {
                 this.showFieldError(event.target, 'Invalid image file');
             }
         }
+    }
+
+    removeVariationImage(variationIndex) {
+        const imageInput = document.getElementById(`variations_${variationIndex}_image_file`);
+        const previewContainer = document.getElementById(`variationImagePreview_${variationIndex}`);
+        
+        if (imageInput) imageInput.value = '';
+        if (previewContainer) previewContainer.innerHTML = '';
     }
 
     // Character Count
@@ -441,6 +602,12 @@ class ProductFormManager {
                 const count = description.value.length;
                 counter.textContent = `${count}/1000`;
                 counter.classList.toggle('text-danger', count > 1000);
+                
+                if (count > 1000) {
+                    this.showFieldError(description, 'Description must be 1000 characters or less');
+                } else {
+                    this.clearFieldError(description);
+                }
             });
             
             // Initialize count
@@ -457,11 +624,7 @@ class ProductFormManager {
         
         inputs.forEach(input => {
             input.addEventListener('blur', () => {
-                if (input.hasAttribute('required') && !input.value.trim()) {
-                    this.showFieldError(input, 'This field is required');
-                } else {
-                    this.clearFieldError(input);
-                }
+                this.validateField(input);
             });
             
             input.addEventListener('input', () => {
@@ -470,6 +633,41 @@ class ProductFormManager {
                 }
             });
         });
+    }
+
+    validateField(field) {
+        if (field.hasAttribute('required') && !field.value.trim()) {
+            this.showFieldError(field, 'This field is required');
+            return false;
+        }
+
+        // Field-specific validation
+        if (field.type === 'email' && field.value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(field.value)) {
+                this.showFieldError(field, 'Please enter a valid email address');
+                return false;
+            }
+        }
+
+        if (field.type === 'number' && field.value) {
+            const min = parseFloat(field.getAttribute('min'));
+            const max = parseFloat(field.getAttribute('max'));
+            const value = parseFloat(field.value);
+
+            if (!isNaN(min) && value < min) {
+                this.showFieldError(field, `Value must be at least ${min}`);
+                return false;
+            }
+
+            if (!isNaN(max) && value > max) {
+                this.showFieldError(field, `Value must be at most ${max}`);
+                return false;
+            }
+        }
+
+        this.clearFieldError(field);
+        return true;
     }
 
     // Utility Methods
@@ -484,30 +682,38 @@ class ProductFormManager {
         }
         
         feedback.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${message}`;
+        feedback.style.display = 'flex';
     }
 
     clearFieldError(field) {
         field.classList.remove('is-invalid');
         const feedback = field.nextElementSibling;
         if (feedback && feedback.classList.contains('invalid-feedback')) {
-            feedback.remove();
+            feedback.style.display = 'none';
         }
     }
 
     showToast(message, type = 'info') {
-        // Simple toast implementation - you can replace with a proper toast library
+        // Remove existing toasts
+        document.querySelectorAll('.alert-toast').forEach(toast => toast.remove());
+
         const toast = document.createElement('div');
-        toast.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+        toast.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show alert-toast position-fixed`;
         toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
         toast.innerHTML = `
-            ${message}
+            <div class="d-flex align-items-center">
+                <i class="fas ${type === 'error' ? 'fa-exclamation-triangle' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'} me-2"></i>
+                <span>${message}</span>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
         
         document.body.appendChild(toast);
         
         setTimeout(() => {
-            toast.remove();
+            if (toast.parentNode) {
+                toast.remove();
+            }
         }, 5000);
     }
 
@@ -520,36 +726,77 @@ class ProductFormManager {
         event.preventDefault();
         
         // Validate all steps before submission
+        let allStepsValid = true;
         for (let step = 1; step <= this.totalSteps; step++) {
             if (!this.validateStep(step)) {
-                this.currentStep = step;
-                this.updateNavigation();
-                this.showToast('Please fix all validation errors before submitting', 'error');
-                return;
+                if (allStepsValid) {
+                    this.currentStep = step;
+                    this.updateNavigation();
+                }
+                allStepsValid = false;
             }
+        }
+
+        if (!allStepsValid) {
+            this.showToast('Please fix all validation errors before submitting', 'error');
+            return;
         }
 
         const form = event.target;
         const submitBtn = document.getElementById('submitBtn');
         
         if (submitBtn) {
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Creating Product...';
-            submitBtn.disabled = true;
+            this.setButtonLoading(submitBtn, true);
             
             try {
-                // Additional final validation can be added here
-                form.submit();
+                // Additional final validation
+                if (this.performFinalValidation()) {
+                    // Add hidden field for removed gallery images
+                    this.removedGalleryIndexes.forEach(index => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'removed_gallery_images[]';
+                        input.value = index;
+                        form.appendChild(input);
+                    });
+
+                    form.submit();
+                } else {
+                    this.showToast('Please fix the validation errors', 'error');
+                    this.setButtonLoading(submitBtn, false);
+                }
             } catch (error) {
                 console.error('Form submission error:', error);
                 this.showToast('An error occurred while creating the product', 'error');
-                if (submitBtn) {
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                }
+                this.setButtonLoading(submitBtn, false);
             }
         } else {
             form.submit();
+        }
+    }
+
+    performFinalValidation() {
+        // Final comprehensive validation
+        const requiredFields = document.querySelectorAll('#productForm [required]');
+        let isValid = true;
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim() && field.offsetParent !== null) {
+                this.showFieldError(field, 'This field is required');
+                isValid = false;
+            }
+        });
+
+        return isValid;
+    }
+
+    setButtonLoading(button, isLoading) {
+        if (isLoading) {
+            button.disabled = true;
+            button.classList.add('btn-loading');
+        } else {
+            button.disabled = false;
+            button.classList.remove('btn-loading');
         }
     }
 }

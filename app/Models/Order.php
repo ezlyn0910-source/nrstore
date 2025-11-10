@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
@@ -11,62 +13,171 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'shipping_address_id',
+        'billing_address_id',
         'order_number',
-        'subtotal',
+        'total_amount',
         'shipping_cost',
         'tax_amount',
         'discount_amount',
-        'total_amount',
         'status',
-        'payment_method',
         'payment_status',
-        'shipping_method',
-        'tracking_number',
-        'tracking_url',
-        'estimated_delivery',
+        'payment_method',
+        'notes',
+        'shipped_at',
+        'delivered_at',
         'cancelled_at',
-        'cancel_reason',
-        'shipping_address_id',
-        'billing_address_id',
     ];
 
     protected $casts = [
-        'subtotal' => 'decimal:2',
+        'total_amount' => 'decimal:2',
         'shipping_cost' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
-        'total_amount' => 'decimal:2',
-        'estimated_delivery' => 'datetime',
+        'shipped_at' => 'datetime',
+        'delivered_at' => 'datetime',
         'cancelled_at' => 'datetime',
     ];
 
-    public function user()
+    protected $appends = [
+        'formatted_total_amount',
+        'status_label',
+        'payment_status_label'
+    ];
+
+    /**
+     * Get the user that owns the order.
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function items()
-    {
-        return $this->hasMany(OrderItem::class);
-    }
-
-    public function statusHistory()
-    {
-        return $this->hasMany(OrderStatusHistory::class)->orderBy('created_at', 'desc');
-    }
-
-    public function shippingAddress()
+    /**
+     * Get the shipping address for the order.
+     */
+    public function shippingAddress(): BelongsTo
     {
         return $this->belongsTo(Address::class, 'shipping_address_id');
     }
 
-    public function billingAddress()
+    /**
+     * Get the billing address for the order.
+     */
+    public function billingAddress(): BelongsTo
     {
         return $this->belongsTo(Address::class, 'billing_address_id');
     }
 
-    public function reviews()
+    /**
+     * Get the order items for the order.
+     */
+    public function orderItems(): HasMany
     {
-        return $this->hasMany(Review::class);
+        return $this->hasMany(OrderItem::class);
+    }
+
+    /**
+     * Get formatted total amount
+     */
+    public function getFormattedTotalAmountAttribute()
+    {
+        return 'RM ' . number_format($this->total_amount, 2);
+    }
+
+    /**
+     * Get status label
+     */
+    public function getStatusLabelAttribute()
+    {
+        return ucfirst($this->status);
+    }
+
+    /**
+     * Get payment status label
+     */
+    public function getPaymentStatusLabelAttribute()
+    {
+        return ucfirst($this->payment_status);
+    }
+
+    /**
+     * Scope pending orders
+     */
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
+    }
+
+    /**
+     * Scope processing orders
+     */
+    public function scopeProcessing($query)
+    {
+        return $query->where('status', 'processing');
+    }
+
+    /**
+     * Scope shipped orders
+     */
+    public function scopeShipped($query)
+    {
+        return $query->where('status', 'shipped');
+    }
+
+    /**
+     * Scope delivered orders
+     */
+    public function scopeDelivered($query)
+    {
+        return $query->where('status', 'delivered');
+    }
+
+    /**
+     * Scope cancelled orders
+     */
+    public function scopeCancelled($query)
+    {
+        return $query->where('status', 'cancelled');
+    }
+
+    /**
+     * Scope paid orders
+     */
+    public function scopePaid($query)
+    {
+        return $query->where('payment_status', 'paid');
+    }
+
+    /**
+     * Generate order number
+     */
+    public static function generateOrderNumber()
+    {
+        $prefix = 'ORD';
+        $date = now()->format('Ymd');
+        $lastOrder = static::where('order_number', 'like', $prefix . $date . '%')->latest()->first();
+
+        if ($lastOrder) {
+            $number = intval(substr($lastOrder->order_number, -4)) + 1;
+        } else {
+            $number = 1;
+        }
+
+        return $prefix . $date . str_pad($number, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Boot method for automatic order number generation
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($order) {
+            if (empty($order->order_number)) {
+                $order->order_number = static::generateOrderNumber();
+            }
+        });
     }
 }

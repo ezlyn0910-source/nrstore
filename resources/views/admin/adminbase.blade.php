@@ -23,7 +23,8 @@
             <li><a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Dashboard</a></li>
             <li><a href="{{ route('admin.manageuser.index') }}" class="{{ request()->routeIs('manageuser.*') ? 'active' : '' }}">User Management</a></li>
             <li><a href="{{ route('admin.manageproduct.index') }}" class="{{ request()->routeIs('manageproduct.*') ? 'active' : '' }}">Product Management</a></li>
-            <li><a href="#">Order Management</a></li>
+            <li><a href="{{ route('admin.manageorder.index') }}" class="{{ request()->routeIs('manageorder.*') ? 'active' : '' }}">Order Management</a></li>
+            <li><a href="#">Bid Management</a></li>
             <li><a href="#">Reports</a></li>
         </ul>
     </aside>

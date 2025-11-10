@@ -310,6 +310,13 @@
                                     </div>
                                 </div>
                             </div>
+
+                            @if(old('removed_gallery_images'))
+                                @foreach(old('removed_gallery_images') as $removedIndex)
+                                    <input type="hidden" name="removed_gallery_images[]" value="{{ $removedIndex }}">
+                                @endforeach
+                            @endif
+                            
                         </div>
 
                         <!-- Step 5: Variations -->
@@ -479,6 +486,7 @@
         </div>
     </div>
 </template>
+
 @endsection
 
 @section('scripts')

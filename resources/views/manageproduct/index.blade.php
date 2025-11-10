@@ -137,7 +137,7 @@
                             <td class="product-column">
                                 <div class="product-info">
                                     <div class="product-image">
-                                        <img src="{{ $product->main_image_url }}" alt="{{ $product->name }}" onerror="this.src='{{ asset('images/default-product.png') }}'">
+                                        <img src="{{ $product->main_image_url }}" alt="{{ $product->name }}">
                                     </div>
                                     <div class="product-details">
                                         <h4 class="product-name">{{ $product->name }}</h4>
