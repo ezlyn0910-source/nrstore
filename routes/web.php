@@ -38,28 +38,19 @@ Route::get('/products/{product}', [ProductController::class, 'show'])->name('pro
 Route::get('/products/{product}/slug', [ProductController::class, 'showBySlug'])->name('products.show.slug');
 
 // Order Routes
-//Route::middleware(['auth'])->group(function () {
-    //Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    //Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    //Route::get('/orders/{order}/details', [OrderController::class, 'details'])->name('orders.details');
-    //Route::post('/orders/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::get('/orders/{order}/details', [OrderController::class, 'details'])->name('orders.details');
-    Route::post('/orders/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+Route::get('/orders/{order}/details', [OrderController::class, 'details'])->name('orders.details');
+Route::post('/orders/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
-    // Checkout Routes
-    //Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
-    //Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('checkout.place-order');
-    //Route::post('/apply-promo-code', [CheckoutController::class, 'applyPromoCode'])->name('checkout.apply-promo');
-    Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
-    Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('checkout.place-order');
-    Route::post('/apply-promo-code', [CheckoutController::class, 'applyPromoCode'])->name('checkout.apply-promo');
+// Checkout Routes
+Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
+Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('checkout.place-order');
+Route::post('/apply-promo-code', [CheckoutController::class, 'applyPromoCode'])->name('checkout.apply-promo');
 
-    // Review Routes
-    //Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
-    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
-//});
+// Review Routes
+Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+
 Route::controller(ProductController::class)->group(function () {
     Route::get('/products', 'index')->name('products.index');
     Route::get('/products/featured', 'featured')->name('products.featured');
@@ -124,6 +115,25 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::post('/{variation}/toggle-active', 'toggleActive')->name('toggle-active');
     });
 
+    // Bid Management Routes 
+    Route::prefix('bids')->name('managebid.')->controller(\App\Http\Controllers\ManageBidController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{bid}', 'show')->name('show');
+        Route::get('/{bid}/edit', 'edit')->name('edit');
+        Route::put('/{bid}', 'update')->name('update');
+        Route::delete('/{bid}', 'destroy')->name('destroy');
+        Route::post('/{bid}/start', 'startBid')->name('start');
+        Route::post('/{bid}/pause', 'pauseBid')->name('pause');
+        Route::post('/{bid}/complete', 'completeBid')->name('complete');
+        
+        // Additional bid management routes
+        Route::post('/{bid}/assign-winner', 'assignWinner')->name('assign-winner');
+        Route::get('/{bid}/participants', 'participants')->name('participants');
+        Route::get('/users/{user}/bid-history', 'userBidHistory')->name('user-history');
+    });
+
     // User Management Routes
     Route::prefix('users')->name('manageuser.')->controller(\App\Http\Controllers\ManageUserController::class)->group(function () {
         Route::get('/', 'index')->name('index');
@@ -148,19 +158,6 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::put('/{order}/update', 'update')->name('update');
         Route::delete('/{order}', 'destroy')->name('destroy');
         Route::post('/bulk-action', 'bulkAction')->name('bulk-action');
-    });
-
-    // routes bids
-    Route::prefix('bids')->name('managebid.')->controller(\App\Http\Controllers\ManageBidController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/create', 'create')->name('create');
-        Route::get('/{bid}', 'show')->name('show');
-        Route::get('/{bid}/edit', 'edit')->name('edit');
-        Route::put('/{bid}', 'update')->name('update');
-        Route::delete('/{bid}', 'destroy')->name('destroy');
-        Route::post('/{bid}/start', 'startBid')->name('start');
-        Route::post('/{bid}/pause', 'pauseBid')->name('pause');
-        Route::post('/{bid}/complete', 'completeBid')->name('complete');
     });
 
     // Reports & Analytics

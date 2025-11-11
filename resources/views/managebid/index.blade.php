@@ -28,7 +28,7 @@
                 <i class="fas fa-play-circle"></i>
             </div>
             <div class="stat-content">
-                <h3 class="stat-number">{{ $bids->where('status', 'active')->where('start_time', '<=', now())->where('end_time', '>', now())->count() }}</h3>
+                <h3 class="stat-number">{{ $stats['active'] }}</h3>
                 <p class="stat-label">Active Bids</p>
             </div>
         </div>
@@ -37,7 +37,7 @@
                 <i class="fas fa-clock"></i>
             </div>
             <div class="stat-content">
-                <h3 class="stat-number">{{ $bids->where('status', 'active')->where('start_time', '>', now())->count() }}</h3>
+                <h3 class="stat-number">{{ $stats['upcoming'] }}</h3>
                 <p class="stat-label">Upcoming</p>
             </div>
         </div>
@@ -46,7 +46,7 @@
                 <i class="fas fa-check-circle"></i>
             </div>
             <div class="stat-content">
-                <h3 class="stat-number">{{ $bids->where('status', 'completed')->count() }}</h3>
+                <h3 class="stat-number">{{ $stats['completed'] }}</h3>
                 <p class="stat-label">Completed</p>
             </div>
         </div>
@@ -55,7 +55,7 @@
                 <i class="fas fa-edit"></i>
             </div>
             <div class="stat-content">
-                <h3 class="stat-number">{{ $bids->where('status', 'draft')->count() }}</h3>
+                <h3 class="stat-number">{{ $stats['draft'] }}</h3>
                 <p class="stat-label">Drafts</p>
             </div>
         </div>
