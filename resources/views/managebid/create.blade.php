@@ -21,6 +21,27 @@
         </div>
     </div>
 
+    <!-- Display Success/Error Messages -->
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i>
+            {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    @endif
+
     <!-- Create Form -->
     <div class="create-form-container">
         <form action="{{ route('admin.managebid.store') }}" method="POST" class="bid-create-form" id="bidCreateForm">
@@ -38,14 +59,15 @@
                 
                 <div class="form-group">
                     <label for="product_id" class="form-label">Select Product *</label>
-                    <select name="product_id" id="product_id" class="form-select" required>
+                    <select name="product_id" id="product_id" class="form-select @error('product_id') is-invalid @enderror" required>
                         <option value="">Choose a product...</option>
                         @foreach($products as $product)
                         <option value="{{ $product->id }}" 
                                 data-price="{{ $product->price }}"
                                 data-stock="{{ $product->stock_quantity }}"
                                 data-image="{{ $product->main_image_url }}"
-                                data-description="{{ $product->description }}">
+                                data-description="{{ $product->description }}"
+                                {{ old('product_id') == $product->id ? 'selected' : '' }}>
                             {{ $product->name }} - RM {{ number_format($product->price, 2) }} (Stock: {{ $product->stock_quantity }})
                         </option>
                         @endforeach
@@ -95,7 +117,9 @@
                         <div class="input-group">
                             <span class="input-group-text">RM</span>
                             <input type="number" name="starting_price" id="starting_price" 
-                                   class="form-control" step="0.01" min="0" 
+                                   class="form-control @error('starting_price') is-invalid @enderror" 
+                                   step="0.01" min="0.01" 
+                                   value="{{ old('starting_price') }}"
                                    placeholder="0.00" required>
                         </div>
                         @error('starting_price')
@@ -109,7 +133,9 @@
                         <div class="input-group">
                             <span class="input-group-text">RM</span>
                             <input type="number" name="reserve_price" id="reserve_price" 
-                                   class="form-control" step="0.01" min="0" 
+                                   class="form-control @error('reserve_price') is-invalid @enderror" 
+                                   step="0.01" min="0" 
+                                   value="{{ old('reserve_price') }}"
                                    placeholder="Optional">
                         </div>
                         @error('reserve_price')
@@ -123,8 +149,9 @@
                         <div class="input-group">
                             <span class="input-group-text">RM</span>
                             <input type="number" name="bid_increment" id="bid_increment" 
-                                   class="form-control" step="0.01" min="0.01" 
-                                   value="1.00" required>
+                                   class="form-control @error('bid_increment') is-invalid @enderror" 
+                                   step="0.01" min="0.01" 
+                                   value="{{ old('bid_increment', '1.00') }}" required>
                         </div>
                         @error('bid_increment')
                         <div class="error-message">{{ $message }}</div>
@@ -148,7 +175,9 @@
                     <div class="form-group">
                         <label for="start_time" class="form-label">Start Time *</label>
                         <input type="datetime-local" name="start_time" id="start_time" 
-                               class="form-control" required>
+                               class="form-control @error('start_time') is-invalid @enderror" 
+                               value="{{ old('start_time') }}"
+                               required>
                         @error('start_time')
                         <div class="error-message">{{ $message }}</div>
                         @enderror
@@ -158,7 +187,9 @@
                     <div class="form-group">
                         <label for="end_time" class="form-label">End Time *</label>
                         <input type="datetime-local" name="end_time" id="end_time" 
-                               class="form-control" required>
+                               class="form-control @error('end_time') is-invalid @enderror" 
+                               value="{{ old('end_time') }}"
+                               required>
                         @error('end_time')
                         <div class="error-message">{{ $message }}</div>
                         @enderror
@@ -189,7 +220,8 @@
                 <div class="form-grid">
                     <div class="form-group checkbox-group">
                         <div class="checkbox-wrapper">
-                            <input type="checkbox" name="auto_extend" id="auto_extend" value="1">
+                            <input type="checkbox" name="auto_extend" id="auto_extend" value="1" 
+                                   {{ old('auto_extend') ? 'checked' : '' }}>
                             <label for="auto_extend" class="checkbox-label">
                                 <span class="checkbox-custom"></span>
                                 Enable Auto-Extend
@@ -202,21 +234,24 @@
                         <label for="extension_minutes" class="form-label">Extension Minutes *</label>
                         <div class="input-group">
                             <input type="number" name="extension_minutes" id="extension_minutes" 
-                                   class="form-control" min="1" value="5">
+                                   class="form-control @error('extension_minutes') is-invalid @enderror" 
+                                   min="1" max="30" 
+                                   value="{{ old('extension_minutes', '5') }}">
                             <span class="input-group-text">minutes</span>
                         </div>
                         @error('extension_minutes')
                         <div class="error-message">{{ $message }}</div>
                         @enderror
-                        <div class="form-hint">How long to extend when a last-minute bid is placed</div>
+                        <div class="form-hint">How long to extend when a last-minute bid is placed (1-30 minutes)</div>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="terms_conditions" class="form-label">Terms & Conditions</label>
                     <textarea name="terms_conditions" id="terms_conditions" 
-                              class="form-control" rows="4" 
-                              placeholder="Optional bid terms and conditions..."></textarea>
+                              class="form-control @error('terms_conditions') is-invalid @enderror" 
+                              rows="4" 
+                              placeholder="Optional bid terms and conditions...">{{ old('terms_conditions') }}</textarea>
                     @error('terms_conditions')
                     <div class="error-message">{{ $message }}</div>
                     @enderror
@@ -234,7 +269,7 @@
                     <i class="fas fa-redo"></i>
                     Reset Form
                 </button>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" id="submitButton">
                     <i class="fas fa-save"></i>
                     Create Bid
                 </button>
@@ -255,12 +290,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const durationDisplay = document.getElementById('durationDisplay');
     const autoExtendCheckbox = document.getElementById('auto_extend');
     const extensionMinutesGroup = document.getElementById('extensionMinutesGroup');
+    const extensionMinutesInput = document.getElementById('extension_minutes');
+    const submitButton = document.getElementById('submitButton');
 
     // Set minimum datetime to current time
     const now = new Date();
     const timezoneOffset = now.getTimezoneOffset() * 60000;
     const localISOTime = new Date(now - timezoneOffset).toISOString().slice(0, 16);
     startTimeInput.min = localISOTime;
+
+    // Check if there are old form values and show auto-extend if needed
+    if (autoExtendCheckbox.checked) {
+        extensionMinutesGroup.style.display = 'block';
+    }
 
     // Product selection handler
     productSelect.addEventListener('change', function() {
@@ -276,18 +318,22 @@ document.addEventListener('DOMContentLoaded', function() {
             
             productPreview.style.display = 'block';
             
-            // Set suggested starting price (50% of regular price)
-            const regularPrice = parseFloat(selectedOption.getAttribute('data-price'));
-            const suggestedPrice = (regularPrice * 0.5).toFixed(2);
-            startingPriceInput.value = suggestedPrice;
-            startingPriceInput.placeholder = suggestedPrice;
+            // Set suggested starting price (50% of regular price) only if not already set
+            if (!startingPriceInput.value || startingPriceInput.value === '0') {
+                const regularPrice = parseFloat(selectedOption.getAttribute('data-price'));
+                const suggestedPrice = (regularPrice * 0.5).toFixed(2);
+                startingPriceInput.value = suggestedPrice;
+            }
             
         } else {
             productPreview.style.display = 'none';
-            startingPriceInput.value = '';
-            startingPriceInput.placeholder = '0.00';
         }
     });
+
+    // Trigger product change if there's already a selected product (from old input)
+    if (productSelect.value) {
+        productSelect.dispatchEvent(new Event('change'));
+    }
 
     // Duration calculation
     function calculateDuration() {
@@ -321,38 +367,104 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auto-extend toggle
     autoExtendCheckbox.addEventListener('change', function() {
         extensionMinutesGroup.style.display = this.checked ? 'block' : 'none';
-        if (!this.checked) {
-            document.getElementById('extension_minutes').value = '5';
+        if (this.checked && (!extensionMinutesInput.value || extensionMinutesInput.value < 1)) {
+            extensionMinutesInput.value = '5';
         }
     });
 
-    // Form validation
+    // Form validation - only prevent submission if there are errors
     document.getElementById('bidCreateForm').addEventListener('submit', function(e) {
-        const startTime = new Date(startTimeInput.value);
-        const endTime = new Date(endTimeInput.value);
+        let hasErrors = false;
         
-        if (startTime >= endTime) {
-            e.preventDefault();
-            alert('End time must be after start time.');
-            return false;
-        }
-        
-        if (startTime < new Date()) {
-            e.preventDefault();
-            alert('Start time must be in the future.');
-            return false;
+        // Clear previous error highlights
+        document.querySelectorAll('.is-invalid').forEach(el => {
+            el.classList.remove('is-invalid');
+        });
+
+        // Validate required fields
+        if (!productSelect.value) {
+            productSelect.classList.add('is-invalid');
+            hasErrors = true;
         }
 
+        if (!startingPriceInput.value || parseFloat(startingPriceInput.value) < 0.01) {
+            startingPriceInput.classList.add('is-invalid');
+            hasErrors = true;
+        }
+
+        if (!bidIncrementInput.value || parseFloat(bidIncrementInput.value) < 0.01) {
+            bidIncrementInput.classList.add('is-invalid');
+            hasErrors = true;
+        }
+
+        if (!startTimeInput.value) {
+            startTimeInput.classList.add('is-invalid');
+            hasErrors = true;
+        }
+
+        if (!endTimeInput.value) {
+            endTimeInput.classList.add('is-invalid');
+            hasErrors = true;
+        }
+
+        // Validate timing
+        const startTime = new Date(startTimeInput.value);
+        const endTime = new Date(endTimeInput.value);
+        const currentTime = new Date();
+        
+        if (startTimeInput.value && endTimeInput.value) {
+            if (startTime >= endTime) {
+                endTimeInput.classList.add('is-invalid');
+                hasErrors = true;
+            }
+            
+            if (startTime < currentTime) {
+                startTimeInput.classList.add('is-invalid');
+                hasErrors = true;
+            }
+        }
+
+        // Validate reserve price
         const reservePrice = parseFloat(document.getElementById('reserve_price').value) || 0;
         const startingPrice = parseFloat(startingPriceInput.value);
         
         if (reservePrice > 0 && reservePrice <= startingPrice) {
+            document.getElementById('reserve_price').classList.add('is-invalid');
+            hasErrors = true;
+        }
+
+        // Validate extension minutes if auto-extend is enabled
+        if (autoExtendCheckbox.checked) {
+            const extensionMinutes = parseInt(extensionMinutesInput.value);
+            if (!extensionMinutes || extensionMinutes < 1 || extensionMinutes > 30) {
+                extensionMinutesInput.classList.add('is-invalid');
+                hasErrors = true;
+            }
+        }
+
+        if (hasErrors) {
             e.preventDefault();
-            alert('Reserve price must be greater than starting price.');
+            alert('Please fix the validation errors before submitting.');
             return false;
         }
 
-        // If all validations pass, form will submit normally and redirect to index
+        // If no errors, show loading state and allow form submission
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Bid...';
+        
+        // Form will submit normally and redirect to index page
+    });
+
+    // Real-time validation for reserve price
+    document.getElementById('reserve_price').addEventListener('input', function() {
+        const reservePrice = parseFloat(this.value) || 0;
+        const startingPrice = parseFloat(startingPriceInput.value);
+        
+        if (reservePrice > 0 && reservePrice <= startingPrice) {
+            this.classList.add('is-invalid');
+        } else {
+            this.classList.remove('is-invalid');
+        }
     });
 });
 </script>

@@ -65,6 +65,12 @@ class ManageBidController extends Controller
             'reserve_price.gt' => 'The reserve price must be greater than the starting price.',
             'end_time.after' => 'The end time must be after the start time.',
             'start_time.after' => 'The start time must be in the future.',
+            'product_id.required' => 'Please select a product.',
+            'starting_price.required' => 'Starting price is required.',
+            'starting_price' => 'Starting price must be at least RM 0.01.',
+            'bid_increment.required' => 'Bid inrement is required.',
+            'bid_inrement.min' => 'Bid increment must be at least RM 1',
+            'extension_minutes.required_if' => 'Extension minutes are required when auto-extend is enabled.',
         ]);
 
         try {
