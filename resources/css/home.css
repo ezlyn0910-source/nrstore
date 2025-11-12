@@ -24,7 +24,7 @@ body {
     margin: 0;
     padding: 0;
     font-family: "Nunito", sans-serif;
-    background-color: var(--white);
+    background-color: var(--primary-dark) !important;
 }
 
 .container {
@@ -330,11 +330,13 @@ p {
 
 /* ===== FOOTER STYLES ===== */
 .footer-dark {
-    background: var(--primary-dark);
-    color: var(--light-bone);
-    padding: 3rem 0 1rem;
-    margin-top: 4rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--primary-dark) !important;
+    color: var(--light-bone) !important;
+    padding: 3rem 0 1rem !important;
+    margin-top: 0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    width: 100% !important;
+    position: relative;
 }
 
 .footer-content {
@@ -656,6 +658,18 @@ html {
 
 /* ===== FORCE HEADER CONSISTENCY ACROSS ALL PAGES ===== */
 /* Ensure header styles are not overridden by page-specific CSS */
+#app {
+    background-color: var(--light-bone);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+    background-color: var(--light-bone);
+}
+
 #app .header-top,
 #app .header-bottom {
     position: relative !important;
