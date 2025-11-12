@@ -12,6 +12,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\BidController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -78,6 +79,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/orders/{order}/cancel', 'cancel')->name('orders.cancel');
     });
 });
+
+// Bid Routes
+Route::get('/bid', [BidController::class, 'index'])->name('bid.index');
+Route::get('/bid/{id}', [BidController::class, 'show'])->name('bid.show');
+Route::post('/bid/{id}/place', [BidController::class, 'placeBid'])->name('bid.place');
 
 // Admin Routes
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
