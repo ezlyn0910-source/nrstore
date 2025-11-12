@@ -148,8 +148,8 @@
 
 .categories-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
 }
 
 .category-card {
@@ -198,7 +198,7 @@
     align-items: center;
     gap: 0.5rem;
     color: var(--accent-gold);
-    font-weight: 600;
+    font-weight: 400;
     font-size: 0.95rem;
     text-decoration: none;
     transition: all 0.3s ease;
@@ -215,7 +215,7 @@
     right: 1.5rem;
     width: 80px;
     height: 80px;
-    background: var(--light-bone);
+    background: transparent !important;
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -434,8 +434,8 @@
 /* Homepage Specific Responsive Design */
 @media (max-width: 968px) {
     .categories-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
     }
 
     .slide-content h1 {
