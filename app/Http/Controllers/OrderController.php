@@ -9,247 +9,286 @@ class OrderController extends Controller
 {
     public function index()
     {
-        if (Auth::check()) {
+        /*if (Auth::check()) {*/
             $orders = collect([
-                // Sample order data for design testing
                 (object)[
                     'id' => 1,
-                    'order_number' => 'ORD-001234',
-                    'status' => 'pending',
-                    'total_amount' => 3499.00,
+                    'order_number' => 'ORD-2024-001',
+                    'status' => 'shipped',
+                    'total_amount' => 2499.99,
                     'created_at' => now()->subDays(2),
-                    'items' => [
-                        (object)[
-                            'product' => (object)[
-                                'id' => 1,
-                                'name' => 'Dell XPS 13 Laptop',
-                                'specifications' => 'Intel Core i7-1165G7 • 16GB RAM • 512GB SSD',
-                                'processor' => 'Intel Core i7-1165G7',
-                                'ram' => '16GB RAM',
-                                'storage' => '512GB SSD',
-                                'images' => [
-                                    (object)['path' => 'products/orderpage.png']
-                                ]
-                            ],
-                            'quantity' => 1,
-                            'price' => 3499.00
-                        ]
+                    'shipping_address' => (object)[
+                        'name' => 'John Doe',
+                        'address_line_1' => '123 Main Street',
+                        'address_line_2' => 'Apt 4B',
+                        'city' => 'Kuala Lumpur',
+                        'state' => 'Wilayah Persekutuan',
+                        'postal_code' => '50000',
+                        'country' => 'Malaysia'
                     ],
-                    'statusHistory' => [
+                    'items' => collect([
                         (object)[
-                            'status' => 'pending',
-                            'created_at' => now()->subDays(2),
-                            'notes' => 'Order placed successfully'
+                            'id' => 1,
+                            'quantity' => 1,
+                            'price' => 2499.99,
+                            'product' => (object)[
+                                'name' => 'Gaming Laptop Pro',
+                                'processor' => 'Intel Core i7-12700H',
+                                'ram' => '16GB DDR5',
+                                'storage' => '1TB NVMe SSD',
+                                'specifications' => null
+                            ]
                         ]
-                    ]
+                    ])
                 ],
                 (object)[
                     'id' => 2,
-                    'order_number' => 'ORD-001233',
+                    'order_number' => 'ORD-2024-002',
                     'status' => 'delivered',
-                    'total_amount' => 2299.00,
+                    'total_amount' => 899.50,
                     'created_at' => now()->subDays(7),
-                    'items' => [
-                        (object)[
-                            'product' => (object)[
-                                'id' => 2,
-                                'name' => 'HP Pavilion 15',
-                                'specifications' => 'AMD Ryzen 5 5500U • 8GB RAM • 256GB SSD',
-                                'processor' => 'AMD Ryzen 5 5500U',
-                                'ram' => '8GB RAM',
-                                'storage' => '256GB SSD',
-                                'images' => [
-                                    (object)['path' => 'products/orderpage.png']
-                                ]
-                            ],
-                            'quantity' => 1,
-                            'price' => 2299.00
-                        ]
+                    'shipping_address' => (object)[
+                        'name' => 'John Doe',
+                        'address_line_1' => '123 Main Street',
+                        'address_line_2' => 'Apt 4B',
+                        'city' => 'Kuala Lumpur',
+                        'state' => 'Wilayah Persekutuan',
+                        'postal_code' => '50000',
+                        'country' => 'Malaysia'
                     ],
-                    'statusHistory' => [
+                    'items' => collect([
                         (object)[
-                            'status' => 'delivered',
-                            'created_at' => now()->subDays(1),
-                            'notes' => 'Order delivered successfully'
-                        ],
-                        (object)[
-                            'status' => 'shipped',
-                            'created_at' => now()->subDays(3),
-                            'notes' => 'Order shipped via express delivery'
-                        ],
-                        (object)[
-                            'status' => 'processing',
-                            'created_at' => now()->subDays(5),
-                            'notes' => 'Order is being processed'
-                        ],
-                        (object)[
-                            'status' => 'pending',
-                            'created_at' => now()->subDays(7),
-                            'notes' => 'Order placed successfully'
+                            'id' => 2,
+                            'quantity' => 2,
+                            'price' => 449.75,
+                            'product' => (object)[
+                                'name' => 'Wireless Mechanical Keyboard',
+                                'processor' => null,
+                                'ram' => null,
+                                'storage' => null,
+                                'specifications' => 'RGB Backlit, Brown Switches, Wireless'
+                            ]
                         ]
-                    ]
+                    ])
                 ],
                 (object)[
                     'id' => 3,
-                    'order_number' => 'ORD-001232',
-                    'status' => 'cancelled',
-                    'total_amount' => 1899.00,
-                    'created_at' => now()->subDays(10),
-                    'items' => [
-                        (object)[
-                            'product' => (object)[
-                                'id' => 3,
-                                'name' => 'Lenovo IdeaPad 3',
-                                'specifications' => 'Intel Core i5-1135G7 • 8GB RAM • 512GB SSD',
-                                'processor' => 'Intel Core i5-1135G7',
-                                'ram' => '8GB RAM',
-                                'storage' => '512GB SSD',
-                                'images' => [
-                                    (object)['path' => 'products/orderpage.png']
-                                ]
-                            ],
-                            'quantity' => 1,
-                            'price' => 1899.00
-                        ]
+                    'order_number' => 'ORD-2024-003',
+                    'status' => 'pending',
+                    'total_amount' => 1599.00,
+                    'created_at' => now()->subHours(5),
+                    'shipping_address' => (object)[
+                        'name' => 'John Doe',
+                        'address_line_1' => '123 Main Street',
+                        'address_line_2' => null,
+                        'city' => 'Kuala Lumpur',
+                        'state' => 'Wilayah Persekutuan',
+                        'postal_code' => '50000',
+                        'country' => 'Malaysia'
                     ],
-                    'statusHistory' => [
+                    'items' => collect([
                         (object)[
-                            'status' => 'cancelled',
-                            'created_at' => now()->subDays(8),
-                            'notes' => 'Order cancelled by customer'
-                        ],
-                        (object)[
-                            'status' => 'pending',
-                            'created_at' => now()->subDays(10),
-                            'notes' => 'Order placed successfully'
+                            'id' => 3,
+                            'quantity' => 1,
+                            'price' => 1599.00,
+                            'product' => (object)[
+                                'name' => '27" Gaming Monitor',
+                                'processor' => null,
+                                'ram' => null,
+                                'storage' => null,
+                                'specifications' => '144Hz, 1ms, QHD, IPS Panel'
+                            ]
                         ]
-                    ]
+                    ])
+                ],
+                (object)[
+                    'id' => 4,
+                    'order_number' => 'ORD-2024-004',
+                    'status' => 'processing',
+                    'total_amount' => 3299.00,
+                    'created_at' => now()->subDays(1),
+                    'shipping_address' => (object)[
+                        'name' => 'John Doe',
+                        'address_line_1' => '123 Main Street',
+                        'address_line_2' => null,
+                        'city' => 'Kuala Lumpur',
+                        'state' => 'Wilayah Persekutuan',
+                        'postal_code' => '50000',
+                        'country' => 'Malaysia'
+                    ],
+                    'items' => collect([
+                        (object)[
+                            'id' => 4,
+                            'quantity' => 1,
+                            'price' => 3299.00,
+                            'product' => (object)[
+                                'name' => 'Gaming Desktop PC',
+                                'processor' => 'AMD Ryzen 7 7800X3D',
+                                'ram' => '32GB DDR5',
+                                'storage' => '2TB SSD + 2TB HDD',
+                                'specifications' => null
+                            ]
+                        ]
+                    ])
+                ],
+                (object)[
+                    'id' => 5,
+                    'order_number' => 'ORD-2024-005',
+                    'status' => 'cancelled',
+                    'total_amount' => 599.00,
+                    'created_at' => now()->subDays(10),
+                    'shipping_address' => (object)[
+                        'name' => 'John Doe',
+                        'address_line_1' => '123 Main Street',
+                        'address_line_2' => 'Apt 4B',
+                        'city' => 'Kuala Lumpur',
+                        'state' => 'Wilayah Persekutuan',
+                        'postal_code' => '50000',
+                        'country' => 'Malaysia'
+                    ],
+                    'items' => collect([
+                        (object)[
+                            'id' => 5,
+                            'quantity' => 1,
+                            'price' => 599.00,
+                            'product' => (object)[
+                                'name' => 'Gaming Mouse',
+                                'processor' => null,
+                                'ram' => null,
+                                'storage' => null,
+                                'specifications' => 'RGB, 16000 DPI, Wireless'
+                            ]
+                        ]
+                    ])
+                ],
+                (object)[
+                    'id' => 6,
+                    'order_number' => 'ORD-2024-006',
+                    'status' => 'returned',
+                    'total_amount' => 1299.00,
+                    'created_at' => now()->subDays(15),
+                    'shipping_address' => (object)[
+                        'name' => 'John Doe',
+                        'address_line_1' => '123 Main Street',
+                        'address_line_2' => null,
+                        'city' => 'Kuala Lumpur',
+                        'state' => 'Wilayah Persekutuan',
+                        'postal_code' => '50000',
+                        'country' => 'Malaysia'
+                    ],
+                    'items' => collect([
+                        (object)[
+                            'id' => 6,
+                            'quantity' => 1,
+                            'price' => 1299.00,
+                            'product' => (object)[
+                                'name' => 'Tablet Pro',
+                                'processor' => null,
+                                'ram' => null,
+                                'storage' => null,
+                                'specifications' => '11" Display, 128GB, Stylus Included'
+                            ]
+                        ]
+                    ])
                 ]
             ]);
 
             return view('orders.index', compact('orders'));
-        } else {
-                // User is not logged in - return empty orders with guest flag
-                $orders = collect();
-                $isGuest = true;
-                return view('orders.index', compact('orders', 'isGuest'));
-            }
+        /*} else {
+            // User is not logged in - return empty orders with guest flag
+            $orders = collect();
+            $isGuest = true;
+            return view('orders.index', compact('orders', 'isGuest'));
+        }*/
+            return view('orders.index', compact('orders'));
     }
 
     public function show($orderId)
     {
-        // Temporary: Return sample order data for testing
-        $order = (object)[
-            'id' => $orderId,
-            'order_number' => 'ORD-001234',
-            'status' => 'pending',
-            'subtotal' => 3499.00,
-            'shipping_cost' => 10.00,
-            'tax_amount' => 210.00,
-            'discount_amount' => 0.00,
-            'total_amount' => 3719.00,
-            'payment_method' => 'credit_card',
-            'payment_status' => 'paid',
-            'shipping_method' => 'express',
-            'tracking_number' => 'TRK123456789',
-            'tracking_url' => '#',
-            'estimated_delivery' => now()->addDays(3),
-            'created_at' => now()->subDays(2),
-            'items' => [
-                (object)[
-                    'product' => (object)[
+        // Find the order from our dummy data
+        $orders = collect([
+            (object)[
+                'id' => 1,
+                'order_number' => 'ORD-2024-001',
+                'status' => 'shipped',
+                'total_amount' => 2499.99,
+                'created_at' => now()->subDays(2),
+                'shipping_address' => (object)[
+                    'name' => 'John Doe',
+                    'address_line_1' => '123 Main Street',
+                    'address_line_2' => 'Apt 4B',
+                    'city' => 'Kuala Lumpur',
+                    'state' => 'Wilayah Persekutuan',
+                    'postal_code' => '50000',
+                    'country' => 'Malaysia'
+                ],
+                'items' => collect([
+                    (object)[
                         'id' => 1,
-                        'name' => 'Dell XPS 13 Laptop',
-                        'specifications' => 'Intel Core i7-1165G7 • 16GB RAM • 512GB SSD',
-                        'images' => [
-                            (object)['path' => 'products/orderpage.png']
+                        'quantity' => 1,
+                        'price' => 2499.99,
+                        'product' => (object)[
+                            'name' => 'Gaming Laptop Pro',
+                            'processor' => 'Intel Core i7-12700H',
+                            'ram' => '16GB DDR5',
+                            'storage' => '1TB NVMe SSD',
+                            'specifications' => null
                         ]
-                    ],
-                    'quantity' => 1,
-                    'price' => 3499.00
-                ]
-            ],
-            'statusHistory' => [
-                (object)[
-                    'status' => 'pending',
-                    'created_at' => now()->subDays(2),
-                    'notes' => 'Order placed successfully'
-                ]
-            ],
-            'shippingAddress' => (object)[
-                'full_name' => 'John Doe',
-                'address_line_1' => '123 Main Street',
-                'address_line_2' => 'Apt 4B',
-                'city' => 'Kuala Lumpur',
-                'state' => 'Wilayah Persekutuan',
-                'postal_code' => '50000',
-                'country' => 'Malaysia',
-                'phone' => '+60 12-345 6789'
-            ],
-            'billingAddress' => (object)[
-                'full_name' => 'John Doe',
-                'address_line_1' => '123 Main Street',
-                'address_line_2' => 'Apt 4B',
-                'city' => 'Kuala Lumpur',
-                'state' => 'Wilayah Persekutuan',
-                'postal_code' => '50000',
-                'country' => 'Malaysia'
+                    ]
+                ])
             ]
-        ];
+        ]);
+
+        $order = $orders->firstWhere('id', $orderId);
+
+        if (!$order) {
+            abort(404);
+        }
 
         return view('orders.show', compact('order'));
     }
 
     public function details($orderId)
     {
-        // Temporary: Return sample order details for modal
-        $order = (object)[
-            'id' => $orderId,
-            'order_number' => 'ORD-001234',
-            'status' => 'pending',
-            'subtotal' => 3499.00,
-            'shipping_cost' => 10.00,
-            'tax_amount' => 210.00,
-            'total_amount' => 3719.00,
-            'payment_method' => 'credit_card',
-            'payment_status' => 'paid',
-            'shipping_method' => 'express',
-            'tracking_number' => 'TRK123456789',
-            'estimated_delivery' => now()->addDays(3),
-            'created_at' => now()->subDays(2),
-            'items' => [
-                (object)[
-                    'product' => (object)[
-                        'name' => 'Dell XPS 13 Laptop',
-                        'specifications' => 'Intel Core i7-1165G7 • 16GB RAM • 512GB SSD',
-                        'images' => [
-                            (object)['path' => 'products/orderpage.png']
+        // Find the order from our dummy data for modal
+        $orders = collect([
+            (object)[
+                'id' => 1,
+                'order_number' => 'ORD-2024-001',
+                'status' => 'shipped',
+                'total_amount' => 2499.99,
+                'created_at' => now()->subDays(2),
+                'shipping_address' => (object)[
+                    'name' => 'John Doe',
+                    'address_line_1' => '123 Main Street',
+                    'address_line_2' => 'Apt 4B',
+                    'city' => 'Kuala Lumpur',
+                    'state' => 'Wilayah Persekutuan',
+                    'postal_code' => '50000',
+                    'country' => 'Malaysia'
+                ],
+                'items' => collect([
+                    (object)[
+                        'id' => 1,
+                        'quantity' => 1,
+                        'price' => 2499.99,
+                        'product' => (object)[
+                            'name' => 'Gaming Laptop Pro',
+                            'processor' => 'Intel Core i7-12700H',
+                            'ram' => '16GB DDR5',
+                            'storage' => '1TB NVMe SSD',
+                            'specifications' => null
                         ]
-                    ],
-                    'quantity' => 1,
-                    'price' => 3499.00
-                ]
-            ],
-            'shippingAddress' => (object)[
-                'full_name' => 'John Doe',
-                'address_line_1' => '123 Main Street',
-                'address_line_2' => 'Apt 4B',
-                'city' => 'Kuala Lumpur',
-                'state' => 'Wilayah Persekutuan',
-                'postal_code' => '50000',
-                'country' => 'Malaysia',
-                'phone' => '+60 12-345 6789'
-            ],
-            'billingAddress' => (object)[
-                'full_name' => 'John Doe',
-                'address_line_1' => '123 Main Street',
-                'address_line_2' => 'Apt 4B',
-                'city' => 'Kuala Lumpur',
-                'state' => 'Wilayah Persekutuan',
-                'postal_code' => '50000',
-                'country' => 'Malaysia'
+                    ]
+                ])
             ]
-        ];
+        ]);
+
+        $order = $orders->firstWhere('id', $orderId);
+
+        if (!$order) {
+            abort(404);
+        }
 
         return view('orders.details', compact('order'));
     }

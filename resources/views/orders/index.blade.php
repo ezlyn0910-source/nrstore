@@ -6,108 +6,143 @@
 
 @section('content')
 <div class="orders-page">
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <img src="{{ asset('storage/images/orderbanner.jpg') }}" alt="Orders Banner" class="hero-image">
-        <div class="hero-title">
-            <h1>Orders</h1>
+    <!-- Page Title -->
+    <section class="page-title-section">
+        <div class="container">
+            <div class="page-title-container">
+                <h1 class="page-title">Orders</h1>
+            </div>
         </div>
     </section>
 
     <!-- Main Content -->
     <section class="main-content-section">
         <div class="container">
-            <div class="content-box">
-                <!-- Header -->
-                <div class="page-header">
-                    <h2>My Orders</h2>
+            <!-- Two Column Layout -->
+            <div class="orders-layout">
+                <!-- Left Column - Categories -->
+                <div class="categories-column">
+                    <div class="status-categories">
+                        <button class="status-category active" data-status="all">
+                            <span class="status-text">All Orders</span>
+                            <span class="status-count">{{ $orders->count() }}</span>
+                        </button>
+                        <button class="status-category" data-status="pending">
+                            <span class="status-text">Pending</span>
+                            <span class="status-count">{{ $orders->where('status', 'pending')->count() }}</span>
+                        </button>
+                        <button class="status-category" data-status="processing">
+                            <span class="status-text">Processing</span>
+                            <span class="status-count">{{ $orders->where('status', 'processing')->count() }}</span>
+                        </button>
+                        <button class="status-category" data-status="delivered">
+                            <span class="status-text">Delivered</span>
+                            <span class="status-count">{{ $orders->where('status', 'delivered')->count() }}</span>
+                        </button>
+                        <button class="status-category" data-status="cancelled">
+                            <span class="status-text">Cancelled</span>
+                            <span class="status-count">{{ $orders->where('status', 'cancelled')->count() }}</span>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Order Categories -->
-                <div class="order-categories">
-                    <button class="order-category active" data-status="all">All Orders</button>
-                    <button class="order-category" data-status="pending">Pending</button>
-                    <button class="order-category" data-status="processing">Processing</button>
-                    <button class="order-category" data-status="shipped">Shipped</button>
-                    <button class="order-category" data-status="delivered">Delivered</button>
-                    <button class="order-category" data-status="cancelled">Cancelled</button>
-                </div>
-
-                <!-- Orders List -->
-                <div class="orders-container">
-                    @foreach($orders as $order)
-                    <div class="order-card" data-status="{{ $order->status }}">
-                        <div class="order-header">
-                            <div class="order-status">
-                                <span class="status-badge {{ $order->status }}">{{ ucfirst($order->status) }}</span>
-                                <div class="order-date">{{ $order->created_at->format('M d, Y • h:i A') }}</div>
-                            </div>
-                            <div class="order-meta">
-                                <span class="order-id">Order #{{ $order->order_number }}</span>
-                                <span class="order-price">RM{{ number_format($order->total_amount, 2) }}</span>
-                            </div>
-                        </div>
-
-                        <div class="order-header-divider"></div>
-
-                        <div class="order-items">
-                            @foreach($order->items as $item)
-                            <div class="order-item">
-                                <div class="item-image">
-                                    <img src="{{ asset('storage/products/orderpage.png') }}" alt="{{ $item->product->name }}">
+                <!-- Right Column - Orders -->
+                <div class="orders-column">
+                    <!-- Orders List -->
+                    <div class="orders-container">
+                        @if($orders->count() > 0)
+                            @foreach($orders as $order)
+                            <div class="order-card" data-status="{{ $order->status }}">
+                                <!-- Order Header -->
+                                <div class="order-header">
+                                    <div class="order-id-section">
+                                        <div class="order-id-label">Order ID</div>
+                                        <div class="order-id-value">#{{ $order->order_number }}</div>
+                                        <!-- Address placed directly here -->
+                                        <div class="shipping-address">
+                                            Deliver to: 
+                                            @php
+                                                $addressParts = [
+                                                    $order->shipping_address->address_line_1 ?? 'N/A',
+                                                    $order->shipping_address->address_line_2 ?? null,
+                                                    $order->shipping_address->city ?? 'N/A',
+                                                    $order->shipping_address->state ?? 'N/A',
+                                                    $order->shipping_address->postal_code ?? 'N/A',
+                                                    $order->shipping_address->country ?? 'N/A'
+                                                ];
+                                                $addressLine = implode(', ', array_filter($addressParts, function($part) {
+                                                    return $part !== null;
+                                                }));
+                                            @endphp
+                                            {{ $addressLine }}
+                                        </div>
+                                    </div>
+                                    <div class="order-status-badge {{ $order->status }}">
+                                        {{ ucfirst($order->status) }}
+                                    </div>
                                 </div>
-                                <div class="item-details">
-                                <!-- Product Name and Specs -->
-                                <div class="product-name-specs">
-                                    <h5 class="item-name-with-specs">
-                                        {{ $item->product->name }}
-                                        @if(isset($item->product->processor) && $item->product->processor)
-                                        ({{ $item->product->processor }} | {{ $item->product->ram }} | {{ $item->product->storage }})
-                                        @elseif(isset($item->product->specifications) && $item->product->specifications)
-                                        ({{ $item->product->specifications }})
-                                        @endif
-                                    </h5>
+
+                                <!-- Divider -->
+                                <div class="order-divider"></div>
+
+                                <!-- Order Items -->
+                                <div class="order-items">
+                                    @foreach($order->items as $item)
+                                    <div class="order-item">
+                                        <div class="item-image">
+                                            <img src="{{ asset('storage/products/orderpage.png') }}" alt="{{ $item->product->name }}">
+                                        </div>
+                                        <div class="item-details">
+                                            <div class="item-name">{{ $item->product->name }}</div>
+                                            <div class="item-specs">
+                                                @if(isset($item->product->processor) && $item->product->processor)
+                                                    {{ $item->product->processor }} | {{ $item->product->ram }} | {{ $item->product->storage }}
+                                                @elseif(isset($item->product->specifications) && $item->product->specifications)
+                                                    {{ $item->product->specifications }}
+                                                @endif
+                                            </div>
+                                            <div class="item-price">RM{{ number_format($item->price, 2) }}</div>
+                                            <div class="item-quantity">Qty: {{ $item->quantity }}</div>
+                                        </div>
+                                    </div>
+                                    @endforeach
                                 </div>
-                                
-                                <!-- Quantity and Order Details Button in one row -->
-                                <div class="item-actions-row">
-                                    <span class="item-quantity">Qty: {{ $item->quantity }}</span>
-                                    <button class="specs-order-details-btn" data-order-id="{{ $order->id }}">
-                                        Order Details
+
+                                <!-- Order Footer -->
+                                <div class="order-footer">
+                                    <div class="order-total">RM{{ number_format($order->total_amount, 2) }}</div>
+                                    <button class="details-btn" data-order-id="{{ $order->id }}">
+                                        Details
                                     </button>
                                 </div>
                             </div>
-                            </div>
                             @endforeach
+                        @else
+                            <!-- Empty State -->
+                            <div class="empty-state">
+                                <div class="empty-icon">📦</div>
+                                <h3>No Orders Yet</h3>
+                                <p>You haven't placed any orders. Start shopping to see your orders here.</p>
+                                <a href="{{ route('products.index') }}" class="btn btn-primary">Start Shopping</a>
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Pagination -->
+                    @if($orders->count() > 0)
+                    <div class="pagination-container">
+                        <div class="pagination">
+                            <button class="pagination-btn">Previous</button>
+                            <div class="pagination-numbers">
+                                @for($i = 1; $i <= 3; $i++)
+                                <button class="pagination-number {{ $i == 1 ? 'active' : '' }}">{{ $i }}</button>
+                                @endfor
+                            </div>
+                            <button class="pagination-btn">Next</button>
                         </div>
                     </div>
-                    @endforeach
+                    @endif
                 </div>
-
-                <!-- Empty State -->
-                @if($orders->isEmpty())
-                <div class="empty-state">
-                    <div class="empty-icon">📦</div>
-                    <h3>No Orders Yet</h3>
-                    <p>You haven't placed any orders. Start shopping to see your orders here.</p>
-                    <a href="{{ route('login') }}" class="btn btn-primary">Start Shopping</a>
-                </div>
-                @endif
-
-                <!-- Pagination -->
-                @if($orders->count() > 0)
-                <div class="pagination-container">
-                    <div class="pagination">
-                        <button class="pagination-btn">Previous</button>
-                        <div class="pagination-numbers">
-                            @for($i = 1; $i <= 3; $i++)
-                            <button class="pagination-number {{ $i == 1 ? 'active' : '' }}">{{ $i }}</button>
-                            @endfor
-                        </div>
-                        <button class="pagination-btn">Next</button>
-                    </div>
-                </div>
-                @endif
             </div>
         </div>
     </section>
@@ -133,7 +168,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Order category filtering
-    const categoryButtons = document.querySelectorAll('.order-category');
+    const categoryButtons = document.querySelectorAll('.status-category');
     const orderCards = document.querySelectorAll('.order-card');
     
     categoryButtons.forEach(button => {
@@ -155,9 +190,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Order details modal - specs button
-    const specsOrderDetailsButtons = document.querySelectorAll('.specs-order-details-btn');
-    specsOrderDetailsButtons.forEach(button => {
+    // Order details modal
+    const detailsButtons = document.querySelectorAll('.details-btn');
+    detailsButtons.forEach(button => {
         button.addEventListener('click', function() {
             const orderId = this.dataset.orderId;
             loadOrderDetails(orderId);
@@ -180,109 +215,7 @@ function loadOrderDetails(orderId) {
 </script>
 
 <style>
-/* Guest Empty State Styles */
-.guest-empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 400px;
-    text-align: center;
-    padding: 3rem 2rem;
-}
-
-.guest-empty-icon {
-    font-size: 4rem;
-    color: var(--light-text);
-    margin-bottom: 1.5rem;
-    opacity: 0.7;
-}
-
-.guest-empty-title {
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: var(--dark-text);
-    margin-bottom: 1rem;
-}
-
-.guest-empty-description {
-    color: var(--light-text);
-    font-size: 1rem;
-    margin-bottom: 2rem;
-    max-width: 400px;
-    line-height: 1.6;
-}
-
-.guest-auth-buttons {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-bottom: 2rem;
-}
-
-.guest-btn {
-    padding: 0.75rem 2rem;
-    border-radius: 25px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    border: 2px solid transparent;
-}
-
-.guest-btn-login {
-    background: var(--primary-dark);
-    color: var(--white);
-    border-color: var(--primary-dark);
-}
-
-.guest-btn-login:hover {
-    background: var(--primary-green);
-    border-color: var(--primary-green);
-    transform: translateY(-2px);
-}
-
-.guest-btn-register {
-    background: transparent;
-    color: var(--primary-dark);
-    border-color: var(--primary-dark);
-}
-
-.guest-btn-register:hover {
-    background: var(--primary-dark);
-    color: var(--white);
-    transform: translateY(-2px);
-}
-
-.guest-shopping-option {
-    text-align: center;
-}
-
-.guest-shopping-option p {
-    color: var(--light-text);
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.guest-shopping-link {
-    color: var(--accent-gold);
-    text-decoration: none;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.3s ease;
-}
-
-.guest-shopping-link:hover {
-    color: var(--primary-green);
-    gap: 0.75rem;
-}
-
-/* Use CSS variables from home.css */
+/* CSS Variables */
 :root {
     --primary-dark: #1a2412;
     --primary-green: #2d4a35;
@@ -292,128 +225,392 @@ function loadOrderDetails(orderId) {
     --light-text: #6b7c72;
     --white: #ffffff;
     --border-light: #e9ecef;
+    --grey-bg: #f5f5f5;
+    --grey-text: #6b7280;
 }
 
-.product-name-specs {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 0.5rem;
+/* Page Title */
+.page-title-container {
+    text-align: center;
+    padding: 2rem 0 1rem;
 }
 
-.item-name-with-specs {
-    font-size: 1rem;
-    font-weight: bold;
-    color: #1f2937;
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-dark);
     margin: 0;
-    line-height: 1.4;
-    flex: 1;
-    margin-right: 1rem;
 }
 
-.specs-order-details-btn {
-    padding: 0.25rem 0.75rem;
-    background: #1f2937;
-    color: white;
-    border: none;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    flex-shrink: 0;
+/* Two Column Layout */
+.orders-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
 }
 
-.specs-order-details-btn:hover {
-    background: #374151;
-    transform: translateY(-1px);
+/* Left Column - Categories */
+.categories-column {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    height: fit-content;
 }
 
-/* Ensure proper spacing in item details */
-.item-details {
-    flex: 1;
-    position: relative;
+.categories-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--dark-text);
 }
 
-.item-meta {
+.status-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.status-category {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 0.5rem;
-}
-
-/* Order status layout */
-.order-status {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-}
-
-.order-date {
-    color: #6b7280;
-    font-size: 0.875rem;
-}
-
-/* Header divider */
-.order-header-divider {
-    height: 1px;
-    background: #e5e7eb;
-    margin: 1.5rem 0;
+    padding: 1rem 1.25rem;
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
     width: 100%;
 }
 
-/* Product box spacing */
-.orders-container .order-card .order-items .order-item {
-    display: flex !important;
-    gap: 1rem !important;
-    padding: 1.5rem !important;
-    border-radius: 0.5rem !important;
-    background: white !important;
-    border: 1px solid #e5e7eb !important;
-    margin-bottom: 1rem !important;
+.status-category:hover {
+    border-color: var(--primary-green);
 }
 
-.orders-container .order-card .order-items {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 1.5rem !important;
+.status-category.active {
+    background: var(--primary-green);
+    border-color: var(--primary-green);
+    color: var(--white);
 }
 
-.orders-container .order-card .order-items .order-item .item-details {
-    flex: 1 !important;
-    padding: 0.5rem 0 !important;
+.status-text {
+    font-weight: 500;
+    font-size: 1rem;
 }
 
-/* Responsive design */
+.status-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--grey-bg);
+    border-radius: 50%;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--dark-text);
+}
+
+.status-category.active .status-count {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--white);
+}
+
+/* Right Column - Orders */
+.orders-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.orders-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Order Card */
+.order-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-light);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.order-id-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.order-id-label {
+    font-size: 0.875rem;
+    color: var(--grey-text);
+    margin-bottom: 0.25rem;
+}
+
+.order-id-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--dark-text);
+}
+
+.order-status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.order-status-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.order-status-badge.processing {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.order-status-badge.shipped {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.order-status-badge.delivered {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.order-status-badge.cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.order-status-badge.returned {
+    background: #f3e8ff;
+    color: #7c3aed;
+}
+
+/* Divider */
+.order-divider {
+    height: 1px;
+    background: var(--border-light);
+    margin: 1.5rem 0;
+}
+
+/* Shipping Section */
+.shipping-section {
+    margin-bottom: 1.5rem;
+}
+
+.shipping-label {
+    font-size: 0.875rem;
+    color: var(--grey-text);
+    margin-bottom: 0.5rem;
+}
+
+.shipping-address {
+    font-size: 1rem;
+    color: var(--dark-text);
+    line-height: 1.5;
+}
+
+/* Order Items */
+.order-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.order-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+}
+
+.item-image {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+}
+
+.item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.item-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.item-name {
+    font-weight: 600;
+    color: var(--dark-text);
+    margin-bottom: 0.25rem;
+}
+
+.item-specs {
+    font-size: 0.875rem;
+    color: var(--grey-text);
+    margin-bottom: 0.5rem;
+}
+
+.item-price, .item-quantity {
+    font-size: 0.875rem;
+    color: var(--dark-text);
+}
+
+/* Order Footer */
+.order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-light);
+}
+
+.order-total {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--grey-text);
+}
+
+.details-btn {
+    padding: 0.75rem 1.5rem;
+    background: var(--primary-green);
+    color: var(--white);
+    border: none;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.details-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    text-align: center;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--dark-text);
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: var(--light-text);
+    margin-bottom: 2rem;
+    max-width: 400px;
+}
+
+/* Pagination */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pagination-btn, .pagination-number {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-light);
+    background: var(--white);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pagination-number.active {
+    background: var(--primary-green);
+    color: var(--white);
+    border-color: var(--primary-green);
+}
+
+.pagination-btn:hover, .pagination-number:hover {
+    border-color: var(--primary-green);
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
-    .guest-auth-buttons {
+    .orders-layout {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .order-header {
         flex-direction: column;
-        width: 100%;
-        max-width: 250px;
+        gap: 1rem;
     }
     
-    .guest-btn {
-        justify-content: center;
-    }
-    
-    .guest-empty-state {
-        padding: 2rem 1rem;
-    }
-
-    .product-name-specs {
+    .order-footer {
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 1rem;
+        align-items: flex-start;
     }
     
-    .item-name-with-specs {
-        margin-right: 0;
-    }
-    
-    .specs-order-details-btn {
+    .details-btn {
         align-self: flex-end;
     }
+    
+    .order-item {
+        flex-direction: column;
+    }
+    
+    .item-image {
+        width: 100%;
+        height: 200px;
+    }
 }
-
 </style>
 @endsection
