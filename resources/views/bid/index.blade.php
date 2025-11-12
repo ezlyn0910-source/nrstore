@@ -6,7 +6,7 @@
 
 @section('content')
 <div class="bid-page">
-    <!-- Hero Section with Overlay Text -->
+    <!-- Hero Section - DARK -->
     <section class="bid-hero-section">
         <img src="{{ asset('storage/images/bidbanner.png') }}" alt="Bid Banner" class="bid-hero-banner">
         <div class="hero-overlay-text">
@@ -15,93 +15,178 @@
         </div>
     </section>
 
-    <!-- Main Content -->
-    <section class="bid-main-content">
+    <!-- Auction Categories - LIGHT -->
+    <section class="bid-section bid-section-light">
         <div class="container">
-            <div class="bid-content-box">
-                <!-- Auction Categories Section -->
-                <div class="auction-categories-section">
-                    <div class="section-title-container">
-                        <h2 class="section-title">
-                            <span class="title-part-black">Auction</span>
-                            <span class="title-part-green">Categories</span>
-                        </h2>
-                        <div class="title-underline"></div>
-                    </div>
+            <div class="section-title-container">
+                <h2 class="section-title">
+                    <span class="title-part-black">Auction</span>
+                    <span class="title-part-green">Categories</span>
+                </h2>
+                <div class="title-underline"></div>
+            </div>
 
-                    <div class="auction-categories-grid">
-                        @foreach($auctionCategories as $category)
-                        <div class="category-card" onclick="window.location.href='#'">
-                            <div class="category-logo">
-                                <i class="fas fa-laptop"></i>
-                            </div>
-                            <h4 class="category-name">{{ $category->name }}</h4>
-                            <p class="category-count">{{ $category->count }} items</p>
-                        </div>
-                        @endforeach
+            <div class="auction-categories-grid">
+                @foreach($auctionCategories as $category)
+                <div class="category-card">
+                    <div class="category-logo">
+                        <i class="fas fa-laptop"></i>
                     </div>
+                    <h4 class="category-name">{{ $category->name }}</h4>
+                    <p class="category-count">{{ $category->count }} items</p>
                 </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
 
-                <!-- Live Auctions Section -->
-                <div class="live-auctions-section">
-                    <div class="section-title-container">
-                        <h2 class="section-title">
-                            <span class="title-part-black">Live</span>
-                            <span class="title-part-green">Auction</span>
-                        </h2>
-                        <div class="title-underline"></div>
-                    </div>
+    <!-- Live Auctions - DARK -->
+    <section class="bid-section bid-section-dark">
+        <div class="container">
+            <div class="section-title-container">
+                <h2 class="section-title">
+                    <span class="title-part-white">Live</span>
+                    <span class="title-part-green">Auctions</span>
+                </h2>
+                <div class="title-underline title-underline-white"></div>
+            </div>
 
-                    <div class="live-auctions-slider-container">
-                        <div class="live-auctions-track">
-                            @foreach($liveAuctions as $auction)
-                            <div class="live-auction-card" onclick="window.location.href='{{ route('bid.show', $auction->id) }}'">
-                                <div class="live-auction-badge">
-                                    <i class="fas fa-bolt"></i> LIVE
-                                </div>
-                                <div class="live-auction-image">
-                                    <img src="{{ asset($auction->image) }}" alt="{{ $auction->product_name }}">
-                                </div>
-                                <div class="live-auction-content">
-                                    <h4 class="live-auction-name">{{ $auction->product_name }}</h4>
-                                    <p class="live-auction-condition">{{ $auction->condition }}</p>
-                                    <div class="live-auction-info">
-                                        <div class="live-auction-price">RM{{ number_format($auction->current_bid, 2) }}</div>
-                                        <div class="live-auction-bids">{{ $auction->bid_count }} bids</div>
-                                    </div>
-                                    <div class="live-auction-time">
-                                        <i class="fas fa-clock"></i>
-                                        {{ $auction->time_left }} left
-                                    </div>
-                                </div>
+            <div class="live-auctions-slider-container">
+                <div class="live-auctions-track">
+                    @foreach($liveAuctions as $auction)
+                    <div class="live-auction-card">
+                        <div class="live-auction-badge">
+                            <i class="fas fa-bolt"></i> LIVE
+                        </div>
+                        <div class="live-auction-image">
+                            <img src="{{ asset($auction->image) }}" alt="{{ $auction->product_name }}">
+                        </div>
+                        <div class="live-auction-content">
+                            <h4 class="live-auction-name">{{ $auction->product_name }}</h4>
+                            <p class="live-auction-condition">{{ $auction->condition }}</p>
+                            <div class="live-auction-info">
+                                <div class="live-auction-price">RM{{ number_format($auction->current_bid, 2) }}</div>
+                                <div class="live-auction-bids">{{ $auction->bid_count }} bids</div>
                             </div>
-                            @endforeach
-                            
-                            <!-- Duplicate items for seamless loop -->
-                            @foreach($liveAuctions as $auction)
-                            <div class="live-auction-card" onclick="window.location.href='{{ route('bid.show', $auction->id) }}'">
-                                <div class="live-auction-badge">
-                                    <i class="fas fa-bolt"></i> LIVE
-                                </div>
-                                <div class="live-auction-image">
-                                    <img src="{{ asset($auction->image) }}" alt="{{ $auction->product_name }}">
-                                </div>
-                                <div class="live-auction-content">
-                                    <h4 class="live-auction-name">{{ $auction->product_name }}</h4>
-                                    <p class="live-auction-condition">{{ $auction->condition }}</p>
-                                    <div class="live-auction-info">
-                                        <div class="live-auction-price">RM{{ number_format($auction->current_bid, 2) }}</div>
-                                        <div class="live-auction-bids">{{ $auction->bid_count }} bids</div>
-                                    </div>
-                                    <div class="live-auction-time">
-                                        <i class="fas fa-clock"></i>
-                                        {{ $auction->time_left }} left
-                                    </div>
-                                </div>
+                            <div class="live-auction-time">
+                                <i class="fas fa-clock"></i>
+                                {{ $auction->time_left }} left
                             </div>
-                            @endforeach
                         </div>
                     </div>
+                    @endforeach
+                    
+                    <!-- Duplicate for loop -->
+                    @foreach($liveAuctions as $auction)
+                    <div class="live-auction-card">
+                        <div class="live-auction-badge">
+                            <i class="fas fa-bolt"></i> LIVE
+                        </div>
+                        <div class="live-auction-image">
+                            <img src="{{ asset($auction->image) }}" alt="{{ $auction->product_name }}">
+                        </div>
+                        <div class="live-auction-content">
+                            <h4 class="live-auction-name">{{ $auction->product_name }}</h4>
+                            <p class="live-auction-condition">{{ $auction->condition }}</p>
+                            <div class="live-auction-info">
+                                <div class="live-auction-price">RM{{ number_format($auction->current_bid, 2) }}</div>
+                                <div class="live-auction-bids">{{ $auction->bid_count }} bids</div>
+                            </div>
+                            <div class="live-auction-time">
+                                <i class="fas fa-clock"></i>
+                                {{ $auction->time_left }} left
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works - LIGHT -->
+    <section class="bid-section bid-section-light">
+        <div class="container">
+            <div class="section-title-container">
+                <h2 class="section-title">
+                    <span class="title-part-black">How It</span>
+                    <span class="title-part-green">Works</span>
+                </h2>
+                <div class="title-underline"></div>
+            </div>
+
+            <div class="auction-categories-grid">
+                <div class="category-card">
+                    <div class="category-logo">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h4 class="category-name">Register</h4>
+                    <p class="category-count">Create your account</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-logo">
+                        <i class="fas fa-gavel"></i>
+                    </div>
+                    <h4 class="category-name">Bid</h4>
+                    <p class="category-count">Place your bids</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-logo">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <h4 class="category-name">Win</h4>
+                    <p class="category-count">Get the best deals</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-logo">
+                        <i class="fas fa-shipping-fast"></i>
+                    </div>
+                    <h4 class="category-name">Receive</h4>
+                    <p class="category-count">Fast delivery</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upcoming Auctions - DARK -->
+    <section class="bid-section bid-section-dark">
+        <div class="container">
+            <div class="section-title-container">
+                <h2 class="section-title">
+                    <span class="title-part-white">Upcoming</span>
+                    <span class="title-part-green">Auctions</span>
+                </h2>
+                <div class="title-underline title-underline-white"></div>
+            </div>
+
+            <div class="auction-categories-grid">
+                <div class="category-card">
+                    <div class="category-logo">
+                        <i class="fas fa-desktop"></i>
+                    </div>
+                    <h4 class="category-name">Gaming PCs</h4>
+                    <p class="category-count">Starts Tomorrow</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-logo">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h4 class="category-name">Smartphones</h4>
+                    <p class="category-count">Starts in 2 days</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-logo">
+                        <i class="fas fa-laptop"></i>
+                    </div>
+                    <h4 class="category-name">Laptops</h4>
+                    <p class="category-count">Starts in 3 days</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-logo">
+                        <i class="fas fa-headphones"></i>
+                    </div>
+                    <h4 class="category-name">Accessories</h4>
+                    <p class="category-count">Starts next week</p>
                 </div>
             </div>
         </div>
@@ -112,20 +197,16 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-sliding animation is handled by CSS
-    console.log('Bid page loaded with auto-slider');
-    
-    // Add hover effect pause for better UX
-    const track = document.querySelector('.live-auctions-track');
-    const cards = document.querySelectorAll('.live-auction-card');
+    // Add hover effects
+    const cards = document.querySelectorAll('.live-auction-card, .category-card');
     
     cards.forEach(card => {
         card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-5px) scale(1.02)';
+            this.style.transform = 'translateY(-5px)';
         });
         
         card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0) scale(1)';
+            this.style.transform = 'translateY(0)';
         });
     });
 });
