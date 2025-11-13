@@ -6,19 +6,18 @@
 
 @section('content')
 <div class="product-page">
-    <!-- Hero Section with Overlap -->
-    <section class="hero-section" style="position: relative; height: 450px; background-color: #1f2937; overflow: hidden; margin-bottom: 0;">
+    <section class="hero-section" style="position: relative; height: 350px; background-color: #1f2937; overflow: hidden; margin-bottom: 0;">
         <img src="{{ asset('storage/images/productbanner.png') }}" alt="Products Banner" 
             style="width: 100%; height: 100%; object-fit: cover; opacity: 1;">
-        <div style="position: absolute; bottom: -14px; left: 0; right: 0; text-align: center;">
-            <h1 style="font-size: 18rem; font-weight: bold; color: white; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7); margin: 0;">
+        <div style="position: absolute; bottom: 5px; left: 0; right: 0; text-align: center;">
+            <h1 style="font-size: 14rem; font-weight: bold; color: white; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7); margin: 0;">
                 Product
             </h1>
         </div>
     </section>
 
-    <!-- White Box Container with Overlap -->
-    <section style="padding: 0; margin-top: -100px; position: relative; z-index: 10;">
+    <!-- White Box Container -->
+    <section class="white-box-container" style="padding: 0; margin-top: -120px; position: relative; z-index: 10; margin-bottom: 2rem;">
         <div style="max-width: 1200px; margin: 0 auto; padding: 0 1rem;">
             <div style="background: white; border-radius: 1.5rem; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); padding: 3rem 2rem 2rem; border: 1px solid #e5e7eb;">
                 
@@ -224,7 +223,7 @@
                 </div>
 
                 <!-- Recommendations Section -->
-                <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e5e7eb;">
+                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                         <h2 style="font-size: 1.5rem; font-weight: bold; color: #1f2937;">Explore our recommendations</h2>
                         <div style="display: flex; gap: 0.5rem;">
@@ -744,169 +743,25 @@ function showProductPopup(product) {
 <style>
 /* CSS Variables */
 :root {
+    --primary-dark: #1a2412;
+    --primary-green: #2d4a35;
+    --accent-gold: #daa112;
     --light-bone: #f8f9fa;
-    --dark-text: #1f2937;
-    --light-text: #6b7280;
-    --primary-dark: #1f2937;
-    --primary-green: #10b981;
-    --accent-gold: #d97706;
-    --border-light: #e5e7eb;
+    --dark-text: #1a2412;
+    --light-text: #6b7c72;
     --white: #ffffff;
+    --border-light: #e9ecef;
 }
 
-/* Footer Styles - Matching Minimalist Theme */
-.footer-dark {
-    background: #1a1a1a;
-    color: #e5e7eb;
-    padding: 3rem 0 1rem;
-    margin-top: 4rem;
-    border-top: 1px solid #374151;
-}
-
-.footer-content {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1.5fr;
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.footer-section {
-    display: flex;
-    flex-direction: column;
-}
-
-.footer-heading {
-    color: #ffffff;
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    letter-spacing: -0.5px;
-}
-
-.footer-text {
-    color: #9ca3af;
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
-    font-size: 0.9rem;
-}
-
-.footer-social {
-    display: flex;
-    gap: 0.75rem;
-}
-
-.social-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    background: #374151;
-    border: 1.5px solid #4b5563;
-    border-radius: 8px;
-    color: #e5e7eb;
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
-
-.social-link:hover {
-    background: #10b981;
-    border-color: #10b981;
-    color: #ffffff;
-    transform: translateY(-2px);
-}
-
-.footer-links {
-    list-style: none;
+.product-page {
+    background-color: var(--light-bone);
+    margin: 0;
     padding: 0;
-    margin: 0;
 }
 
-.footer-links li {
-    margin-bottom: 0.75rem;
-}
-
-.footer-link {
-    color: #9ca3af;
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-}
-
-.footer-link:hover {
-    color: #10b981;
-    transform: translateX(5px);
-}
-
-.contact-info {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.contact-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    color: #9ca3af;
-    font-size: 0.9rem;
-}
-
-.contact-item i {
-    color: #10b981;
-    width: 16px;
-}
-
-.footer-divider {
-    height: 1px;
-    background: #374151;
-    margin: 2rem 0 1.5rem;
-}
-
-.footer-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.footer-copyright {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-
-.footer-copyright p {
-    color: #9ca3af;
-    font-size: 0.875rem;
-    margin: 0;
-}
-
-.footer-payment {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    color: #9ca3af;
-    font-size: 0.875rem;
-}
-
-.payment-methods {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.payment-methods i {
-    font-size: 1.5rem;
-    color: #9ca3af;
-    transition: color 0.2s ease;
-}
-
-.payment-methods i:hover {
-    color: #10b981;
+.white-box-container {
+    margin-bottom: 2rem;
+    position: relative;
 }
 
 /* Filter Section Enhancements */
@@ -1118,51 +973,23 @@ button:not(.search-button):not(.social-link):hover {
 
 /* Responsive Design */
 @media (max-width: 991.98px) {
-    .footer-content {
-        grid-template-columns: 1fr 1fr;
-        gap: 2rem;
-    }
-    
     .search-container {
         width: 350px;
     }
 }
 
 @media (max-width: 768px) {
-    .footer-dark {
-        padding: 2rem 0 1rem;
-    }
-    
-    .footer-content {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
-    
-    .footer-bottom {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .footer-copyright {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .footer-payment {
-        justify-content: center;
-    }
-
     /* Adjust overlap for mobile */
     .hero-section {
-        height: 300px;
+        height: 250px;
     }
 
     .hero-section h1 {
-        font-size: 6rem !important;
+        font-size: 8rem !important;
     }
 
-    section[style*="margin-top: -100px"] {
-        margin-top: -60px !important;
+    section[style*="margin-top: -80px"] {
+        margin-top: -50px !important;
     }
     
     .search-container {
@@ -1189,23 +1016,11 @@ button:not(.search-button):not(.social-link):hover {
 }
 
 @media (max-width: 576px) {
-    .footer-social {
-        justify-content: center;
-    }
-    
-    .footer-heading {
-        text-align: center;
-    }
-    
-    .footer-text {
-        text-align: center;
-    }
-
     .hero-section h1 {
-        font-size: 4rem !important;
+        font-size: 6rem !important;
     }
 
-    section[style*="margin-top: -100px"] {
+    section[style*="margin-top: -80px"] {
         margin-top: -40px !important;
     }
     
@@ -1229,10 +1044,10 @@ button:not(.search-button):not(.social-link):hover {
     }
 }
 
-/* Hero Section Adjustments */
+/* Hero Section Adjustments - Reduced Height */
 .hero-section {
     position: relative;
-    height: 450px;
+    height: 350px;
     background-color: #1f2937;
     overflow: hidden;
     margin-bottom: 0;
@@ -1251,7 +1066,7 @@ button:not(.search-button):not(.social-link):hover {
     left: 0;
     right: 0;
     text-align: center;
-    font-size: 18rem;
+    font-size: 14rem;
     font-weight: bold;
     color: white;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
@@ -1271,7 +1086,7 @@ button:not(.search-button):not(.social-link):hover {
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     padding: 3rem 2rem 2rem;
     border: 1px solid #e5e7eb;
-    margin-top: -100px;
+    margin-top: -80px;
     position: relative;
     z-index: 10;
 }
