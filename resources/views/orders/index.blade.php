@@ -82,9 +82,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Divider -->
-                                <div class="order-divider"></div>
-
                                 <!-- Order Items -->
                                 <div class="order-items">
                                     @foreach($order->items as $item)
@@ -93,16 +90,20 @@
                                             <img src="{{ asset('storage/products/orderpage.png') }}" alt="{{ $item->product->name }}">
                                         </div>
                                         <div class="item-details">
-                                            <div class="item-name">{{ $item->product->name }}</div>
-                                            <div class="item-specs">
-                                                @if(isset($item->product->processor) && $item->product->processor)
-                                                    {{ $item->product->processor }} | {{ $item->product->ram }} | {{ $item->product->storage }}
-                                                @elseif(isset($item->product->specifications) && $item->product->specifications)
-                                                    {{ $item->product->specifications }}
-                                                @endif
+                                            <div class="item-header">
+                                                <div class="item-name">{{ $item->product->name }}</div>
+                                                <div class="item-specs">
+                                                    @if(isset($item->product->processor) && $item->product->processor)
+                                                        ({{ $item->product->processor }} | {{ $item->product->ram }} | {{ $item->product->storage }})
+                                                    @elseif(isset($item->product->specifications) && $item->product->specifications)
+                                                        ({{ $item->product->specifications }})
+                                                    @endif
+                                                </div>
                                             </div>
-                                            <div class="item-price">RM{{ number_format($item->price, 2) }}</div>
-                                            <div class="item-quantity">Qty: {{ $item->quantity }}</div>
+                                            <div class="item-meta">
+                                                <div class="item-price">RM{{ number_format($item->price, 2) }}</div>
+                                                <div class="item-quantity">Qty: {{ $item->quantity }}</div>
+                                            </div>
                                         </div>
                                     </div>
                                     @endforeach
@@ -469,7 +470,6 @@ function loadOrderDetails(orderId) {
 .item-name {
     font-weight: 600;
     color: var(--dark-text);
-    margin-bottom: 0.25rem;
 }
 
 .item-specs {

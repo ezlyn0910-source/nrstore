@@ -117,6 +117,4 @@ class BidController extends Controller
 
         return view('bid.index', compact('auctionCategories', 'liveAuctions'));
     }
-
-    // ... keep your existing show() and placeBid() methods
 }

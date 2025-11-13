@@ -104,59 +104,15 @@
         </div>
     </section>
 
-    <!-- How It Works - LIGHT -->
+    <!-- Upcoming Auctions - LIGHT -->
     <section class="bid-section bid-section-light">
         <div class="container">
             <div class="section-title-container">
                 <h2 class="section-title">
-                    <span class="title-part-black">How It</span>
-                    <span class="title-part-green">Works</span>
-                </h2>
-                <div class="title-underline"></div>
-            </div>
-
-            <div class="auction-categories-grid">
-                <div class="category-card">
-                    <div class="category-logo">
-                        <i class="fas fa-user-plus"></i>
-                    </div>
-                    <h4 class="category-name">Register</h4>
-                    <p class="category-count">Create your account</p>
-                </div>
-                <div class="category-card">
-                    <div class="category-logo">
-                        <i class="fas fa-gavel"></i>
-                    </div>
-                    <h4 class="category-name">Bid</h4>
-                    <p class="category-count">Place your bids</p>
-                </div>
-                <div class="category-card">
-                    <div class="category-logo">
-                        <i class="fas fa-trophy"></i>
-                    </div>
-                    <h4 class="category-name">Win</h4>
-                    <p class="category-count">Get the best deals</p>
-                </div>
-                <div class="category-card">
-                    <div class="category-logo">
-                        <i class="fas fa-shipping-fast"></i>
-                    </div>
-                    <h4 class="category-name">Receive</h4>
-                    <p class="category-count">Fast delivery</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Upcoming Auctions - DARK -->
-    <section class="bid-section bid-section-dark">
-        <div class="container">
-            <div class="section-title-container">
-                <h2 class="section-title">
-                    <span class="title-part-white">Upcoming</span>
+                    <span class="title-part-black">Upcoming</span>
                     <span class="title-part-green">Auctions</span>
                 </h2>
-                <div class="title-underline title-underline-white"></div>
+                <div class="title-underline title-underline-black"></div>
             </div>
 
             <div class="auction-categories-grid">
