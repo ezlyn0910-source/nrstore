@@ -194,7 +194,7 @@
                                     <a href="{{ route('admin.manageproduct.edit', $product) }}" class="btn-action edit" title="Edit Product">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="{{ route('products.show', $product->slug) }}" target="_blank" class="btn-action view" title="View Product">
+                                    <a href="{{ route('admin.manageproduct.show', $product) }}" target="_blank" class="btn-action view" title="View Product">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     <form action="{{ route('admin.manageproduct.destroy', $product) }}" method="POST" class="delete-form">
