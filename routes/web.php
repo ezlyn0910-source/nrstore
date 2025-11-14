@@ -85,6 +85,9 @@ Route::get('/bid', [BidController::class, 'index'])->name('bid.index');
 Route::get('/bid/{id}', [BidController::class, 'show'])->name('bid.show');
 Route::post('/bid/{id}/place', [BidController::class, 'placeBid'])->name('bid.place');
 
+// Brand auction pages
+Route::get('/brand/{brand}/auctions', [App\Http\Controllers\BrandController::class, 'show'])->name('brand.auctions');
+
 // Admin Routes
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     // Admin Dashboard

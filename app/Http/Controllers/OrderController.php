@@ -14,7 +14,7 @@ class OrderController extends Controller
                 (object)[
                     'id' => 1,
                     'order_number' => 'ORD-2024-001',
-                    'status' => 'shipped',
+                    'status' => 'processing', // Changed from 'shipped' to 'processing'
                     'total_amount' => 2499.99,
                     'created_at' => now()->subDays(2),
                     'shipping_address' => (object)[
@@ -157,36 +157,6 @@ class OrderController extends Controller
                                 'ram' => null,
                                 'storage' => null,
                                 'specifications' => 'RGB, 16000 DPI, Wireless'
-                            ]
-                        ]
-                    ])
-                ],
-                (object)[
-                    'id' => 6,
-                    'order_number' => 'ORD-2024-006',
-                    'status' => 'returned',
-                    'total_amount' => 1299.00,
-                    'created_at' => now()->subDays(15),
-                    'shipping_address' => (object)[
-                        'name' => 'John Doe',
-                        'address_line_1' => '123 Main Street',
-                        'address_line_2' => null,
-                        'city' => 'Kuala Lumpur',
-                        'state' => 'Wilayah Persekutuan',
-                        'postal_code' => '50000',
-                        'country' => 'Malaysia'
-                    ],
-                    'items' => collect([
-                        (object)[
-                            'id' => 6,
-                            'quantity' => 1,
-                            'price' => 1299.00,
-                            'product' => (object)[
-                                'name' => 'Tablet Pro',
-                                'processor' => null,
-                                'ram' => null,
-                                'storage' => null,
-                                'specifications' => '11" Display, 128GB, Stylus Included'
                             ]
                         ]
                     ])

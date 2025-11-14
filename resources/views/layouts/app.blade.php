@@ -48,15 +48,36 @@
                         </div>
                         <div class="header-right">
                             <div class="auth-links">
-                                <a href="#" class="auth-link">
-                                    <i class="fas fa-user"></i>
-                                    <span>Sign In</span>
-                                </a>
-                                <div class="auth-divider"></div>
-                                <a href="#" class="auth-link">
-                                    <i class="fas fa-user-plus"></i>
-                                    <span>Register</span>
-                                </a>
+                                @auth
+                                    <!-- Show user menu when logged in -->
+                                    <div class="user-menu">
+                                        <a href="{{ route('profile') }}" class="header-link">
+                                            <i class="fas fa-user-circle"></i>
+                                            <span>{{ Auth::user()->name }}</span>
+                                        </a>
+                                        <div class="auth-divider"></div>
+                                        <form method="POST" action="{{ route('logout') }}" style="display: inline;">
+                                            @csrf
+                                            <a href="{{ route('logout') }}" 
+                                            class="header-link"
+                                            onclick="event.preventDefault(); this.closest('form').submit();">
+                                                <i class="fas fa-sign-out-alt"></i>
+                                                <span>Logout</span>
+                                            </a>
+                                        </form>
+                                    </div>
+                                @else
+                                    <!-- Show login/register when not logged in -->
+                                    <a href="{{ route('login') }}" class="auth-link">
+                                        <i class="fas fa-sign-in-alt"></i>
+                                        <span>Sign In</span>
+                                    </a>
+                                    <div class="auth-divider"></div>
+                                    <a href="{{ route('register') }}" class="auth-link">
+                                        <i class="fas fa-user-plus"></i>
+                                        <span>Register</span>
+                                    </a>
+                                @endauth
                             </div>
                         </div>
                     </div>
