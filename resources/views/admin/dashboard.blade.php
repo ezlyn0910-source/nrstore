@@ -8,19 +8,19 @@
     <div class="dashboard-cards">
         <div class="card">
             <h3>Total Users</h3>
-            <p>120</p>
+            <p>{{ $stats['total_users'] }}</p>
         </div>
         <div class="card">
             <h3>Total Products</h3>
-            <p>85</p>
+            <p>{{ $stats['total_products'] }}</p>
         </div>
         <div class="card">
-            <h3>Pending Orders</h3>
-            <p>15</p>
+            <h3>Uncomplete Orders</h3>
+            <p>{{ $stats['uncomplete_orders'] }}</p>
         </div>
         <div class="card">
             <h3>Monthly Revenue</h3>
-            <p>RM 12,450</p>
+            <p>RM {{ number_format($stats['monthly_revenue'], 2) }}</p>
         </div>
     </div>
 
@@ -34,30 +34,50 @@
                     <th>Product</th>
                     <th>Status</th>
                     <th>Date</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
+                @foreach($recentOrders as $order)
                 <tr>
-                    <td>001</td>
-                    <td>Aina Rahman</td>
-                    <td>Matte Foundation</td>
-                    <td><span class="badge bg-warning text-dark">Processing</span></td>
-                    <td>2025-10-15</td>
+                    <td>{{ $order->order_number }}</td>
+                    <td>{{ $order->user->name ?? 'N/A' }}</td>
+                    <td>
+                        @if($order->orderItems->count() > 0)
+                            {{ $order->orderItems->first()->product->name ?? 'Product' }}
+                            @if($order->orderItems->count() > 1)
+                                + {{ $order->orderItems->count() - 1 }} more
+                            @endif
+                        @else
+                            No items
+                        @endif
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ 
+                            $order->status == 'processing' ? 'warning text-dark' : 
+                            ($order->status == 'shipped' ? 'info' : 
+                            ($order->status == 'delivered' ? 'success' : 
+                            ($order->status == 'cancelled' ? 'danger' : 'secondary'))) 
+                        }}">
+                            {{ $order->status_label }}
+                        </span>
+                        @if($order->payment_status == 'paid')
+                        <span class="badge bg-success ms-1">Paid</span>
+                        @endif
+                    </td>
+                    <td>{{ $order->created_at->format('Y-m-d') }}</td>
+                    <td>
+                        <a href="{{ route('admin.manageorder.show', $order->id) }}" class="btn btn-sm btn-outline-primary" title="View Order">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                    </td>
                 </tr>
+                @endforeach
+                @if($recentOrders->count() == 0)
                 <tr>
-                    <td>002</td>
-                    <td>Sarah Lim</td>
-                    <td>Lip Tint</td>
-                    <td><span class="badge bg-success">Delivered</span></td>
-                    <td>2025-10-14</td>
+                    <td colspan="6" class="text-center">No recent orders found.</td>
                 </tr>
-                <tr>
-                    <td>003</td>
-                    <td>Nora Zulkifli</td>
-                    <td>BB Cream</td>
-                    <td><span class="badge bg-danger">Cancelled</span></td>
-                    <td>2025-10-13</td>
-                </tr>
+                @endif
             </tbody>
         </table>
     </div>

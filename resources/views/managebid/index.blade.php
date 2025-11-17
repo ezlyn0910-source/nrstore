@@ -9,7 +9,7 @@
 <div class="bids-management-container">
     <!-- Header Section -->
     <div class="bids-header">
-        <div class="header-left">
+        <div class="header-content">
             <h1 class="page-title">Manage Bids</h1>
             <p class="page-subtitle">Monitor and manage all auction bids</p>
         </div>
@@ -30,68 +30,48 @@
     <!-- Statistics Cards -->
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-icon active">
-                <i class="fas fa-play-circle"></i>
-            </div>
-            <div class="stat-content">
-                <h3 class="stat-number">{{ $stats['active'] }}</h3>
-                <p class="stat-label">Active Bids</p>
-                <div class="stat-trend positive">
-                    <i class="fas fa-arrow-up"></i>
-                    <span>Live auctions</span>
-                </div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon upcoming">
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="stat-content">
-                <h3 class="stat-number">{{ $stats['upcoming'] }}</h3>
-                <p class="stat-label">Upcoming</p>
-                <div class="stat-trend info">
-                    <i class="fas fa-calendar"></i>
-                    <span>Scheduled</span>
-                </div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon completed">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="stat-content">
-                <h3 class="stat-number">{{ $stats['completed'] }}</h3>
-                <p class="stat-label">Completed</p>
-                <div class="stat-trend neutral">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Finished</span>
-                </div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon draft">
-                <i class="fas fa-edit"></i>
-            </div>
-            <div class="stat-content">
-                <h3 class="stat-number">{{ $stats['draft'] }}</h3>
-                <p class="stat-label">Drafts</p>
-                <div class="stat-trend warning">
-                    <i class="fas fa-pencil-alt"></i>
-                    <span>Pending setup</span>
-                </div>
-            </div>
-        </div>
-        <div class="stat-card">
             <div class="stat-icon total">
-                <i class="fas fa-gavel"></i>
+                <i class="fas fa-box"></i>
             </div>
             <div class="stat-content">
                 <h3 class="stat-number">{{ $stats['total'] }}</h3>
                 <p class="stat-label">Total Bids</p>
-                <div class="stat-trend info">
-                    <i class="fas fa-database"></i>
-                    <span>All time</span>
-                </div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon active">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-number">{{ $stats['active'] }}</h3>
+                <p class="stat-label">Active Bids</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon upcoming">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-number">{{ $stats['upcoming'] }}</h3>
+                <p class="stat-label">Upcoming</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon completed">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-number">{{ $stats['completed'] }}</h3>
+                <p class="stat-label">Completed</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon draft">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-number">{{ $stats['draft'] }}</h3>
+                <p class="stat-label">Draft</p>
             </div>
         </div>
     </div>
@@ -204,7 +184,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($bids as $bid)
+                        @forelse($bids as $bid) 
                         <tr class="bid-row" 
                             data-status="{{ $bid->status }}" 
                             data-search="{{ strtolower($bid->product->name) }}"

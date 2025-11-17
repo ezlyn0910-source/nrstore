@@ -19,7 +19,7 @@
             <div class="stat-icon total">
                 <i class="fas fa-shopping-bag"></i>
             </div>
-            <div class="stat-info">
+            <div class="stat-content">
                 <h3 class="stat-number">{{ $stats['total'] }}</h3>
                 <p class="stat-label">Total Orders</p>
             </div>
@@ -29,7 +29,7 @@
             <div class="stat-icon pending">
                 <i class="fas fa-clock"></i>
             </div>
-            <div class="stat-info">
+            <div class="stat-content">
                 <h3 class="stat-number">{{ $stats['pending'] }}</h3>
                 <p class="stat-label">Pending</p>
             </div>
@@ -39,7 +39,7 @@
             <div class="stat-icon processing">
                 <i class="fas fa-cog"></i>
             </div>
-            <div class="stat-info">
+            <div class="stat-content">
                 <h3 class="stat-number">{{ $stats['processing'] }}</h3>
                 <p class="stat-label">Processing</p>
             </div>
@@ -49,7 +49,7 @@
             <div class="stat-icon delivered">
                 <i class="fas fa-check-circle"></i>
             </div>
-            <div class="stat-info">
+            <div class="stat-content">
                 <h3 class="stat-number">{{ $stats['delivered'] }}</h3>
                 <p class="stat-label">Delivered</p>
             </div>

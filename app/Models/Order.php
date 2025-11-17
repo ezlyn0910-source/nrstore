@@ -102,14 +102,6 @@ class Order extends Model
     }
 
     /**
-     * Scope pending orders
-     */
-    public function scopePending($query)
-    {
-        return $query->where('status', 'pending');
-    }
-
-    /**
      * Scope processing orders
      */
     public function scopeProcessing($query)
@@ -123,14 +115,6 @@ class Order extends Model
     public function scopeShipped($query)
     {
         return $query->where('status', 'shipped');
-    }
-
-    /**
-     * Scope delivered orders
-     */
-    public function scopeDelivered($query)
-    {
-        return $query->where('status', 'delivered');
     }
 
     /**

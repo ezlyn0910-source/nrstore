@@ -1,7 +1,6 @@
 @extends('admin.adminbase')
 
 @section('title', 'User Management')
-@section('page_title', 'User Management Dashboard')
 
 @section('styles')
     @vite(['resources/sass/app.scss', 'resources/css/manage_user/index.css', 'resources/js/app.js'])
@@ -9,23 +8,52 @@
 
 @section('content')
 <div class="user-management-container">
+    <!-- Header Section-->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <h1 class="page-title">Manage Users</h1>
+            <p class="page-subtitle">Manage your users listings</p>
+        </div>
+    </div>
+
     <!-- Stats Cards -->
+
     <div class="stats-grid">
         <div class="stat-card">
-            <h3>Total Users</h3>
-            <p>{{ $stats['total_users'] }}</p>
+            <div class="stat-icon">
+                <i class="fas fa-box"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-number">{{ $stats['total_users'] }}</h3>
+                <p class="stat-label">Total Users</p>
+            </div>
         </div>
         <div class="stat-card">
-            <h3>Active Users</h3>
-            <p>{{ $stats['active_users'] }}</p>
+            <div class="stat-icon active">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-number">{{ $stats['active_users'] }}</h3>
+                <p class="stat-label">Active Users</p>
+            </div>
         </div>
         <div class="stat-card">
-            <h3>Suspended Users</h3>
-            <p>{{ $stats['suspended_users'] }}</p>
+            <div class="stat-icon featured">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-number">{{ $stats['suspended_users'] }}</h3>
+                <p class="stat-label">Suspended Users</p>
+            </div>
         </div>
         <div class="stat-card">
-            <h3>New Users Today</h3>
-            <p>{{ $stats['new_users_today'] }}</p>
+            <div class="stat-icon low-stock">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-number">{{ $stats['new_users_today'] }}</h3>
+                <p class="stat-label">New Users Today</p>
+            </div>
         </div>
     </div>
 
