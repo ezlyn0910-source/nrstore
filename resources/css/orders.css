@@ -183,12 +183,17 @@
 }
 
 .order-status-badge {
-    padding: 0.625rem 1.25rem;
-    border-radius: 25px;
-    font-size: 0.875rem;
+    padding: 0.5rem 0.8rem; /* More vertical, slightly less horizontal padding */
+    border-radius: 20px;
+    font-size: 0.7rem; /* Slightly smaller font for longer text */
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    width: 110px; /* Fixed width to accommodate "Processing" */
+    text-align: center;
+    display: inline-block;
+    white-space: nowrap;
+    box-sizing: border-box;
 }
 
 .order-status-badge.pending {
@@ -255,12 +260,13 @@
 
 .order-item {
     display: flex;
-    gap: 1.25rem;
-    padding: 1.25rem;
+    gap: 0;
+    padding: 0;
     background: var(--white);
     border: 2px solid var(--border-light);
     border-radius: 0.75rem;
     transition: all 0.3s ease;
+    align-items: stretch;
 }
 
 .order-item:hover {
@@ -269,19 +275,20 @@
 }
 
 .item-image {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     flex-shrink: 0;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem 0 0 0.75rem;
     overflow: hidden;
-    border: 1px solid var(--border-light);
+    border: none;
+    border-right: 1px solid var(--border-light);
 }
 
 .item-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
+    display: block;
 }
 
 .order-item:hover .item-image img {
@@ -292,7 +299,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
     flex-wrap: wrap;
 }
 
@@ -300,13 +307,27 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
+    padding: 1rem;
+    gap: 0;
+}
+
+.item-top-row {
+    margin-bottom: 0; /* No margin */
+}
+
+.item-name-specs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .item-name {
     font-weight: 700;
     color: var(--dark-text);
     font-size: 1.125rem;
+    margin: 0;
 }
 
 .item-specs {
@@ -325,6 +346,7 @@
     font-size: 0.875rem;
     color: var(--grey-text);
     font-weight: 600;
+    margin: 0;
 }
 
 /* Order Footer */
@@ -341,9 +363,15 @@
 }
 
 .order-total {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
-    color: var(--grey-text);
+    color: var(--dark-text);
+}
+
+.item-count {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 500;
 }
 
 .details-btn {

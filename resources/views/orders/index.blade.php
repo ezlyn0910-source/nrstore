@@ -90,17 +90,19 @@
                                             <img src="{{ asset('storage/products/orderpage.png') }}" alt="{{ $item->product->name }}">
                                         </div>
                                         <div class="item-details">
-                                            <div class="item-header">
-                                                <div class="item-name">{{ $item->product->name }}</div>
-                                                <div class="item-specs">
-                                                    @if(isset($item->product->processor) && $item->product->processor)
-                                                        ({{ $item->product->processor }} | {{ $item->product->ram }} | {{ $item->product->storage }})
-                                                    @elseif(isset($item->product->specifications) && $item->product->specifications)
-                                                        ({{ $item->product->specifications }})
-                                                    @endif
+                                            <div class="item-top-row">
+                                                <div class="item-name-specs">
+                                                    <span class="item-name">{{ $item->product->name }}</span>
+                                                    <span class="item-specs">
+                                                        @if(isset($item->product->processor) && $item->product->processor)
+                                                            ({{ $item->product->processor }} | {{ $item->product->ram }} | {{ $item->product->storage }})
+                                                        @elseif(isset($item->product->specifications) && $item->product->specifications)
+                                                            ({{ $item->product->specifications }})
+                                                        @endif
+                                                    </span>
                                                 </div>
                                             </div>
-                                            <div class="item-meta">
+                                            <div class="item-bottom-row">
                                                 <div class="item-price">RM{{ number_format($item->price, 2) }}</div>
                                                 <div class="item-quantity">Qty: {{ $item->quantity }}</div>
                                             </div>
@@ -111,7 +113,17 @@
 
                                 <!-- Order Footer -->
                                 <div class="order-footer">
-                                    <div class="order-total">RM{{ number_format($order->total_amount, 2) }}</div>
+                                    <div class="order-total">Total: RM{{ number_format($order->total_amount, 2) }}
+                                        <span class="item-count">
+                                            ({{ $order->items->sum('quantity') }} 
+                                            @if($order->items->sum('quantity') == 1)
+                                                item
+                                            @else
+                                                items
+                                            @endif
+                                            )
+                                        </span>
+                                    </div>
                                     <button class="details-btn" data-order-id="{{ $order->id }}">
                                         Details
                                     </button>

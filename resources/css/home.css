@@ -3,7 +3,7 @@
 :root {
     --primary-dark: #1a2412;
     --primary-green: #2d4a35;
-    --accent-gold: #daa112;
+    --light-green: #4caf50;
     --light-bone: #f8f9fa;
     --dark-text: #1a2412;
     --light-text: #6b7c72;
@@ -65,6 +65,8 @@ p {
     max-height: 40px !important;
     display: flex !important;
     align-items: center !important;
+    position: relative;
+    z-index: 1000;
 }
 
 .header-top-content {
@@ -85,6 +87,7 @@ p {
 
 .language-dropdown {
     position: relative;
+    z-index: 1001;
 }
 
 .language-btn {
@@ -119,7 +122,7 @@ p {
     min-width: 120px;
     box-shadow: var(--shadow);
     border-radius: 4px;
-    z-index: 1000;
+    z-index: 1002;
 }
 
 .dropdown-content .dropdown-item {
@@ -173,7 +176,7 @@ p {
 }
 
 .header-link:hover {
-    color: var(--accent-gold);
+    color: var(--light-green);
 }
 
 .auth-links {
@@ -196,7 +199,7 @@ p {
 }
 
 .auth-link:hover {
-    color: var(--accent-gold);
+    color: var(--light-green);
 }
 
 .auth-divider {
@@ -214,6 +217,8 @@ p {
     max-height: 70px !important;
     display: flex !important;
     align-items: center !important;
+    position: relative;
+    z-index: 999;
 }
 
 .header-bottom-content {
@@ -233,7 +238,7 @@ p {
 }
 
 .logo-link:hover {
-    color: var(--accent-gold);
+    color: var(--light-green);
 }
 
 .main-nav {
@@ -253,7 +258,7 @@ p {
 }
 
 .nav-link:hover {
-    color: var(--accent-gold);
+    color: var(--light-green);
 }
 
 .bid-link {
@@ -386,8 +391,8 @@ p {
 }
 
 .social-link:hover {
-    background: var(--accent-gold);
-    border-color: var(--accent-gold);
+    background: var(--light-green);
+    border-color: var(--light-green);
     color: var(--white);
     transform: translateY(-2px);
 }
@@ -412,7 +417,7 @@ p {
 }
 
 .footer-link:hover {
-    color: var(--accent-gold);
+    color: var(--light-green);
     transform: translateX(5px);
 }
 
@@ -431,7 +436,7 @@ p {
 }
 
 .contact-item i {
-    color: var(--accent-gold);
+    color: var(--light-green);
     width: 16px;
 }
 
@@ -482,7 +487,7 @@ p {
 }
 
 .payment-methods i:hover {
-    color: var(--accent-gold);
+    color: var(--light-green);
 }
 
 /* ===== RESPONSIVE DESIGN ===== */
@@ -643,7 +648,7 @@ html {
 .nav-link:focus,
 .nav-action-btn:focus,
 .dropdown-item:focus {
-    outline: 2px solid var(--accent-gold);
+    outline: 2px solid var(--light-green);
     outline-offset: 2px;
 }
 
@@ -685,6 +690,8 @@ main {
     max-height: 40px !important;
     display: flex !important;
     align-items: center !important;
+    position: relative !important;
+    z-index: 1000 !important;
 }
 
 #app .header-bottom {
@@ -695,6 +702,8 @@ main {
     max-height: 70px !important;
     display: flex !important;
     align-items: center !important;
+    position: relative !important;
+    z-index: 999 !important;
 }
 
 /* Ensure header content stays consistent */

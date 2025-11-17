@@ -26,16 +26,34 @@
                 <div class="title-underline"></div>
             </div>
 
-            <div class="auction-categories-grid">
-                @foreach($auctionCategories as $category)
-                <div class="category-card">
-                    <div class="category-logo">
-                        <i class="fas fa-laptop"></i>
+            <div class="brands-row">
+                <a href="{{ route('brand.auctions', 'microsoft') }}" class="brand-card">
+                    <div class="brand-logo-circle">
+                        <img src="{{ asset('storage/images/microsoftlogo.png') }}" alt="Microsoft Logo">
                     </div>
-                    <h4 class="category-name">{{ $category->name }}</h4>
-                    <p class="category-count">{{ $category->count }} items</p>
-                </div>
-                @endforeach
+                    <h4 class="brand-name">Microsoft</h4>
+                </a>
+                
+                <a href="{{ route('brand.auctions', 'hp') }}" class="brand-card">
+                    <div class="brand-logo-circle">
+                        <img src="{{ asset('storage/images/hplogo.png') }}" alt="HP Logo">
+                    </div>
+                    <h4 class="brand-name">HP</h4>
+                </a>
+                
+                <a href="{{ route('brand.auctions', 'dell') }}" class="brand-card">
+                    <div class="brand-logo-circle">
+                        <img src="{{ asset('storage/images/delllogo.png') }}" alt="Dell Logo">
+                    </div>
+                    <h4 class="brand-name">Dell</h4>
+                </a>
+                
+                <a href="{{ route('brand.auctions', 'lenovo') }}" class="brand-card">
+                    <div class="brand-logo-circle">
+                        <img src="{{ asset('storage/images/lenovologo.png') }}" alt="Lenovo Logo">
+                    </div>
+                    <h4 class="brand-name">Lenovo</h4>
+                </a>
             </div>
         </div>
     </section>
@@ -115,34 +133,127 @@
                 <div class="title-underline title-underline-black"></div>
             </div>
 
-            <div class="auction-categories-grid">
-                <div class="category-card">
-                    <div class="category-logo">
-                        <i class="fas fa-desktop"></i>
+            <div class="upcoming-auctions-container">
+                <div class="upcoming-auctions-track">
+                    <!-- Product 1 -->
+                    <div class="upcoming-auction-card">
+                        <div class="upcoming-badge">
+                            <i class="fas fa-clock"></i> UPCOMING
+                        </div>
+                        <div class="upcoming-auction-image">
+                            <img src="{{ asset('storage/images/gaming-pc.png') }}" alt="Gaming PC">
+                        </div>
+                        <div class="upcoming-auction-content">
+                            <h3 class="upcoming-auction-name">Gaming PC RTX 4080</h3>
+                            <div class="upcoming-auction-specs">
+                                <div class="upcoming-auction-spec">Intel i9-13900K, 32GB RAM</div>
+                                <div class="upcoming-auction-spec">NVIDIA RTX 4080 16GB</div>
+                                <div class="upcoming-auction-spec">2TB NVMe SSD + 4TB HDD</div>
+                            </div>
+                            <div class="upcoming-auction-price">
+                                <div class="price-label">Starting Bid</div>
+                                <div class="price-tba">TBA</div>
+                            </div>
+                            <div class="upcoming-date">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Starts: Dec 15, 2024 - 10:00 AM</span>
+                            </div>
+                            <button class="reminder-btn">
+                                <i class="fas fa-bell"></i>
+                                Set Reminder
+                            </button>
+                        </div>
                     </div>
-                    <h4 class="category-name">Gaming PCs</h4>
-                    <p class="category-count">Starts Tomorrow</p>
-                </div>
-                <div class="category-card">
-                    <div class="category-logo">
-                        <i class="fas fa-mobile-alt"></i>
+
+                    <!-- Product 2 -->
+                    <div class="upcoming-auction-card">
+                        <div class="upcoming-badge">
+                            <i class="fas fa-clock"></i> UPCOMING
+                        </div>
+                        <div class="upcoming-auction-image">
+                            <img src="{{ asset('storage/images/iphone-15.png') }}" alt="iPhone 15 Pro">
+                        </div>
+                        <div class="upcoming-auction-content">
+                            <h3 class="upcoming-auction-name">iPhone 15 Pro Max</h3>
+                            <div class="upcoming-auction-specs">
+                                <div class="upcoming-auction-spec">6.7" Super Retina XDR</div>
+                                <div class="upcoming-auction-spec">A17 Pro Chip, 1TB Storage</div>
+                                <div class="upcoming-auction-spec">Titanium Design</div>
+                            </div>
+                            <div class="upcoming-auction-price">
+                                <div class="price-label">Starting Bid</div>
+                                <div class="price-tba">TBA</div>
+                            </div>
+                            <div class="upcoming-date">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Starts: Dec 18, 2024 - 2:00 PM</span>
+                            </div>
+                            <button class="reminder-btn">
+                                <i class="fas fa-bell"></i>
+                                Set Reminder
+                            </button>
+                        </div>
                     </div>
-                    <h4 class="category-name">Smartphones</h4>
-                    <p class="category-count">Starts in 2 days</p>
-                </div>
-                <div class="category-card">
-                    <div class="category-logo">
-                        <i class="fas fa-laptop"></i>
+
+                    <!-- Product 3 -->
+                    <div class="upcoming-auction-card">
+                        <div class="upcoming-badge">
+                            <i class="fas fa-clock"></i> UPCOMING
+                        </div>
+                        <div class="upcoming-auction-image">
+                            <img src="{{ asset('storage/images/macbook-pro.png') }}" alt="MacBook Pro">
+                        </div>
+                        <div class="upcoming-auction-content">
+                            <h3 class="upcoming-auction-name">MacBook Pro 16"</h3>
+                            <div class="upcoming-auction-specs">
+                                <div class="upcoming-auction-spec">M3 Max, 48GB RAM, 4TB SSD</div>
+                                <div class="upcoming-auction-spec">16.2" Liquid Retina XDR</div>
+                                <div class="upcoming-auction-spec">Space Black Finish</div>
+                            </div>
+                            <div class="upcoming-auction-price">
+                                <div class="price-label">Starting Bid</div>
+                                <div class="price-tba">TBA</div>
+                            </div>
+                            <div class="upcoming-date">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Starts: Dec 20, 2024 - 9:00 AM</span>
+                            </div>
+                            <button class="reminder-btn">
+                                <i class="fas fa-bell"></i>
+                                Set Reminder
+                            </button>
+                        </div>
                     </div>
-                    <h4 class="category-name">Laptops</h4>
-                    <p class="category-count">Starts in 3 days</p>
-                </div>
-                <div class="category-card">
-                    <div class="category-logo">
-                        <i class="fas fa-headphones"></i>
+
+                    <!-- Product 4 -->
+                    <div class="upcoming-auction-card">
+                        <div class="upcoming-badge">
+                            <i class="fas fa-clock"></i> UPCOMING
+                        </div>
+                        <div class="upcoming-auction-image">
+                            <img src="{{ asset('storage/images/camera.png') }}" alt="Professional Camera">
+                        </div>
+                        <div class="upcoming-auction-content">
+                            <h3 class="upcoming-auction-name">Sony A7IV Camera</h3>
+                            <div class="upcoming-auction-specs">
+                                <div class="upcoming-auction-spec">33MP Full-frame Sensor</div>
+                                <div class="upcoming-auction-spec">4K 60p Video Recording</div>
+                                <div class="upcoming-auction-spec">With 24-70mm Lens</div>
+                            </div>
+                            <div class="upcoming-auction-price">
+                                <div class="price-label">Starting Bid</div>
+                                <div class="price-tba">TBA</div>
+                            </div>
+                            <div class="upcoming-date">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Starts: Dec 22, 2024 - 11:00 AM</span>
+                            </div>
+                            <button class="reminder-btn">
+                                <i class="fas fa-bell"></i>
+                                Set Reminder
+                            </button>
+                        </div>
                     </div>
-                    <h4 class="category-name">Accessories</h4>
-                    <p class="category-count">Starts next week</p>
                 </div>
             </div>
         </div>
@@ -153,8 +264,8 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Add hover effects
     const cards = document.querySelectorAll('.live-auction-card, .category-card');
+    const reminderBtns = document.querySelectorAll('.reminder-btn');
     
     cards.forEach(card => {
         card.addEventListener('mouseenter', function() {
@@ -163,6 +274,23 @@ document.addEventListener('DOMContentLoaded', function() {
         
         card.addEventListener('mouseleave', function() {
             this.style.transform = 'translateY(0)';
+        });
+    });
+
+    reminderBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const productName = this.closest('.upcoming-auction-card').querySelector('.upcoming-auction-name').textContent;
+            
+            if (this.classList.contains('reminder-set')) {
+                this.classList.remove('reminder-set');
+                this.innerHTML = '<i class="fas fa-bell"></i> Set Reminder';
+                // Remove reminder logic here
+            } else {
+                this.classList.add('reminder-set');
+                this.innerHTML = '<i class="fas fa-bell-slash"></i> Reminder Set';
+                // Set reminder logic here
+                alert(`Reminder set for ${productName}`);
+            }
         });
     });
 });
