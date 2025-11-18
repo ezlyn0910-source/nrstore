@@ -21,14 +21,7 @@ Auth::routes();
 
 // User Routes
 // Starter/Landing Page
-Route::get('/', function () {
-    return view('homepage');
-})->name('home');
-
-// Homepage
-Route::get('/homepage', function () {
-    return view('homepage');
-})->name('homepage');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Authentication Routes
 Auth::routes(['register' => true]); // Enable registration if needed
