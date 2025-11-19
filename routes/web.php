@@ -35,7 +35,7 @@ Route::get('/products/{product}/slug', [ProductController::class, 'showBySlug'])
 Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 Route::get('/orders/{order}/details', [OrderController::class, 'details'])->name('orders.details');
-Route::post('/orders/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
 // Checkout Routes
 Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
