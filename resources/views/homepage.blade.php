@@ -84,45 +84,32 @@
     <div class="container">
         <h2 class="section-title">Featured Products</h2>
         <div class="products-grid">
-            <div class="product-card">
+            @forelse($hotProducts as $product)
+            <div class="product-card" data-product-id="{{ $product->id }}">
                 <button class="like-btn">
                     <i class="far fa-heart"></i>
                 </button>
                 <div class="product-image">
-                    <div class="image-placeholder">Product 1</div>
+                    @if($product->main_image_url)
+                        <img src="{{ $product->main_image_url }}" alt="{{ $product->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    @else
+                        <div class="image-placeholder">No Image</div>
+                    @endif
                 </div>
                 <div class="product-info">
-                    <h3 class="product-name">Wireless Headphones</h3>
-                    <p class="product-brand">AudioTech</p>
-                    <p class="product-price">RM129.99</p>
+                    <h3 class="product-name">{{ $product->name }}</h3>
+                    <p class="product-brand">{{ $product->brand }}</p>
+                    <p class="product-price">{{ $product->formatted_price }}</p>
+                    @if($product->has_variations)
+                        <small style="color: var(--light-text);">From {{ $product->formatted_price }}</small>
+                    @endif
                 </div>
             </div>
-            <div class="product-card">
-                <button class="like-btn">
-                    <i class="far fa-heart"></i>
-                </button>
-                <div class="product-image">
-                    <div class="image-placeholder">Product 2</div>
-                </div>
-                <div class="product-info">
-                    <h3 class="product-name">Smart Watch</h3>
-                    <p class="product-brand">TechWear</p>
-                    <p class="product-price">RM199.99</p>
-                </div>
+            @empty
+            <div class="no-products">
+                <p>No hot selling products found.</p>
             </div>
-            <div class="product-card">
-                <button class="like-btn">
-                    <i class="far fa-heart"></i>
-                </button>
-                <div class="product-image">
-                    <div class="image-placeholder">Product 3</div>
-                </div>
-                <div class="product-info">
-                    <h3 class="product-name">Camera Lens</h3>
-                    <p class="product-brand">PhotoPro</p>
-                    <p class="product-price">RM299.99</p>
-                </div>
-            </div>
+            @endforelse
         </div>
     </div>
 </section>
@@ -132,58 +119,32 @@
     <div class="container">
         <h2 class="section-title">New Arrivals</h2>
         <div class="products-grid four-column">
-            <div class="product-card">
+            @forelse($newArrivals as $product)
+            <div class="product-card" data-product-id="{{ $product->id }}">
                 <button class="like-btn">
                     <i class="far fa-heart"></i>
                 </button>
                 <div class="product-image">
-                    <div class="image-placeholder">New 1</div>
+                    @if($product->main_image_url)
+                        <img src="{{ $product->main_image_url }}" alt="{{ $product->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    @else
+                        <div class="image-placeholder">No Image</div>
+                    @endif
                 </div>
                 <div class="product-info">
-                    <h3 class="product-name">Gaming Keyboard</h3>
-                    <p class="product-brand">GameMaster</p>
-                    <p class="product-price">RM89.99</p>
+                    <h3 class="product-name">{{ $product->name }}</h3>
+                    <p class="product-brand">{{ $product->brand }}</p>
+                    <p class="product-price">{{ $product->formatted_price }}</p>
+                    @if($product->has_variations)
+                        <small style="color: var(--light-text);">From {{ $product->formatted_price }}</small>
+                    @endif
                 </div>
             </div>
-            <div class="product-card">
-                <button class="like-btn">
-                    <i class="far fa-heart"></i>
-                </button>
-                <div class="product-image">
-                    <div class="image-placeholder">New 2</div>
-                </div>
-                <div class="product-info">
-                    <h3 class="product-name">Fitness Tracker</h3>
-                    <p class="product-brand">FitLife</p>
-                    <p class="product-price">RM79.99</p>
-                </div>
+            @empty
+            <div class="no-products">
+                <p>No new arrivals found.</p>
             </div>
-            <div class="product-card">
-                <button class="like-btn">
-                    <i class="far fa-heart"></i>
-                </button>
-                <div class="product-image">
-                    <div class="image-placeholder">New 3</div>
-                </div>
-                <div class="product-info">
-                    <h3 class="product-name">Bluetooth Speaker</h3>
-                    <p class="product-brand">SoundWave</p>
-                    <p class="product-price">RM59.99</p>
-                </div>
-            </div>
-            <div class="product-card">
-                <button class="like-btn">
-                    <i class="far fa-heart"></i>
-                </button>
-                <div class="product-image">
-                    <div class="image-placeholder">New 4</div>
-                </div>
-                <div class="product-info">
-                    <h3 class="product-name">Wireless Earbuds</h3>
-                    <p class="product-brand">AudioPro</p>
-                    <p class="product-price">RM149.99</p>
-                </div>
-            </div>
+            @endforelse
         </div>
     </div>
 </section>
@@ -284,8 +245,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add click events to product cards for navigation
     productCards.forEach(card => {
         card.addEventListener('click', function() {
-            const productName = this.querySelector('.product-name').textContent;
-            console.log('Product clicked:', productName);
+            const productId = this.getAttribute('data-product-id');
+            if (productId) {
+                window.location.href = `/products/${productId}`;
+            }
         });
     });
 
@@ -295,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function() {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const categoryName = this.closest('.category-card').querySelector('.category-name').textContent;
-            console.log('Exploring category:', categoryName);
+            window.location.href = `/products?category=${encodeURIComponent(categoryName)}`;
         });
     });
 });

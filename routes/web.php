@@ -20,14 +20,7 @@ Auth::routes();
 
 // User Routes
 // Starter/Landing Page
-Route::get('/', function () {
-    return view('homepage');
-})->name('home');
-
-// Homepage
-Route::get('/homepage', function () {
-    return view('homepage');
-})->name('homepage');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Authentication Routes
 Auth::routes(['register' => true]); // Enable registration if needed
@@ -46,7 +39,7 @@ Route::get('/products/{product}/slug', [ProductController::class, 'showBySlug'])
 Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 Route::get('/orders/{order}/details', [OrderController::class, 'details'])->name('orders.details');
-Route::post('/orders/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
 // Cart Routes
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');

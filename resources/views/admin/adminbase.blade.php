@@ -35,6 +35,16 @@
             <h1>@yield('page_title', 'Dashboard')</h1>
             <div class="user-info">
                 {{ Auth::user()->name ?? 'Admin' }}
+            
+                <form method="POST" action="{{ route('logout') }}" style="display: inline;">
+                    @csrf 
+                    <a href="{{ route('logout') }}"
+                    class="header-link"
+                    onclick="event.preventDefault(); this.closest('form').submit();">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </form>
             </div>
         </header>
 

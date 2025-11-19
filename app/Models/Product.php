@@ -273,4 +273,15 @@ class Product extends Model
             }
         });
     }
+
+    // In Product.php model
+    public function bid()
+    {
+        return $this->hasOne(Bid::class);
+    }
+
+    public function activeBid()
+    {
+        return $this->hasOne(Bid::class)->active();
+    }
 }

@@ -51,7 +51,7 @@
                                 @auth
                                     <!-- Show user menu when logged in -->
                                     <div class="user-menu">
-                                        <a href="/profile" class="header-link">
+                                        <a href="#" class="header-link">
                                             <i class="fas fa-user-circle"></i>
                                             <span>{{ Auth::user()->name }}</span>
                                         </a>

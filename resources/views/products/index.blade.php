@@ -213,10 +213,39 @@
                         </div>
 
                         <!-- Pagination -->
-                        <div style="border-top: 1px solid #e5e7eb; margin: 2rem 0;"></div>
-                        <div style="display: flex; justify-content: center; align-items: center;">
-                            {{ $products->links() }}
+
+                        @if($products->hasPages())
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
+                            <!-- Previous Button--> 
+                            @if($products->onFirstPage())
+                            <button style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 2rem; font-size: 0.875rem; background: #f3f4f6; color: #9ca3af; cursor: not-allowed;" disabled>
+                               Previous
+                            </button>
+                            @else
+                            <a href="{{ $products->previousPageUrl() }}" style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 2rem; font-size: 0.875rem; background: white; color: #1f2937; text-decoration: none; transition: all 0.2s ease;">
+                                Previous
+                            </a>
+                            @endif
+
+                            <!-- Page Numbers-->
+                            <div style="display: flex; gap: 0.5rem;">
+                                @foreach($products->getUrlRange(1, $products->lastPage()) as $page => $url)
+                                    @if($page == $products->currentPage())
+                                    <span style="padding: 0.5rem 0.75rem; border: 1px solid #1f2937; border-radius: 2rem; font-size: 0.875rem; background: #1f2937; color: white;">{{ $page }}</span>
+                                    @else
+                                    <a href="{{ $url }}" style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 2rem; font-size: 0.875rem; background: white; color: #1f2937; text-decoration: none; transition: all 0.2s ease;">{{ $page }}</a>
+                                    @endif
+                                @endforeach
+                            </div>
+
+                            <!-- Next Button -->
+                            @if($products->hasMorePages())
+                            <a href="{{ $products->nextPageUrl() }}" style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 2rem; font-size: 0.875rem; background: white; color: #1f2937; text-decoration: none; transition: all 0.2s ease;">Next</a>
+                            @else
+                            <button style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 2rem; font-size: 0.875rem; background: #f3f4f6; color: #9ca3af; cursor: not-allowed;" disabled>Next</button>
+                            @endif
                         </div>
+                        @endif
                     </div>
                 </div>
 

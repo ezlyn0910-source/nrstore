@@ -2,119 +2,134 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bid;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class BidController extends Controller
 {
     public function index()
     {
-        // Auction Categories Data
-        $auctionCategories = collect([
-            (object)[
-                'id' => 1,
-                'name' => 'Gaming Laptops',
-                'logo' => 'storage/images/categories/gaming.png',
-                'count' => 24
-            ],
-            (object)[
-                'id' => 2,
-                'name' => 'Business Laptops',
-                'logo' => 'storage/images/categories/business.png',
-                'count' => 18
-            ],
-            (object)[
-                'id' => 3,
-                'name' => 'Ultrabooks',
-                'logo' => 'storage/images/categories/ultrabook.png',
-                'count' => 15
-            ],
-            (object)[
-                'id' => 4,
-                'name' => 'Workstations',
-                'logo' => 'storage/images/categories/workstation.png',
-                'count' => 12
-            ],
-            (object)[
-                'id' => 5,
-                'name' => '2-in-1 Laptops',
-                'logo' => 'storage/images/categories/2in1.png',
-                'count' => 20
-            ],
-            (object)[
-                'id' => 6,
-                'name' => 'Student Laptops',
-                'logo' => 'storage/images/categories/student.png',
-                'count' => 30
-            ],
-            (object)[
-                'id' => 7,
-                'name' => 'Apple MacBooks',
-                'logo' => 'storage/images/categories/apple.png',
-                'count' => 16
-            ],
-            (object)[
-                'id' => 8,
-                'name' => 'Gaming Desktops',
-                'logo' => 'storage/images/categories/desktop.png',
-                'count' => 14
-            ]
+        // Get live auctions from database
+        $liveAuctions = Bid::with(['product', 'highestBid'])
+            ->active()
+            ->whereHas('product', function($query) {
+                $query->where('is_active', true);
+            })
+            ->get()
+            ->map(function($bid) {
+                return (object)[
+                    'id' => $bid->id,
+                    'product_name' => $bid->product->name,
+                    'current_bid' => $bid->current_price,
+                    'time_left' => $this->formatTimeRemaining($bid->time_remaining),
+                    'image' => $bid->product->main_image_url,
+                    'bid_count' => $bid->bid_count,
+                    'condition' => $bid->product->condition ?? 'Excellent',
+                    'end_time' => $bid->end_time,
+                    'starting_price' => $bid->starting_price,
+                    'reserve_price' => $bid->reserve_price
+                ];
+            });
+
+        // Get upcoming auctions
+        $upcomingAuctions = Bid::with(['product'])
+            ->upcoming()
+            ->whereHas('product', function($query) {
+                $query->where('is_active', true);
+            })
+            ->get();
+
+        return view('bid.index', compact('liveAuctions', 'upcomingAuctions'));
+    }
+
+    public function brandAuctions($brand)
+    {
+        $brands = ['microsoft', 'hp', 'dell', 'lenovo'];
+        
+        if (!in_array(strtolower($brand), $brands)) {
+            abort(404);
+        }
+
+        $auctions = Bid::with(['product'])
+            ->whereHas('product', function($query) use ($brand) {
+                $query->where('brand', ucfirst($brand))
+                      ->where('is_active', true);
+            })
+            ->active()
+            ->get();
+
+        return view('bid.brand', compact('auctions', 'brand'));
+    }
+
+    public function show($id)
+    {
+        $bid = Bid::with(['product', 'bids.user', 'highestBid.user'])
+                 ->findOrFail($id);
+
+        return view('bid.show', compact('bid'));
+    }
+
+    public function placeBid(Request $request, $id)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0',
+            'is_auto_bid' => 'boolean',
+            'max_auto_bid' => 'nullable|numeric|min:0'
         ]);
 
-        // Live Auctions Data for Slider
-        $liveAuctions = collect([
-            (object)[
-                'id' => 1,
-                'product_name' => 'MacBook Pro 16" M3 Max',
-                'current_bid' => 3200.00,
-                'time_left' => '2h 15m',
-                'image' => 'storage/products/bid-macbook.jpg',
-                'bid_count' => 12,
-                'condition' => 'Like New',
-                'end_time' => now()->addHours(2)->addMinutes(15)
-            ],
-            (object)[
-                'id' => 2,
-                'product_name' => 'Dell XPS 15 OLED',
-                'current_bid' => 1800.00,
-                'time_left' => '1d 4h',
-                'image' => 'storage/products/bid-dell.jpg',
-                'bid_count' => 8,
-                'condition' => 'Excellent',
-                'end_time' => now()->addDays(1)->addHours(4)
-            ],
-            (object)[
-                'id' => 3,
-                'product_name' => 'ASUS ROG Zephyrus',
-                'current_bid' => 2200.00,
-                'time_left' => '6h 30m',
-                'image' => 'storage/products/bid-asus.jpg',
-                'bid_count' => 15,
-                'condition' => 'Refurbished',
-                'end_time' => now()->addHours(6)->addMinutes(30)
-            ],
-            (object)[
-                'id' => 4,
-                'product_name' => 'Lenovo ThinkPad X1',
-                'current_bid' => 950.00,
-                'time_left' => '15m',
-                'image' => 'storage/products/bid-lenovo.jpg',
-                'bid_count' => 6,
-                'condition' => 'Good',
-                'end_time' => now()->addMinutes(15)
-            ],
-            (object)[
-                'id' => 5,
-                'product_name' => 'HP Spectre x360',
-                'current_bid' => 1400.00,
-                'time_left' => '3h 45m',
-                'image' => 'storage/products/bid-hp.jpg',
-                'bid_count' => 9,
-                'condition' => 'Excellent',
-                'end_time' => now()->addHours(3)->addMinutes(45)
-            ]
+        $bid = Bid::active()->findOrFail($id);
+        $user = Auth::user();
+        $amount = $request->amount;
+
+        // Check if bid is active
+        if (!$bid->is_active) {
+            return back()->with('error', 'This auction has ended.');
+        }
+
+        // Check minimum bid amount
+        $minBid = $bid->current_price + $bid->bid_increment;
+        if ($amount < $minBid) {
+            return back()->with('error', "Minimum bid amount is RM " . number_format($minBid, 2));
+        }
+
+        // Create new bid
+        $bidBid = $bid->bids()->create([
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'is_auto_bid' => $request->is_auto_bid ?? false,
+            'max_auto_bid' => $request->max_auto_bid,
+            'ip_address' => $request->ip()
         ]);
 
-        return view('bid.index', compact('auctionCategories', 'liveAuctions'));
+        // Update current price
+        $bid->update([
+            'current_price' => $amount,
+            'bid_count' => $bid->bid_count + 1
+        ]);
+
+        // Handle auto-extension if enabled
+        if ($bid->auto_extend && $bid->end_time->diffInMinutes(now()) < 5) {
+            $bid->update([
+                'end_time' => $bid->end_time->addMinutes($bid->extension_minutes)
+            ]);
+        }
+
+        return back()->with('success', 'Bid placed successfully!');
+    }
+
+    private function formatTimeRemaining($timeRemaining)
+    {
+        if (!$timeRemaining) return 'Ended';
+        
+        if ($timeRemaining->d > 0) {
+            return $timeRemaining->d . 'd ' . $timeRemaining->h . 'h';
+        } elseif ($timeRemaining->h > 0) {
+            return $timeRemaining->h . 'h ' . $timeRemaining->i . 'm';
+        } else {
+            return $timeRemaining->i . 'm';
+        }
     }
 }
