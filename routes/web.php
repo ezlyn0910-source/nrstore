@@ -1,5 +1,4 @@
 <?php
-// routes/web.php
 
 use App\Http\Controllers\ManageProductVariationController;
 use App\Http\Controllers\AdminController;
@@ -33,6 +32,11 @@ Route::get('/homepage', function () {
 // Authentication Routes
 Auth::routes(['register' => true]); // Enable registration if needed
 
+// Profile route
+Route::get('/profile', function () {
+    return view('profile'); // You'll need to create this view
+})->name('profile')->middleware('auth');
+
 // Public Product Routes (for customers)
 Route::get('/products', [ProductController::class, 'index'])->name('productpage');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
@@ -43,6 +47,16 @@ Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 Route::get('/orders/{order}/details', [OrderController::class, 'details'])->name('orders.details');
 Route::post('/orders/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+
+// Cart Routes
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+Route::post('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
+Route::post('/cart/increase/{id}', [CartController::class, 'increase'])->name('cart.increase');
+Route::post('/cart/decrease/{id}', [CartController::class, 'decrease'])->name('cart.decrease');
+Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
+Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+Route::get('/cart/count', [CartController::class, 'getCount'])->name('cart.count');
 
 // Checkout Routes
 Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
@@ -59,16 +73,6 @@ Route::controller(ProductController::class)->group(function () {
     Route::get('/products/category/{slug}', 'category')->name('products.category');
     Route::get('/products/{slug}', 'show')->name('products.show');
     Route::get('/product/search', 'quickSearch')->name('products.quick-search');
-});
-
-// Cart Routes (for customers)
-Route::controller(CartController::class)->group(function () {
-    Route::get('/cart', 'index')->name('cart.index');
-    Route::post('/cart/add', 'add')->name('cart.add');
-    Route::put('/cart/update/{cartItem}', 'update')->name('cart.update');
-    Route::delete('/cart/remove/{cartItem}', 'remove')->name('cart.remove');
-    Route::post('/cart/clear', 'clear')->name('cart.clear');
-    Route::get('/cart/count', 'getCartCount')->name('cart.count');
 });
 
 // Checkout & Order Routes (for customers)

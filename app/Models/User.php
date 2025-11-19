@@ -84,6 +84,78 @@ class User extends Authenticatable
         return $this->status === 'suspended';
     }
 
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Get the addresses for the user.
+     */
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(Address::class);
+    }
+
+    /**
+     * Get the user's default shipping address.
+     */
+    public function defaultShippingAddress()
+    {
+        return $this->addresses()
+            ->where('type', 'shipping')
+            ->where('is_default', true)
+            ->first();
+    }
+
+    /**
+     * Get the user's default billing address.
+     */
+    public function defaultBillingAddress()
+    {
+        return $this->addresses()
+            ->where('type', 'billing')
+            ->where('is_default', true)
+            ->first();
+    }
+
+    /**
+     * Get the cart for the user.
+     */
+    public function cart()
+    {
+        return $this->hasOne(Cart::class);
+    }
+
+    /**
+     * Get cart items count for the user
+     */
+    public function getCartItemsCountAttribute()
+    {
+        $cart = $this->cart;
+        return $cart ? $cart->item_count : 0;
+    }
+
+    /**
+     * Check if user has any orders
+     */
+    public function hasOrders(): bool
+    {
+        return $this->orders()->exists();
+    }
+
+    /**
+     * Get user's order statistics
+     */
+    public function getOrderStatsAttribute()
+    {
+        return [
+            'total_orders' => $this->orders()->count(),
+            'total_spent' => $this->orders()->where('payment_status', 'paid')->sum('total_amount'),
+            'pending_orders' => $this->orders()->where('status', 'pending')->count(),
+        ];
+    }
+
     public function bidBids(): HasMany
     {
         return $this->hasMany(BidBid::class);

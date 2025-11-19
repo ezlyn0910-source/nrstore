@@ -79,10 +79,10 @@
     </div>
 </section>
 
-<!-- Hot Selling Products Section -->
+<!-- Featured Products Section -->
 <section class="products-section">
     <div class="container">
-        <h2 class="section-title">Hot Selling Products</h2>
+        <h2 class="section-title">Featured Products</h2>
         <div class="products-grid">
             <div class="product-card">
                 <button class="like-btn">

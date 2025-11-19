@@ -38,15 +38,20 @@ class Cart extends Model
      */
     public static function getCart($user = null, $sessionId = null)
     {
-        if ($user) {
-            return static::firstOrCreate(['user_id' => $user->id]);
+        try {
+            if ($user) {
+                return static::firstOrCreate(['user_id' => $user->id]);
+            }
+            
+            if ($sessionId) {
+                return static::firstOrCreate(['session_id' => $sessionId]);
+            }
+            
+            return null;
+        } catch (\Exception $e) {
+            \Log::error('Cart::getCart error: ' . $e->getMessage());
+            return null;
         }
-        
-        if ($sessionId) {
-            return static::firstOrCreate(['session_id' => $sessionId]);
-        }
-        
-        return null;
     }
 
     /**

@@ -86,4 +86,28 @@ class OrderItem extends Model
             $orderItem->total = $orderItem->price * $orderItem->quantity;
         });
     }
+
+    /**
+     * Calculate total price
+     */
+    public function calculateTotal(): void
+    {
+        $this->total = $this->price * $this->quantity;
+    }
+
+    /**
+     * Scope for items with variations
+     */
+    public function scopeWithVariations($query)
+    {
+        return $query->whereNotNull('variation_id');
+    }
+
+    /**
+     * Scope for items without variations
+     */
+    public function scopeWithoutVariations($query)
+    {
+        return $query->whereNull('variation_id');
+    }
 }

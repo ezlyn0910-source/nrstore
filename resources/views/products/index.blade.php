@@ -158,7 +158,7 @@
                     <div style="width: 75%;">
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
                             @foreach($products as $product)                       
-                            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; transition: all 0.3s ease; padding: 0; margin: 0;" class="product-card">
+                            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; transition: all 0.3s ease; padding: 0; margin: 0;" class="product-card" data-product-id="{{ $product->id }}">
                                 <div style="width: 100%; height: 150px; background-color: #f3f4f6; overflow: hidden; margin: 0; padding: 0; border-radius: 0.5rem 0.5rem 0 0;">
                                     <img src="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"    
                                         alt="{{ $product->name }}" 
@@ -167,57 +167,55 @@
                                 <div style="padding: 0.75rem;">
                                     <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; font-size: 0.875rem; line-height: 1.25;">{{ $product->name }}</h3>
                                     
-                                        <!-- Product Specs with Price -->
-                                        <div style="margin-bottom: 0.75rem;">
-                                            @if($product->processor)
-                                            <p style="color: #6b7280; font-size: 0.75rem; margin-bottom: 0.125rem;">{{ $product->processor }}</p>
-                                            @endif
-                                            @if($product->ram && $product->storage)
-                                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                <p style="color: #6b7280; font-size: 0.75rem; margin: 0;">{{ $product->ram }} • {{ $product->storage }}</p>
-                                                <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">RM{{ number_format($product->price, 2) }}</p>
-                                            </div>
-                                            @elseif($product->ram)
-                                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                <p style="color: #6b7280; font-size: 0.75rem; margin: 0;">{{ $product->ram }}</p>
-                                                <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">RM{{ number_format($product->price, 2) }}</p>
-                                            </div>
-                                            @elseif($product->storage)
-                                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                <p style="color: #6b7280; font-size: 0.75rem; margin: 0;">{{ $product->storage }}</p>
-                                                <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">RM{{ number_format($product->price, 2) }}</p>
-                                            </div>
-                                            @else
+                                    <!-- Product Specs with Price -->
+                                    <div style="margin-bottom: 0.75rem;">
+                                        @if($product->processor)
+                                        <p style="color: #6b7280; font-size: 0.75rem; margin-bottom: 0.125rem;">{{ $product->processor }}</p>
+                                        @endif
+                                        @if($product->ram && $product->storage)
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <p style="color: #6b7280; font-size: 0.75rem; margin: 0;">{{ $product->ram }} • {{ $product->storage }}</p>
                                             <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">RM{{ number_format($product->price, 2) }}</p>
-                                            @endif
                                         </div>
+                                        @elseif($product->ram)
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <p style="color: #6b7280; font-size: 0.75rem; margin: 0;">{{ $product->ram }}</p>
+                                            <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">RM{{ number_format($product->price, 2) }}</p>
+                                        </div>
+                                        @elseif($product->storage)
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <p style="color: #6b7280; font-size: 0.75rem; margin: 0;">{{ $product->storage }}</p>
+                                            <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">RM{{ number_format($product->price, 2) }}</p>
+                                        </div>
+                                        @else
+                                        <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">RM{{ number_format($product->price, 2) }}</p>
+                                        @endif
+                                    </div>
                                     
-                                        <!-- Buttons Row -->
-                                        <div style="display: flex; gap: 0.5rem;">
-                                            <button style="flex: 1; border: 1px solid #1f2937; background: white; color: #1f2937; padding: 0.4rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem; transition: all 0.2s ease;">
-                                                <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                                </svg>
-                                                Cart
-                                            </button>
-                                            <button style="flex: 1; background: #1f2937; color: white; padding: 0.4rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; border: none; transition: all 0.2s ease;">Buy Now</button>
-                                        </div>
+                                    <!-- Buttons Row -->
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="add-to-cart-btn" 
+                                                data-product-id="{{ $product->id }}"
+                                                data-product-name="{{ $product->name }}"
+                                                data-product-price="{{ $product->price }}"
+                                                data-product-image="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"
+                                                style="flex: 1; border: 1px solid #1f2937; background: white; color: #1f2937; padding: 0.4rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem; transition: all 0.2s ease; cursor: pointer;">
+                                            <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                            </svg>
+                                            <span class="cart-btn-text">Add to Cart</span>
+                                        </button>
+                                        <button style="flex: 1; background: #1f2937; color: white; padding: 0.4rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; border: none; transition: all 0.2s ease; cursor: pointer;">Buy Now</button>
+                                    </div>
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
-
-                        <div style="border-top: 1px solid #e5e7eb; margin: 2rem 0;"></div>
+                            @endforeach
+                        </div>
 
                         <!-- Pagination -->
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <button style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 2rem; font-size: 0.875rem; background: white; transition: all 0.2s ease;">Previous</button>
-                            <div style="display: flex; gap: 0.5rem;">
-                                @for($i = 1; $i <= 6; $i++)
-                                <button style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 2rem; font-size: 0.875rem; background: {{ $i == 1 ? '#1f2937' : 'white' }}; color: {{ $i == 1 ? 'white' : '#1f2937' }}; transition: all 0.2s ease;">{{ $i }}</button>
-                                @endfor
-                            </div>
-                            <button style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 2rem; font-size: 0.875rem; background: white; transition: all 0.2s ease;">Next</button>
+                        <div style="border-top: 1px solid #e5e7eb; margin: 2rem 0;"></div>
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            {{ $products->links() }}
                         </div>
                     </div>
                 </div>
@@ -242,7 +240,7 @@
 
                     <div style="display: flex; overflow-x: auto; gap: 1rem; padding-bottom: 1rem; scrollbar-width: none;">
                         @foreach($recommendedProducts as $product)
-                        <div style="flex: 0 0 auto; width: 300px; background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden; transition: all 0.3s ease;">
+                        <div style="flex: 0 0 auto; width: 300px; background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden; transition: all 0.3s ease;" class="product-card" data-product-id="{{ $product->id }}">
                             <div style="width: 100%; height: 200px; background-color: #f3f4f6; overflow: hidden; margin: 0; padding: 0;">
                                 <img src="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"    
                                     alt="{{ $product->name }}" 
@@ -252,13 +250,18 @@
                                 <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; font-size: 1rem;">{{ $product->name }}</h3>
                                 <p style="font-weight: bold; color: #1f2937; margin-bottom: 0.5rem; font-size: 1rem;">RM{{ number_format($product->price, 2) }}</p>
                                 <div style="display: flex; gap: 0.25rem;">
-                                    <button style="flex: 1; border: 1px solid #1f2937; background: white; color: #1f2937; padding: 0.25rem 0.5rem; border-radius: 2rem; font-size: 0.8; display: flex; align-items: center; justify-content: center; gap: 0.125rem; transition: all 0.2s ease;">
+                                    <button class="add-to-cart-btn" 
+                                            data-product-id="{{ $product->id }}"
+                                            data-product-name="{{ $product->name }}"
+                                            data-product-price="{{ $product->price }}"
+                                            data-product-image="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"
+                                            style="flex: 1; border: 1px solid #1f2937; background: white; color: #1f2937; padding: 0.25rem 0.5rem; border-radius: 2rem; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.125rem; transition: all 0.2s ease; cursor: pointer;">
                                         <svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                         </svg>
-                                        Cart
+                                        <span class="cart-btn-text">Add to Cart</span>
                                     </button>
-                                    <button style="flex: 1; background: #1f2937; color: white; padding: 0.25rem 0.5rem; border-radius: 2rem; font-size: 0.8rem; border: none; transition: all 0.2s ease;">Buy Now</button>
+                                    <button style="flex: 1; background: #1f2937; color: white; padding: 0.25rem 0.5rem; border-radius: 2rem; font-size: 0.8rem; border: none; transition: all 0.2s ease; cursor: pointer;">Buy Now</button>
                                 </div>
                             </div>
                         </div>
@@ -270,16 +273,169 @@
     </section>
 </div>
 
-<!-- JavaScript -->
+<!-- Success Notification -->
+<div id="cart-notification" style="display: none; position: fixed; top: 100px; right: 20px; background: #10b981; color: white; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); z-index: 10001; transition: all 0.3s ease;">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <svg style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span id="notification-message">Product added to cart!</span>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
 <script>
+function updateHeaderCartCount(count) {
+    const cartBadge = document.querySelector('#cart-icon .action-badge');
+    if (cartBadge) {
+        if (count > 0) {
+            cartBadge.textContent = count;
+            cartBadge.style.display = 'flex';
+        } else {
+            cartBadge.style.display = 'none';
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Type filter functionality
+    // Add to Cart functionality
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            const productId = this.getAttribute('data-product-id');
+            const productName = this.getAttribute('data-product-name');
+            const productPrice = this.getAttribute('data-product-price');
+            const productImage = this.getAttribute('data-product-image');
+            
+            console.log('=== ADD TO CART DEBUG START ===');
+            console.log('Product Data:', {
+                id: productId,
+                name: productName,
+                price: productPrice,
+                image: productImage
+            });
+            
+            // Show loading state
+            const originalText = this.querySelector('.cart-btn-text').textContent;
+            this.querySelector('.cart-btn-text').textContent = 'Adding...';
+            this.disabled = true;
+            
+            // Prepare the request data
+            const requestData = {
+                product_id: productId,
+                product_name: productName,
+                price: parseFloat(productPrice),
+                quantity: 1,
+                image: productImage
+            };
+            
+            console.log('Request Data:', requestData);
+            console.log('CSRF Token:', '{{ csrf_token() }}');
+            
+            // Send AJAX request to add to cart
+            fetch('/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                console.log('Response Status:', response.status);
+                console.log('Response OK:', response.ok);
+                
+                if (!response.ok) {
+                    // Get the response text for more details
+                    return response.text().then(text => {
+                        console.log('Error Response Text:', text);
+                        throw new Error(`HTTP ${response.status}: ${text}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success Response:', data);
+                
+                if (data.success) {
+                    showNotification('Product added to cart successfully!');
+                    
+                    if (typeof updateHeaderCartCount === 'function') {
+                        updateHeaderCartCount(data.cart_count);
+                    }
+                    
+                    setTimeout(() => {
+                        this.querySelector('.cart-btn-text').textContent = 'Added!';
+                        setTimeout(() => {
+                            this.querySelector('.cart-btn-text').textContent = originalText;
+                            this.disabled = false;
+                        }, 1000);
+                    }, 500);
+                } else {
+                    console.error('Server Error:', data);
+                    showNotification(data.message || 'Failed to add product to cart.', 'error');
+                    this.querySelector('.cart-btn-text').textContent = originalText;
+                    this.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('=== FETCH ERROR ===');
+                console.error('Error Name:', error.name);
+                console.error('Error Message:', error.message);
+                console.error('Error Stack:', error.stack);
+                console.log('=== END DEBUG ===');
+                
+                showNotification('Network error. Please check console for details.', 'error');
+                this.querySelector('.cart-btn-text').textContent = originalText;
+                this.disabled = false;
+            });
+        });
+    });
+
+    // Cart count in header
+    function updateCartCount(count) {
+        const cartBadge = document.querySelector('#cart-icon .action-badge');
+        if (cartBadge) {
+            if (count > 0) {
+                cartBadge.textContent = count;
+                cartBadge.style.display = 'flex';
+            } else {
+                cartBadge.style.display = 'none';
+            }
+        }
+    }
+
+    // Show notification
+    function showNotification(message, type = 'success') {
+        const notification = document.getElementById('cart-notification');
+        const messageElement = document.getElementById('notification-message');
+        
+        // Set message and style based on type
+        messageElement.textContent = message;
+        if (type === 'error') {
+            notification.style.background = '#ef4444';
+        } else {
+            notification.style.background = '#10b981';
+        }
+        
+        // Show notification
+        notification.style.display = 'block';
+        
+        // Hide after 3 seconds
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 3000);
+    }
+
+    // Type filter functionality (existing code)
     const laptopTypeCheckbox = document.getElementById('laptop-type');
     const desktopTypeCheckbox = document.getElementById('desktop-type');
     const laptopSubOptions = document.querySelectorAll('input[name="laptop_type[]"]');
     const desktopSubOptions = document.querySelectorAll('input[name="desktop_type[]"]');
 
-    // Enable/disable sub-options based on main type selection
     function toggleSubOptions(mainCheckbox, subOptions) {
         if (mainCheckbox.checked) {
             subOptions.forEach(option => {
@@ -295,14 +451,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Laptop type toggle
     if (laptopTypeCheckbox) {
         laptopTypeCheckbox.addEventListener('change', function() {
             toggleSubOptions(laptopTypeCheckbox, laptopSubOptions);
         });
     }
 
-    // Desktop type toggle
     if (desktopTypeCheckbox) {
         desktopTypeCheckbox.addEventListener('change', function() {
             toggleSubOptions(desktopTypeCheckbox, desktopSubOptions);
@@ -349,56 +503,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // FIXED: Recommendations slider functionality
-    function initRecommendationSlider() {
-        const recommendationsSection = document.querySelector('[style*="margin-top: 3rem"]');
-        if (!recommendationsSection) return;
-
-        const slider = recommendationsSection.querySelector('[style*="overflow-x: auto"]');
-        const prevBtn = recommendationsSection.querySelector('button:first-child');
-        const nextBtn = recommendationsSection.querySelector('button:last-child');
-
-        if (slider && prevBtn && nextBtn) {
-            // Remove any existing event listeners
-            const newPrevBtn = prevBtn.cloneNode(true);
-            const newNextBtn = nextBtn.cloneNode(true);
-            prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
-            nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
-
-            // Add new event listeners
-            newPrevBtn.addEventListener('click', () => {
-                slider.scrollBy({ left: -320, behavior: 'smooth' });
-            });
-            
-            newNextBtn.addEventListener('click', () => {
-                slider.scrollBy({ left: 320, behavior: 'smooth' });
-            });
-
-            // Add hover effects to slider buttons
-            [newPrevBtn, newNextBtn].forEach(btn => {
-                btn.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-2px)';
-                    this.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                    this.style.borderColor = '#1f2937';
-                    this.style.background = '#1f2937';
-                    this.style.color = 'white';
-                });
-                
-                btn.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                    this.style.boxShadow = 'none';
-                    this.style.borderColor = '#d1d5db';
-                    this.style.background = 'white';
-                    this.style.color = 'currentColor';
-                });
-            });
-        }
-    }
-
-    // Initialize recommendation slider
-    initRecommendationSlider();
-
-    // Product card hover effects
+    // Product card hover effects and popup functionality (existing code)
     const productCards = document.querySelectorAll('.product-card');
     productCards.forEach(card => {
         card.addEventListener('mouseenter', () => {
@@ -422,6 +527,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
+            const productId = this.getAttribute('data-product-id');
             const productName = this.querySelector('h3').textContent;
             const priceElement = this.querySelector('p[style*="font-weight: bold"]');
             const price = priceElement ? priceElement.textContent.replace('RM', '') : '0.00';
@@ -456,6 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const product = {
+                id: productId,
                 name: productName,
                 price: price,
                 image: image,
@@ -470,656 +577,296 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Button hover effects
-    const buttons = document.querySelectorAll('button');
-    buttons.forEach(button => {
-        // Skip recommendation slider buttons as they have their own handlers
-        if (!button.closest('[style*="margin-top: 3rem"]')) {
-            button.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-1px)';
-                this.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-            });
-            
-            button.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0)';
-                this.style.boxShadow = 'none';
-            });
+    // Popup functionality (existing code)
+    function showProductPopup(product) {
+        // Remove any existing popup
+        const existingPopup = document.querySelector('.popup-overlay');
+        if (existingPopup) {
+            existingPopup.remove();
         }
-    });
 
-    // Add click events to recommendation product cards
-    const recommendedProducts = document.querySelectorAll('[style*="overflow-x: auto"] .product-card');
-    recommendedProducts.forEach(card => {
-        card.addEventListener('click', function(e) {
-            // Don't trigger if clicking on buttons
-            if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-                return;
-            }
-            
-            const productName = this.querySelector('h3').textContent;
-            const priceElement = this.querySelector('p[style*="font-weight: bold"]');
-            const price = priceElement ? priceElement.textContent.replace('RM', '') : '0.00';
-            const image = this.querySelector('img').src;
-            
-            const product = {
-                name: productName,
-                price: price,
-                image: image,
-                processor: '',
-                ram: '',
-                storage: '',
-                brand: productName.split(' ')[0] || 'Brand',
-                description: 'Recommended product with excellent performance and features.'
-            };
-            
-            showProductPopup(product);
-        });
-    });
-});
-
-// Popup functionality
-function showProductPopup(product) {
-    // Remove any existing popup
-    const existingPopup = document.querySelector('.popup-overlay');
-    if (existingPopup) {
-        existingPopup.remove();
-    }
-
-    const popup = document.createElement('div');
-    popup.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10000;
-        backdrop-filter: blur(5px);
-    `;
-
-    popup.innerHTML = `
-        <div style="
-            background: white;
-            border-radius: 1.5rem;
-            width: 900px;
-            max-width: 95vw;
-            height: 550px;
-            max-height: 90vh;
+        const popup = document.createElement('div');
+        popup.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
             display: flex;
-            position: relative;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        ">
-            <!-- Close Button -->
-            <button onclick="this.closest('.popup-overlay').remove()" style="
-                position: absolute;
-                top: 1rem;
-                right: 1rem;
-                background: #1f2937;
-                color: white;
-                border: none;
-                width: 2.5rem;
-                height: 2.5rem;
-                border-radius: 9999px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.25rem;
-                font-weight: bold;
-                cursor: pointer;
-                z-index: 10;
-                transition: all 0.2s ease;
-            ">×</button>
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        `;
 
-            <!-- Left Side - Product Image -->
+        popup.innerHTML = `
             <div style="
-                flex: 1;
-                background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+                background: white;
+                border-radius: 1.5rem;
+                width: 900px;
+                max-width: 95vw;
+                height: 550px;
+                max-height: 90vh;
                 display: flex;
-                align-items: center;
-                justify-content: center;
                 position: relative;
+                box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
                 overflow: hidden;
-                padding: 2rem;
             ">
-                <!-- Brand Logo Background -->
-                <div style="
+                <!-- Close Button -->
+                <button onclick="this.closest('.popup-overlay').remove()" style="
                     position: absolute;
-                    font-size: 6rem;
-                    font-weight: 900;
-                    color: rgba(0, 0, 0, 0.03);
-                    transform: rotate(-45deg);
-                    white-space: nowrap;
-                    user-select: none;
-                ">${product.brand}</div>
-                
-                <!-- Product Image -->
-                <img src="${product.image}" alt="${product.name}" style="
-                    width: 100%;
-                    height: 100%;
-                    object-fit: contain;
-                    filter: drop-shadow(20px 20px 30px rgba(0, 0, 0, 0.2));
+                    top: 1rem;
+                    right: 1rem;
+                    background: #1f2937;
+                    color: white;
+                    border: none;
+                    width: 2.5rem;
+                    height: 2.5rem;
+                    border-radius: 9999px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.25rem;
+                    font-weight: bold;
+                    cursor: pointer;
+                    z-index: 10;
+                    transition: all 0.2s ease;
+                ">×</button>
+
+                <!-- Left Side - Product Image -->
+                <div style="
+                    flex: 1;
+                    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                     position: relative;
-                    z-index: 2;
+                    overflow: hidden;
+                    padding: 2rem;
                 ">
-            </div>
+                    <!-- Brand Logo Background -->
+                    <div style="
+                        position: absolute;
+                        font-size: 6rem;
+                        font-weight: 900;
+                        color: rgba(0, 0, 0, 0.03);
+                        transform: rotate(-45deg);
+                        white-space: nowrap;
+                        user-select: none;
+                    ">${product.brand}</div>
+                    
+                    <!-- Product Image -->
+                    <img src="${product.image}" alt="${product.name}" style="
+                        width: 100%;
+                        height: 100%;
+                        object-fit: contain;
+                        filter: drop-shadow(20px 20px 30px rgba(0, 0, 0, 0.2));
+                        position: relative;
+                        z-index: 2;
+                    ">
+                </div>
 
-            <!-- Right Side - Product Details -->
-            <div style="
-                flex: 1;
-                padding: 2.5rem 2rem;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-            ">
-                <!-- Product Info -->
-                <div>
-                    <!-- Product Name -->
-                    <h2 style="
-                        font-size: 1.75rem;
-                        font-weight: bold;
-                        color: #1f2937;
-                        margin: 0 0 1.5rem 0;
-                        line-height: 1.3;
-                    ">${product.name}</h2>
+                <!-- Right Side - Product Details -->
+                <div style="
+                    flex: 1;
+                    padding: 2.5rem 2rem;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                ">
+                    <!-- Product Info -->
+                    <div>
+                        <!-- Product Name -->
+                        <h2 style="
+                            font-size: 1.75rem;
+                            font-weight: bold;
+                            color: #1f2937;
+                            margin: 0 0 1.5rem 0;
+                            line-height: 1.3;
+                        ">${product.name}</h2>
 
-                    <!-- All Specs Display -->
-                    <div style="margin-bottom: 2rem;">
-                        ${product.processor ? `
-                        <div style="display: flex; align-items: center; margin-bottom: 0.75rem;">
-                            <div style="width: 4px; height: 4px; background: #1f2937; border-radius: 50%; margin-right: 0.75rem;"></div>
-                            <span style="color: #1f2937; font-size: 0.95rem;">${product.processor}</span>
+                        <!-- All Specs Display -->
+                        <div style="margin-bottom: 2rem;">
+                            ${product.processor ? `
+                            <div style="display: flex; align-items: center; margin-bottom: 0.75rem;">
+                                <div style="width: 4px; height: 4px; background: #1f2937; border-radius: 50%; margin-right: 0.75rem;"></div>
+                                <span style="color: #1f2937; font-size: 0.95rem;">${product.processor}</span>
+                            </div>
+                            ` : ''}
+                            
+                            ${product.ram ? `
+                            <div style="display: flex; align-items: center; margin-bottom: 0.75rem;">
+                                <div style="width: 4px; height: 4px; background: #1f2937; border-radius: 50%; margin-right: 0.75rem;"></div>
+                                <span style="color: #1f2937; font-size: 0.95rem;">${product.ram}</span>
+                            </div>
+                            ` : ''}
+                            
+                            ${product.storage ? `
+                            <div style="display: flex; align-items: center; margin-bottom: 0.75rem;">
+                                <div style="width: 4px; height: 4px; background: #1f2937; border-radius: 50%; margin-right: 0.75rem;"></div>
+                                <span style="color: #1f2937; font-size: 0.95rem;">${product.storage}</span>
+                            </div>
+                            ` : ''}
                         </div>
-                        ` : ''}
-                        
-                        ${product.ram ? `
-                        <div style="display: flex; align-items: center; margin-bottom: 0.75rem;">
-                            <div style="width: 4px; height: 4px; background: #1f2937; border-radius: 50%; margin-right: 0.75rem;"></div>
-                            <span style="color: #1f2937; font-size: 0.95rem;">${product.ram}</span>
-                        </div>
-                        ` : ''}
-                        
-                        ${product.storage ? `
-                        <div style="display: flex; align-items: center; margin-bottom: 0.75rem;">
-                            <div style="width: 4px; height: 4px; background: #1f2937; border-radius: 50%; margin-right: 0.75rem;"></div>
-                            <span style="color: #1f2937; font-size: 0.95rem;">${product.storage}</span>
-                        </div>
-                        ` : ''}
+
+                        <!-- Price -->
+                        <p style="
+                            font-size: 2.25rem;
+                            color: #1f2937;
+                            margin: 0 0 1.5rem 0;
+                            font-weight: bold;
+                        ">RM${parseFloat(product.price).toFixed(2)}</p>
+
+                        <!-- Description -->
+                        <p style="
+                            color: #6b7280;
+                            line-height: 1.6;
+                            margin: 0;
+                            font-size: 0.95rem;
+                        ">${product.description}</p>
                     </div>
 
-                    <!-- Price -->
-                    <p style="
-                        font-size: 2.25rem;
-                        color: #1f2937;
-                        margin: 0 0 1.5rem 0;
-                        font-weight: bold;
-                    ">RM${parseFloat(product.price).toFixed(2)}</p>
-
-                    <!-- Description -->
-                    <p style="
-                        color: #6b7280;
-                        line-height: 1.6;
-                        margin: 0;
-                        font-size: 0.95rem;
-                    ">${product.description}</p>
-                </div>
-
-                <!-- Buttons - Fixed Position -->
-                <div style="display: flex; gap: 1rem; margin-top: auto;">
-                    <button style="
-                        flex: 1;
-                        border: 1px solid #1f2937;
-                        background: white;
-                        color: #1f2937;
-                        padding: 0.875rem 1.5rem;
-                        border-radius: 2rem;
-                        font-size: 1rem;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 0.5rem;
-                        transition: all 0.2s ease;
-                        cursor: pointer;
-                        font-weight: 500;
-                    ">
-                        <svg style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                        Add to Cart
-                    </button>
-                    <button style="
-                        flex: 1;
-                        background: #1f2937;
-                        color: white;
-                        padding: 0.875rem 1.5rem;
-                        border-radius: 2rem;
-                        font-size: 1rem;
-                        border: none;
-                        transition: all 0.2s ease;
-                        cursor: pointer;
-                        font-weight: 500;
-                    ">Buy Now</button>
+                    <!-- Buttons - Fixed Position -->
+                    <div style="display: flex; gap: 1rem; margin-top: auto;">
+                        <button class="popup-add-to-cart" 
+                                data-product-id="${product.id}"
+                                data-product-name="${product.name}"
+                                data-product-price="${product.price}"
+                                data-product-image="${product.image}"
+                                style="
+                            flex: 1;
+                            border: 1px solid #1f2937;
+                            background: white;
+                            color: #1f2937;
+                            padding: 0.875rem 1.5rem;
+                            border-radius: 2rem;
+                            font-size: 1rem;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 0.5rem;
+                            transition: all 0.2s ease;
+                            cursor: pointer;
+                            font-weight: 500;
+                        ">
+                            <svg style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            Add to Cart
+                        </button>
+                        <button style="
+                            flex: 1;
+                            background: #1f2937;
+                            color: white;
+                            padding: 0.875rem 1.5rem;
+                            border-radius: 2rem;
+                            font-size: 1rem;
+                            border: none;
+                            transition: all 0.2s ease;
+                            cursor: pointer;
+                            font-weight: 500;
+                        ">Buy Now</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    `;
+        `;
 
-    popup.className = 'popup-overlay';
-    document.body.appendChild(popup);
+        popup.className = 'popup-overlay';
+        document.body.appendChild(popup);
 
-    // Add hover effects to popup buttons
-    const popupButtons = popup.querySelectorAll('button');
-    popupButtons.forEach(button => {
-        if (button.textContent !== '×') {
-            button.addEventListener('mouseenter', function() {
-                if (this.style.background === 'white' || this.style.background.includes('white')) {
-                    this.style.background = '#f8fafc';
-                    this.style.borderColor = '#374151';
-                } else {
-                    this.style.background = '#374151';
-                }
-                this.style.transform = 'translateY(-2px)';
-                this.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
-            });
-            
-            button.addEventListener('mouseleave', function() {
-                if (this.style.background === 'rgb(248, 250, 252)' || this.style.background.includes('f8fafc')) {
-                    this.style.background = 'white';
-                    this.style.borderColor = '#1f2937';
-                } else {
-                    this.style.background = '#1f2937';
-                }
-                this.style.transform = 'translateY(0)';
-                this.style.boxShadow = 'none';
+        // Add event listener to popup add to cart button
+        const popupCartBtn = popup.querySelector('.popup-add-to-cart');
+        if (popupCartBtn) {
+            popupCartBtn.addEventListener('click', function() {
+                const productId = this.getAttribute('data-product-id');
+                const productName = this.getAttribute('data-product-name');
+                const productPrice = this.getAttribute('data-product-price');
+                const productImage = this.getAttribute('data-product-image');
+                
+                // Show loading state
+                const originalText = this.textContent;
+                this.textContent = 'Adding...';
+                this.disabled = true;
+                
+                // Send AJAX request to add to cart
+                fetch('/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        product_name: productName,
+                        price: parseFloat(productPrice),
+                        quantity: 1,
+                        image: productImage,
+                        specs: {
+                            processor: product.processor,
+                            ram: product.ram,
+                            storage: product.storage
+                        },
+                        sku: '{{ $product->sku ?? "N/A" }}'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Product added to cart successfully!');
+                        updateCartCount(data.cart_count);
+                        
+                        // Reset button state
+                        setTimeout(() => {
+                            this.textContent = 'Added!';
+                            setTimeout(() => {
+                                this.textContent = originalText;
+                                this.disabled = false;
+                            }, 1000);
+                        }, 500);
+                    } else {
+                        showNotification('Failed to add product to cart. Please try again.', 'error');
+                        this.textContent = originalText;
+                        this.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('An error occurred. Please try again.', 'error');
+                    this.textContent = originalText;
+                    this.disabled = false;
+                });
             });
         }
-    });
-}
+
+        // Add hover effects to popup buttons
+        const popupButtons = popup.querySelectorAll('button');
+        popupButtons.forEach(button => {
+            if (button.textContent !== '×') {
+                button.addEventListener('mouseenter', function() {
+                    if (this.style.background === 'white' || this.style.background.includes('white')) {
+                        this.style.background = '#f8fafc';
+                        this.style.borderColor = '#374151';
+                    } else {
+                        this.style.background = '#374151';
+                    }
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
+                });
+                
+                button.addEventListener('mouseleave', function() {
+                    if (this.style.background === 'rgb(248, 250, 252)' || this.style.background.includes('f8fafc')) {
+                        this.style.background = 'white';
+                        this.style.borderColor = '#1f2937';
+                    } else {
+                        this.style.background = '#1f2937';
+                    }
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = 'none';
+                });
+            }
+        });
+    }
+});
 </script>
-
-<style>
-/* CSS Variables */
-:root {
-    --primary-dark: #1a2412;
-    --primary-green: #2d4a35;
-    --accent-gold: #daa112;
-    --light-bone: #f8f9fa;
-    --dark-text: #1a2412;
-    --light-text: #6b7c72;
-    --white: #ffffff;
-    --border-light: #e9ecef;
-}
-
-.product-page {
-    background-color: var(--light-bone);
-    margin: 0;
-    padding: 0;
-}
-
-.white-box-container {
-    margin-bottom: 2rem;
-    position: relative;
-}
-
-/* Filter Section Enhancements */
-input[type="checkbox"] {
-    accent-color: #000000; /* Black tick */
-}
-
-input[type="checkbox"]:checked {
-    background-color: white; /* White background when checked */
-}
-
-/* Search Input Styles */
-.search-container {
-    width: 400px;
-    position: relative;
-}
-
-.search-form {
-    display: flex;
-    position: relative;
-}
-
-.search-input-container {
-    position: relative;
-    flex: 1;
-}
-
-.search-icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-}
-
-.search-icon svg {
-    width: 1rem;
-    height: 1rem;
-    color: #6b7280;
-}
-
-.search-input {
-    width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    outline: none;
-    transition: all 0.2s ease;
-}
-
-.search-input:focus {
-    border-color: #1f2937;
-    box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.1);
-}
-
-.search-button {
-    position: absolute;
-    right: 4px;
-    top: 50%;
-    transform: translateY(-50%);
-    padding: 0.6rem 1.25rem;
-    background: #1f2937;
-    color: white;
-    border: none;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    z-index: 5;
-}
-
-.search-button:hover {
-    background: #374151;
-    transform: translateY(-50%) scale(1.02);
-}
-
-/* Product Card Hover Effects */
-.product-card {
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.product-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-}
-
-.product-card:hover img {
-    transform: scale(1.05);
-}
-
-/* Button Hover Effects */
-button:not(.search-button):not(.social-link) {
-    transition: all 0.2s ease;
-}
-
-button:not(.search-button):not(.social-link):hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Recommendation Slider Button Styles */
-.recommendation-nav-btn {
-    transition: all 0.2s ease;
-}
-
-.recommendation-nav-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border-color: #1f2937;
-    background: #1f2937;
-    color: white;
-}
-
-/* Popup Overlay Styles */
-.popup-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    backdrop-filter: blur(5px);
-}
-
-/* Filter Section Styles */
-.filter-section {
-    margin-bottom: 1.5rem;
-}
-
-.filter-heading {
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 0.75rem;
-    font-size: 0.875rem;
-    text-transform: uppercase;
-}
-
-.filter-select {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    outline: none;
-    transition: border-color 0.2s ease;
-}
-
-.filter-select:focus {
-    border-color: #1f2937;
-}
-
-/* Type Filter Options */
-.type-option {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.type-option label {
-    font-weight: 500;
-    color: #374151;
-    font-size: 0.875rem;
-}
-
-.sub-options {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    margin-left: 1.5rem;
-}
-
-.sub-option {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-}
-
-.sub-option:not(.enabled) {
-    color: #6b7280;
-}
-
-.sub-option.enabled {
-    color: #374151;
-}
-
-/* Apply Filters Button */
-.apply-filters {
-    width: 100%;
-    padding: 0.75rem;
-    background: #1f2937;
-    color: white;
-    border: none;
-    border-radius: 0.5rem;
-    margin-top: 1rem;
-    transition: all 0.2s ease;
-}
-
-.apply-filters:hover {
-    background: #374151;
-}
-
-/* Responsive Design */
-@media (max-width: 991.98px) {
-    .search-container {
-        width: 350px;
-    }
-}
-
-@media (max-width: 768px) {
-    /* Adjust overlap for mobile */
-    .hero-section {
-        height: 250px;
-    }
-
-    .hero-section h1 {
-        font-size: 8rem !important;
-    }
-
-    section[style*="margin-top: -80px"] {
-        margin-top: -50px !important;
-    }
-    
-    .search-container {
-        width: 300px;
-    }
-    
-    /* Stack filters and products on mobile */
-    .product-layout {
-        flex-direction: column;
-    }
-    
-    .filters-sidebar {
-        width: 100% !important;
-        margin-bottom: 2rem;
-    }
-    
-    .products-main {
-        width: 100% !important;
-    }
-    
-    .products-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-}
-
-@media (max-width: 576px) {
-    .hero-section h1 {
-        font-size: 6rem !important;
-    }
-
-    section[style*="margin-top: -80px"] {
-        margin-top: -40px !important;
-    }
-    
-    .search-container {
-        width: 100%;
-        max-width: 280px;
-    }
-    
-    .products-grid {
-        grid-template-columns: 1fr !important;
-    }
-    
-    .header-row {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: flex-start !important;
-    }
-    
-    .header-row h2 {
-        margin-bottom: 0;
-    }
-}
-
-/* Hero Section Adjustments - Reduced Height */
-.hero-section {
-    position: relative;
-    height: 350px;
-    background-color: #1f2937;
-    overflow: hidden;
-    margin-bottom: 0;
-}
-
-.hero-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 1;
-}
-
-.hero-title {
-    position: absolute;
-    bottom: -14px;
-    left: 0;
-    right: 0;
-    text-align: center;
-    font-size: 14rem;
-    font-weight: bold;
-    color: white;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
-    margin: 0;
-}
-
-/* Main Content Container */
-.main-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-}
-
-.content-box {
-    background: white;
-    border-radius: 1.5rem;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    padding: 3rem 2rem 2rem;
-    border: 1px solid #e5e7eb;
-    margin-top: -80px;
-    position: relative;
-    z-index: 10;
-}
-
-/* Smooth transitions for all interactive elements */
-* {
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
-}
-
-/* Focus styles for accessibility */
-button:focus,
-input:focus,
-select:focus {
-    outline: 2px solid #1f2937;
-    outline-offset: 2px;
-}
-
-/* Custom scrollbar for webkit browsers */
-::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-</style>
-@endsection
+@endpush
