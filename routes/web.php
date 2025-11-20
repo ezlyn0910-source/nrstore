@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ManageUserController;
 use App\Http\Controllers\ManageOrderController;
 use App\Http\Controllers\ManageBidController;
+use App\Http\Controllers\ManageReportController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CheckoutController;
@@ -163,11 +164,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     });
 
     // Reports & Analytics
-    Route::prefix('reports')->name('reports.')->controller(\App\Http\Controllers\ReportController::class)->group(function () {
-        Route::get('/sales', 'sales')->name('sales');
-        Route::get('/products', 'products')->name('products');
-        Route::get('/users', 'users')->name('users');
-        Route::get('/inventory', 'inventory')->name('inventory');
+    Route::prefix('reports')->name('reports.')->controller(\App\Http\Controllers\ManageReportController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/export/{type}', 'export')->name('export');
     });
 });
 

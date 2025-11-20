@@ -24,7 +24,9 @@ class ProductImage extends Model
     ];
 
     protected $appends = [
-        'image_url'
+        'image_url',
+        'main_image_url',
+        
     ];
 
     /**

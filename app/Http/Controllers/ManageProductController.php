@@ -324,13 +324,13 @@ class ManageProductController extends Controller
             $product->update($validated);
 
             // Handle main image update
-            if ($request->hasFile('main_image')) {
+            if ($request->hasFile('main_image_url')) {
                 // Delete old image
                 if ($product->image) {
                     Storage::disk('public')->delete($product->image);
                 }
                 
-                $imagePath = $request->file('main_image')->store('products', 'public');
+                $imagePath = $request->file('main_image_url')->store('products', 'public');
                 $product->update(['image' => $imagePath]);
                 
                 // Update primary product image

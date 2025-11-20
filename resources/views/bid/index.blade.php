@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('styles')
-    @vite('resources/css/bid.css')
+    @vite(['resources/css/bid.css'])
 @endsection
 
 @section('content')
@@ -69,6 +69,7 @@
                 <div class="title-underline title-underline-white"></div>
             </div>
 
+            @if($liveAuctions->count() > 0)
             <div class="live-auctions-slider-container">
                 <div class="live-auctions-track">
                     @foreach($liveAuctions as $auction)
@@ -90,35 +91,19 @@
                                 <i class="fas fa-clock"></i>
                                 {{ $auction->time_left }} left
                             </div>
-                        </div>
-                    </div>
-                    @endforeach
-                    
-                    <!-- Duplicate for loop -->
-                    @foreach($liveAuctions as $auction)
-                    <div class="live-auction-card">
-                        <div class="live-auction-badge">
-                            <i class="fas fa-bolt"></i> LIVE
-                        </div>
-                        <div class="live-auction-image">
-                            <img src="{{ asset($auction->image) }}" alt="{{ $auction->product_name }}">
-                        </div>
-                        <div class="live-auction-content">
-                            <h4 class="live-auction-name">{{ $auction->product_name }}</h4>
-                            <p class="live-auction-condition">{{ $auction->condition }}</p>
-                            <div class="live-auction-info">
-                                <div class="live-auction-price">RM{{ number_format($auction->current_bid, 2) }}</div>
-                                <div class="live-auction-bids">{{ $auction->bid_count }} bids</div>
-                            </div>
-                            <div class="live-auction-time">
-                                <i class="fas fa-clock"></i>
-                                {{ $auction->time_left }} left
-                            </div>
+                            <a href="{{ route('bid.show', $auction->id) }}" class="view-bid-btn" style="display: block; text-align: center; margin-top: 1rem; padding: 0.5rem; background: var(--accent-green); color: white; border-radius: 0.25rem; text-decoration: none;">
+                                View Bid
+                            </a>
                         </div>
                     </div>
                     @endforeach
                 </div>
             </div>
+            @else
+            <div class="text-center py-5">
+                <p class="text-white">No live auctions at the moment. Check back soon!</p>
+            </div>
+            @endif
         </div>
     </section>
 
@@ -133,30 +118,35 @@
                 <div class="title-underline title-underline-black"></div>
             </div>
 
+            @if($upcomingAuctions->count() > 0)
             <div class="upcoming-auctions-container">
                 <div class="upcoming-auctions-track">
-                    <!-- Product 1 -->
+                    @foreach($upcomingAuctions as $auction)
                     <div class="upcoming-auction-card">
                         <div class="upcoming-badge">
                             <i class="fas fa-clock"></i> UPCOMING
                         </div>
                         <div class="upcoming-auction-image">
-                            <img src="{{ asset('storage/images/gaming-pc.png') }}" alt="Gaming PC">
+                            <img src="{{ asset($auction->product->main_image_url ?? 'storage/images/placeholder.jpg') }}" alt="{{ $auction->product->name }}">
                         </div>
                         <div class="upcoming-auction-content">
-                            <h3 class="upcoming-auction-name">Gaming PC RTX 4080</h3>
+                            <h3 class="upcoming-auction-name">{{ $auction->product->name }}</h3>
                             <div class="upcoming-auction-specs">
-                                <div class="upcoming-auction-spec">Intel i9-13900K, 32GB RAM</div>
-                                <div class="upcoming-auction-spec">NVIDIA RTX 4080 16GB</div>
-                                <div class="upcoming-auction-spec">2TB NVMe SSD + 4TB HDD</div>
+                                @if($auction->product->specifications && is_array($auction->product->specifications))
+                                    @foreach(array_slice($auction->product->specifications, 0, 3) as $key => $value)
+                                    <div class="upcoming-auction-spec">{{ $key }}: {{ $value }}</div>
+                                    @endforeach
+                                @else
+                                    <div class="upcoming-auction-spec">Check product details for specifications</div>
+                                @endif
                             </div>
                             <div class="upcoming-auction-price">
                                 <div class="price-label">Starting Bid</div>
-                                <div class="price-tba">TBA</div>
+                                <div class="price-tba">RM{{ number_format($auction->starting_price, 2) }}</div>
                             </div>
                             <div class="upcoming-date">
                                 <i class="fas fa-calendar-alt"></i>
-                                <span>Starts: Dec 15, 2024 - 10:00 AM</span>
+                                <span>Starts: {{ $auction->start_time->format('M d, Y - h:i A') }}</span>
                             </div>
                             <button class="reminder-btn">
                                 <i class="fas fa-bell"></i>
@@ -164,98 +154,14 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Product 2 -->
-                    <div class="upcoming-auction-card">
-                        <div class="upcoming-badge">
-                            <i class="fas fa-clock"></i> UPCOMING
-                        </div>
-                        <div class="upcoming-auction-image">
-                            <img src="{{ asset('storage/images/iphone-15.png') }}" alt="iPhone 15 Pro">
-                        </div>
-                        <div class="upcoming-auction-content">
-                            <h3 class="upcoming-auction-name">iPhone 15 Pro Max</h3>
-                            <div class="upcoming-auction-specs">
-                                <div class="upcoming-auction-spec">6.7" Super Retina XDR</div>
-                                <div class="upcoming-auction-spec">A17 Pro Chip, 1TB Storage</div>
-                                <div class="upcoming-auction-spec">Titanium Design</div>
-                            </div>
-                            <div class="upcoming-auction-price">
-                                <div class="price-label">Starting Bid</div>
-                                <div class="price-tba">TBA</div>
-                            </div>
-                            <div class="upcoming-date">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>Starts: Dec 18, 2024 - 2:00 PM</span>
-                            </div>
-                            <button class="reminder-btn">
-                                <i class="fas fa-bell"></i>
-                                Set Reminder
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Product 3 -->
-                    <div class="upcoming-auction-card">
-                        <div class="upcoming-badge">
-                            <i class="fas fa-clock"></i> UPCOMING
-                        </div>
-                        <div class="upcoming-auction-image">
-                            <img src="{{ asset('storage/images/macbook-pro.png') }}" alt="MacBook Pro">
-                        </div>
-                        <div class="upcoming-auction-content">
-                            <h3 class="upcoming-auction-name">MacBook Pro 16"</h3>
-                            <div class="upcoming-auction-specs">
-                                <div class="upcoming-auction-spec">M3 Max, 48GB RAM, 4TB SSD</div>
-                                <div class="upcoming-auction-spec">16.2" Liquid Retina XDR</div>
-                                <div class="upcoming-auction-spec">Space Black Finish</div>
-                            </div>
-                            <div class="upcoming-auction-price">
-                                <div class="price-label">Starting Bid</div>
-                                <div class="price-tba">TBA</div>
-                            </div>
-                            <div class="upcoming-date">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>Starts: Dec 20, 2024 - 9:00 AM</span>
-                            </div>
-                            <button class="reminder-btn">
-                                <i class="fas fa-bell"></i>
-                                Set Reminder
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Product 4 -->
-                    <div class="upcoming-auction-card">
-                        <div class="upcoming-badge">
-                            <i class="fas fa-clock"></i> UPCOMING
-                        </div>
-                        <div class="upcoming-auction-image">
-                            <img src="{{ asset('storage/images/camera.png') }}" alt="Professional Camera">
-                        </div>
-                        <div class="upcoming-auction-content">
-                            <h3 class="upcoming-auction-name">Sony A7IV Camera</h3>
-                            <div class="upcoming-auction-specs">
-                                <div class="upcoming-auction-spec">33MP Full-frame Sensor</div>
-                                <div class="upcoming-auction-spec">4K 60p Video Recording</div>
-                                <div class="upcoming-auction-spec">With 24-70mm Lens</div>
-                            </div>
-                            <div class="upcoming-auction-price">
-                                <div class="price-label">Starting Bid</div>
-                                <div class="price-tba">TBA</div>
-                            </div>
-                            <div class="upcoming-date">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>Starts: Dec 22, 2024 - 11:00 AM</span>
-                            </div>
-                            <button class="reminder-btn">
-                                <i class="fas fa-bell"></i>
-                                Set Reminder
-                            </button>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
             </div>
+            @else
+            <div class="text-center py-5">
+                <p>No upcoming auctions scheduled. Check back later for new auctions!</p>
+            </div>
+            @endif
         </div>
     </section>
 </div>

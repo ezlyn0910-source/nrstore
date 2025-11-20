@@ -22,10 +22,10 @@ class BidController extends Controller
             ->map(function($bid) {
                 return (object)[
                     'id' => $bid->id,
-                    'product_name' => $bid->product->name,
+                    'product_name' => $bid->product->name ?? 'Unknown Product',
                     'current_bid' => $bid->current_price,
                     'time_left' => $this->formatTimeRemaining($bid->time_remaining),
-                    'image' => $bid->product->main_image_url,
+                    'image' => $bid->product->main_image_url ?? 'storage/images/placeholder.jpg',
                     'bid_count' => $bid->bid_count,
                     'condition' => $bid->product->condition ?? 'Excellent',
                     'end_time' => $bid->end_time,
@@ -34,7 +34,7 @@ class BidController extends Controller
                 ];
             });
 
-        // Get upcoming auctions
+        // Get upcoming auctions - return actual Bid models with relationships
         $upcomingAuctions = Bid::with(['product'])
             ->upcoming()
             ->whereHas('product', function($query) {
