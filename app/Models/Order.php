@@ -86,6 +86,16 @@ class Order extends Model
     }
 
     /**
+     * Calculate order totals
+     */
+    public function calculateTotals(): void
+    {
+        $subtotal = $this->orderItems->sum('total');
+        $this->total_amount = $subtotal + $this->shipping_cost + $this->tax_amount - $this->discount_amount;
+        $this->save();
+    }
+
+    /**
      * Get status label
      */
     public function getStatusLabelAttribute()

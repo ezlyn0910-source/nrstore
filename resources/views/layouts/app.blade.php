@@ -100,13 +100,31 @@
                             </a>
                         </nav>
                         
-                        <div class="search-container">
-                            <form class="search-form">
-                                <input type="text" class="search-input" placeholder="Search products...">
-                                <button type="submit" class="search-btn">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </form>
+                        <div class="search-actions-container">
+                            <!-- Search Field -->
+                            <div class="search-container">
+                                <form class="search-form">
+                                    <input type="text" class="search-input" placeholder="Search products...">
+                                    <button type="submit" class="search-btn">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <!-- Action Icons -->
+                            <div class="action-icons">
+                                <!-- Favorite Icon - No items (badge hidden) -->
+                                <a href="/favorites" class="action-icon">
+                                    <i class="far fa-heart"></i>
+                                    <span class="action-badge" data-count="0"></span>
+                                </a>
+                                
+                                <!-- Cart Icon -->
+                                <a href="{{ route('cart.index') }}" class="action-icon" id="cart-icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                    <span class="action-badge" id="cart-badge" style="display: none;"></span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -204,5 +222,36 @@
     </div>
 
     @stack('scripts')
+    <!-- Global Cart Count Script -->
+    <script>
+    // Global function to update cart count (can be called from any page)
+    function updateHeaderCartCount(count) {
+        const cartBadge = document.querySelector('#cart-icon .action-badge');
+        if (cartBadge) {
+            if (count > 0) {
+                cartBadge.textContent = count;
+                cartBadge.style.display = 'flex';
+            } else {
+                cartBadge.style.display = 'none';
+            }
+        }
+    }
+
+    // Load cart count on page load for ALL pages
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fetch the current cart count via AJAX on page load
+        fetch('/cart/count')
+            .then(response => response.json())
+            .then(data => {
+                updateHeaderCartCount(data.count);
+            })
+            .catch(error => {
+                console.error('Error fetching cart count:', error);
+            });
+    });
+
+    // Make the function globally available
+    window.updateHeaderCartCount = updateHeaderCartCount;
+    </script>
 </body>
 </html>

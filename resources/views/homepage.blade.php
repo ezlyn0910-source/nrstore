@@ -79,10 +79,10 @@
     </div>
 </section>
 
-<!-- Hot Selling Products Section -->
+<!-- Featured Products Section -->
 <section class="products-section">
     <div class="container">
-        <h2 class="section-title">Hot Selling Products</h2>
+        <h2 class="section-title">Featured Products</h2>
         <div class="products-grid">
             @forelse($hotProducts as $product)
             <div class="product-card" data-product-id="{{ $product->id }}">

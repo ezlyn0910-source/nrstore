@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up()
     {
         Schema::create('cart_items', function (Blueprint $table) {
@@ -21,14 +18,13 @@ return new class extends Migration
             $table->timestamps();
             
             $table->unique(['cart_id', 'product_id', 'variation_id']);
+            $table->index(['cart_id']);
+            $table->index(['product_id']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
-        Schema::dropIfExists('cart_items_');
+        Schema::dropIfExists('cart_items');
     }
 };

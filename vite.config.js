@@ -10,6 +10,7 @@ export default defineConfig({
                 "resources/css/productpage.css",
                 "resources/css/homepage.css",
                 "resources/css/orders.css",
+                "resources/css/cart/index.css",
                 "resources/js/app.js",
             ],
             refresh: true,
