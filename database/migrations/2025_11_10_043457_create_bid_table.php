@@ -15,8 +15,8 @@ return new class extends Migration
             $table->decimal('current_price', 10, 2);
             $table->decimal('reserve_price', 10, 2)->nullable();
             $table->decimal('bid_increment', 10, 2)->default(1.00);
-            $table->timestamp('start_time');
-            $table->timestamp('end_time');
+            $table->timestamp('start_time')->useCurrent();
+            $table->timestamp('end_time')->useCurrent();
             $table->enum('status', ['draft', 'active', 'paused', 'completed', 'cancelled'])->default('draft');
             $table->integer('bid_count')->default(0);
             $table->foreignId('winner_id')->nullable()->constrained('users')->onDelete('set null');

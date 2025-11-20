@@ -47,13 +47,14 @@ class CartController extends Controller
             $cart = $this->getOrCreateCart();
             
             if (!$cart) {
+                \Log::error('Cart creation failed');
                 return response()->json([
                     'success' => false,
                     'message' => 'Unable to create cart. Please try again.'
                 ], 500);
             }
 
-            $product = Product::findOrFail($request->product_id);
+            $product = Product::with('images')->findOrFail($request->product_id);
 
             // Check if item already exists in cart
             $existingItem = $cart->items()
@@ -64,13 +65,15 @@ class CartController extends Controller
                 $existingItem->update([
                     'quantity' => $existingItem->quantity + $request->quantity
                 ]);
+                \Log::info('Updated existing cart item', ['item_id' => $existingItem->id]);
             } else {
-                CartItem::create([
+                $cartItem = CartItem::create([
                     'cart_id' => $cart->id,
                     'product_id' => $request->product_id,
                     'quantity' => $request->quantity,
                     'price' => $product->price,
                 ]);
+                \Log::info('Created new cart item', ['item_id' => $cartItem->id]);
             }
 
             // Recalculate cart totals
@@ -96,7 +99,7 @@ class CartController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
+                'message' => 'Error adding product to cart: ' . $e->getMessage()
             ], 500);
         }
     }
