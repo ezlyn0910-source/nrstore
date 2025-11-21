@@ -35,7 +35,7 @@ class ManageReportController extends Controller
             'summary' => $this->getSummaryReport($startDate, $endDate)
         ];
 
-        return view('admin.manage_report.index', compact('reports', 'dateRange', 'startDate', 'endDate'));
+        return view('managereport.index', compact('reports', 'dateRange', 'startDate', 'endDate'));
     }
 
     /**
@@ -43,6 +43,7 @@ class ManageReportController extends Controller
      */
     private function getSalesReport($startDate, $endDate)
     {
+        // Get sales summary by payment method
         $salesData = Order::whereBetween('created_at', [$startDate, $endDate])
             ->select([
                 DB::raw('COUNT(*) as total_orders'),
@@ -50,9 +51,16 @@ class ManageReportController extends Controller
                 DB::raw('AVG(total_amount) as average_order_value'),
                 DB::raw('SUM(CASE WHEN status = "completed" THEN total_amount ELSE 0 END) as completed_revenue'),
                 DB::raw('COUNT(CASE WHEN status = "completed" THEN 1 END) as completed_orders'),
-                DB::raw('COUNT(CASE WHEN status = "cancelled" THEN 1 END) as cancelled_orders'),
+                DB::raw('COUNT(CASE WHEN status = "cancelled" THEN 1 END) as cancelled_orders')
+            ])
+            ->first();
+
+        // Payment method breakdown
+        $paymentMethods = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->select([
                 'payment_method',
-                DB::raw('COUNT(*) as payment_count')
+                DB::raw('COUNT(*) as payment_count'),
+                DB::raw('SUM(total_amount) as total_revenue')
             ])
             ->groupBy('payment_method')
             ->get();
@@ -69,7 +77,7 @@ class ManageReportController extends Controller
             ->orderBy('date')
             ->get();
 
-        // Top selling products
+        // Top selling products - fixed query
         $topProducts = OrderItem::whereHas('order', function($query) use ($startDate, $endDate) {
                 $query->whereBetween('created_at', [$startDate, $endDate])
                       ->where('status', 'completed');
@@ -87,6 +95,7 @@ class ManageReportController extends Controller
 
         return [
             'summary' => $salesData,
+            'payment_methods' => $paymentMethods,
             'daily_trend' => $dailyTrend,
             'top_products' => $topProducts
         ];
@@ -140,39 +149,34 @@ class ManageReportController extends Controller
     }
 
     /**
-     * Get product performance report
+     * Get product performance report - FIXED
      */
     private function getProductPerformanceReport($startDate, $endDate)
     {
-        $productPerformance = Product::with(['category', 'variations'])
-            ->withCount(['orderItems as total_quantity_sold' => function($query) use ($startDate, $endDate) {
-                $query->whereHas('order', function($q) use ($startDate, $endDate) {
-                    $q->whereBetween('created_at', [$startDate, $endDate])
+        // Get product performance through order items
+        $productPerformance = OrderItem::whereHas('order', function($query) use ($startDate, $endDate) {
+                $query->whereBetween('created_at', [$startDate, $endDate])
                       ->where('status', 'completed');
-                });
-            }])
-            ->withSum(['orderItems as total_revenue' => function($query) use ($startDate, $endDate) {
-                $query->whereHas('order', function($q) use ($startDate, $endDate) {
-                    $q->whereBetween('created_at', [$startDate, $endDate])
-                      ->where('status', 'completed');
-                });
-            }], 'total')
-            ->withCount(['orderItems as total_orders' => function($query) use ($startDate, $endDate) {
-                $query->whereHas('order', function($q) use ($startDate, $endDate) {
-                    $q->whereBetween('created_at', [$startDate, $endDate])
-                      ->where('status', 'completed');
-                });
-            }])
+            })
+            ->select([
+                'product_id',
+                DB::raw('SUM(quantity) as total_quantity_sold'),
+                DB::raw('SUM(total) as total_revenue'),
+                DB::raw('COUNT(DISTINCT order_id) as total_orders')
+            ])
+            ->with('product.category')
+            ->groupBy('product_id')
             ->orderByDesc('total_revenue')
             ->limit(20)
             ->get();
 
         // Product categories performance
-        $categoryPerformance = Product::join('categories', 'products.category_id', '=', 'categories.id')
-            ->join('order_items', 'products.id', '=', 'order_items.product_id')
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->whereBetween('orders.created_at', [$startDate, $endDate])
-            ->where('orders.status', 'completed')
+        $categoryPerformance = OrderItem::whereHas('order', function($query) use ($startDate, $endDate) {
+                $query->whereBetween('created_at', [$startDate, $endDate])
+                      ->where('status', 'completed');
+            })
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->join('categories', 'products.category_id', '=', 'categories.id')
             ->select([
                 'categories.name as category_name',
                 DB::raw('COUNT(DISTINCT products.id) as product_count'),

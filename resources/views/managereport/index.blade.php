@@ -11,12 +11,15 @@
     <div class="container-fluid">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h2 mb-0">Reports & Analytics</h1>
+            <div class="header-content">
+                <h1 class="page-title">Manage Report</h1>
+                <p class="page-subtitle">View and manage your reports</p>
+            </div>
             <div class="export-buttons">
-                <a href="{{ route('admin.reports.export', ['type' => 'excel']) }}" class="btn-export excel">
+                <a href="{{ route('admin.managereport.export', ['type' => 'excel']) }}" class="btn-export excel">
                     <i class="fas fa-file-excel"></i> Export Excel
                 </a>
-                <a href="{{ route('admin.reports.export', ['type' => 'pdf']) }}" class="btn-export pdf">
+                <a href="{{ route('admin.managereport.export', ['type' => 'pdf']) }}" class="btn-export pdf">
                     <i class="fas fa-file-pdf"></i> Export PDF
                 </a>
             </div>
@@ -24,7 +27,7 @@
 
         <!-- Date Range Filter -->
         <div class="date-range-filter">
-            <form method="GET" action="{{ route('admin.reports.index') }}" class="row">
+            <form method="GET" action="{{ route('admin.managereport.index') }}" class="row">
                 <div class="col-md-4">
                     <div class="form-group">
                         <label for="date_range">Date Range</label>
@@ -66,47 +69,43 @@
         <!-- Summary Cards -->
         <div class="summary-cards">
             <div class="summary-card sales">
-                <div class="card-label">Total Revenue</div>
                 <div class="card-value">RM {{ number_format($reports['summary']['total_revenue'] ?? 0, 2) }}</div>
-                <div class="card-change positive">+12.5% from last period</div>
+                <div class="card-label">Total Revenue</div>
             </div>
             <div class="summary-card orders">
-                <div class="card-label">Total Orders</div>
                 <div class="card-value">{{ $reports['summary']['total_orders'] ?? 0 }}</div>
-                <div class="card-change positive">+8.3% from last period</div>
+                <div class="card-label">Total Orders</div>
             </div>
             <div class="summary-card users">
-                <div class="card-label">New Users</div>
                 <div class="card-value">{{ $reports['summary']['total_users'] ?? 0 }}</div>
-                <div class="card-change positive">+5.2% from last period</div>
+                <div class="card-label">New Users</div>
             </div>
             <div class="summary-card bids">
-                <div class="card-label">Total Bids</div>
                 <div class="card-value">{{ $reports['summary']['total_bids'] ?? 0 }}</div>
-                <div class="card-change positive">+15.7% from last period</div>
+                <div class="card-label">Total Bids</div>
             </div>
         </div>
 
         <!-- Sales Report Section -->
         <div class="report-section">
-            <h3>Sales Report</h3>
+            <h4>Sales Report</h4>
             
             <!-- Sales Metrics -->
             <div class="metrics-grid">
                 <div class="metric-item">
-                    <div class="metric-value">{{ $reports['sales']['summary']->sum('total_orders') ?? 0 }}</div>
+                    <div class="metric-value">{{ $reports['sales']['summary']->total_orders ?? 0 }}</div>
                     <div class="metric-label">Total Orders</div>
                 </div>
                 <div class="metric-item">
-                    <div class="metric-value">RM {{ number_format($reports['sales']['summary']->sum('total_revenue') ?? 0, 2) }}</div>
+                    <div class="metric-value">RM {{ number_format($reports['sales']['summary']->total_revenue ?? 0, 2) }}</div>
                     <div class="metric-label">Total Revenue</div>
                 </div>
                 <div class="metric-item">
-                    <div class="metric-value">RM {{ number_format($reports['sales']['summary']->avg('average_order_value') ?? 0, 2) }}</div>
+                    <div class="metric-value">RM {{ number_format($reports['sales']['summary']->average_order_value ?? 0, 2) }}</div>
                     <div class="metric-label">Average Order Value</div>
                 </div>
                 <div class="metric-item">
-                    <div class="metric-value">{{ $reports['sales']['summary']->sum('completed_orders') ?? 0 }}</div>
+                    <div class="metric-value">{{ $reports['sales']['summary']->completed_orders ?? 0 }}</div>
                     <div class="metric-label">Completed Orders</div>
                 </div>
             </div>
@@ -124,12 +123,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($reports['sales']['summary'] as $payment)
+                        @foreach($reports['sales']['payment_methods'] as $payment)
                         <tr>
                             <td>{{ $payment->payment_method ?: 'Unknown' }}</td>
                             <td>{{ $payment->payment_count }}</td>
                             <td>RM {{ number_format($payment->total_revenue, 2) }}</td>
-                            <td>{{ $reports['sales']['summary']->sum('total_orders') > 0 ? round(($payment->payment_count / $reports['sales']['summary']->sum('total_orders')) * 100, 1) : 0 }}%</td>
+                            <td>{{ $reports['sales']['summary']->total_orders > 0 ? round(($payment->payment_count / $reports['sales']['summary']->total_orders) * 100, 1) : 0 }}%</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -145,6 +144,7 @@
                             <th>Product</th>
                             <th>Quantity Sold</th>
                             <th>Revenue</th>
+                            <th>Orders</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -153,6 +153,7 @@
                             <td>{{ $product->product->name ?? 'N/A' }}</td>
                             <td>{{ $product->total_quantity }}</td>
                             <td>RM {{ number_format($product->total_revenue, 2) }}</td>
+                            <td>{{ $product->order_count ?? 'N/A' }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -162,7 +163,7 @@
 
         <!-- Bidding Activity Report -->
         <div class="report-section">
-            <h3>Bidding Activity Report</h3>
+            <h4>Bidding Activity Report</h4>
             
             <!-- Bidding Metrics -->
             <div class="metrics-grid">
@@ -175,7 +176,7 @@
                     <div class="metric-label">Total Bids</div>
                 </div>
                 <div class="metric-item">
-                    <div class="metric-value">{{ $reports['bidding']['summary']->average_bids_per_auction ?? 0 }}</div>
+                    <div class="metric-value">{{ number_format($reports['bidding']['summary']->average_bids_per_auction ?? 0, 1) }}</div>
                     <div class="metric-label">Avg Bids/Auction</div>
                 </div>
                 <div class="metric-item">
@@ -210,7 +211,7 @@
 
         <!-- Product Performance Report -->
         <div class="report-section">
-            <h3>Product Performance Report</h3>
+            <h4>Product Performance Report</h4>
 
             <!-- Top Performing Products -->
             <h4 class="mt-4 mb-3">Top Performing Products</h4>
@@ -228,8 +229,8 @@
                     <tbody>
                         @foreach($reports['products']['products'] as $product)
                         <tr>
-                            <td>{{ $product->name }}</td>
-                            <td>{{ $product->category->name ?? 'N/A' }}</td>
+                            <td>{{ $product->product->name ?? 'N/A' }}</td>
+                            <td>{{ $product->product->category->name ?? 'N/A' }}</td>
                             <td>{{ $product->total_orders }}</td>
                             <td>{{ $product->total_quantity_sold }}</td>
                             <td>RM {{ number_format($product->total_revenue, 2) }}</td>
@@ -267,7 +268,7 @@
 
         <!-- Inventory Report -->
         <div class="report-section">
-            <h3>Inventory Report</h3>
+            <h4>Inventory Report</h4>
             
             <!-- Inventory Metrics -->
             <div class="metrics-grid">

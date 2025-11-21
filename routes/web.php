@@ -168,7 +168,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     });
 
     // Reports & Analytics
-    Route::prefix('reports')->name('reports.')->controller(\App\Http\Controllers\ManageReportController::class)->group(function () {
+    Route::prefix('reports')->name('managereport.')->controller(\App\Http\Controllers\ManageReportController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/export/{type}', 'export')->name('export');
     });
