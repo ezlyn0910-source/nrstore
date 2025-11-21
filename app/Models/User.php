@@ -119,6 +119,12 @@ class User extends Authenticatable
             ->first();
     }
 
+    public function favorites()
+    {
+        return $this->belongsToMany(Product::class, 'user_favorites', 'user_id', 'product_id')
+                    ->withTimestamps();
+    }
+
     /**
      * Get the cart for the user.
      */
