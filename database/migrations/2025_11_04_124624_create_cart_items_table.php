@@ -8,23 +8,25 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('cart_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('cart_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->foreignId('variation_id')->nullable()->constrained()->onDelete('cascade');
-            $table->integer('quantity')->default(1);
-            $table->decimal('price', 10, 2);
-            $table->timestamps();
-            
-            $table->unique(['cart_id', 'product_id', 'variation_id']);
-            $table->index(['cart_id']);
-            $table->index(['product_id']);
-        });
+        // Only create the table if it doesn't exist
+        if (!Schema::hasTable('cart_items')) {
+            Schema::create('cart_items', function (Blueprint $table) {
+                $table->decimal('price', 10, 2);                
+            });
+        }
+        
+        // Always ensure the price column exists
+        if (Schema::hasTable('cart_items') && !Schema::hasColumn('cart_items', 'price')) {
+            Schema::table('cart_items', function (Blueprint $table) {
+                $table->decimal('price', 10, 2)->after('quantity');
+            });
+        }
     }
 
     public function down()
     {
-        Schema::dropIfExists('cart_items');
+        // Don't drop the table to avoid data loss
+        // Only drop if you're sure you want to reset
+        // Schema::dropIfExists('cart_items');
     }
 };
