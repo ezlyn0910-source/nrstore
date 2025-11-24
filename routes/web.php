@@ -36,6 +36,12 @@ Route::get('/products', [ProductController::class, 'index'])->name('productpage'
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products/{product}/slug', [ProductController::class, 'showBySlug'])->name('products.show.slug');
 
+Route::middleware(['auth'])->group(function () {
+    Route::post('/favorites/add', [FavoriteController::class, 'add'])->name('favorites.add');
+    Route::post('/favorites/remove', [FavoriteController::class, 'remove'])->name('favorites.remove');
+    Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+});
+
 // Order Routes
 Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');

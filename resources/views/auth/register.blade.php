@@ -80,11 +80,16 @@
                         @enderror
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group password-group">
                         <label for="password">{{ __('Password') }}</label>
-                        <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" 
-                               name="password" required autocomplete="new-password"
-                               placeholder="Create a password">
+                        <div class="password-input-container">
+                            <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" 
+                                   name="password" required autocomplete="new-password"
+                                   placeholder="Create a password">
+                            <span class="password-toggle" onclick="togglePassword('password')">
+                                <i class="fas fa-eye"></i>
+                            </span>
+                        </div>
                         @error('password')
                             <span class="invalid-feedback" role="alert">
                                 <strong>{{ $message }}</strong>
@@ -92,11 +97,16 @@
                         @enderror
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group password-group">
                         <label for="password-confirm">{{ __('Confirm Password') }}</label>
-                        <input id="password-confirm" type="password" class="form-control" 
-                               name="password_confirmation" required autocomplete="new-password"
-                               placeholder="Confirm your password">
+                        <div class="password-input-container">
+                            <input id="password-confirm" type="password" class="form-control" 
+                                   name="password_confirmation" required autocomplete="new-password"
+                                   placeholder="Confirm your password">
+                            <span class="password-toggle" onclick="togglePassword('password-confirm')">
+                                <i class="fas fa-eye"></i>
+                            </span>
+                        </div>
                     </div>
 
                     <button type="submit" class="auth-btn">
@@ -104,17 +114,30 @@
                     </button>
 
                     <div class="auth-divider">
-                        <span>Already have an account?</span>
+                        <span>Already have an account? <a href="{{ route('login') }}" class="login-link">Log in</a></span>
                     </div>
-
-                    <a href="{{ route('login') }}" class="auth-alt-btn">
-                        {{ __('Sign In') }}
-                    </a>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function togglePassword(fieldId) {
+    const passwordField = document.getElementById(fieldId);
+    const toggleIcon = passwordField.nextElementSibling.querySelector('i');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
+    }
+}
+</script>
 
 </body>
 </html>

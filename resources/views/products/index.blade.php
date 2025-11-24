@@ -2,6 +2,51 @@
 
 @section('styles')
     @vite('resources/css/productpage.css')
+    <style>
+        .favorite-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 5;
+        }
+        
+        .favorite-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+        
+        .favorite-icon {
+            width: 18px;
+            height: 18px;
+            transition: all 0.3s ease;
+        }
+        
+        .favorite-btn:not(.favorited) .favorite-icon {
+            color: #6b7280;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+        
+        .favorite-btn.favorited .favorite-icon {
+            color: #ef4444;
+            fill: currentColor;
+        }
+        
+        .product-image-container {
+            position: relative;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -158,11 +203,19 @@
                     <div style="width: 75%;">
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
                             @foreach($products as $product)                       
-                            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; transition: all 0.3s ease; padding: 0; margin: 0;" class="product-card" data-product-id="{{ $product->id }}">
-                                <div style="width: 100%; height: 150px; background-color: #f3f4f6; overflow: hidden; margin: 0; padding: 0; border-radius: 0.5rem 0.5rem 0 0;">
+                            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; transition: all 0.3s ease; padding: 0; margin: 0; position: relative;" class="product-card" data-product-id="{{ $product->id }}">
+                                <div style="width: 100%; height: 150px; background-color: #f3f4f6; overflow: hidden; margin: 0; padding: 0; border-radius: 0.5rem 0.5rem 0 0; position: relative;">
                                     <img src="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"    
                                         alt="{{ $product->name }}" 
                                         style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; margin: 0; padding: 0; display: block; border-radius: 0.5rem 0.5rem 0 0;">
+                                    
+                                    <!-- Favorite Button -->
+                                    <button class="favorite-btn {{ auth()->user() && auth()->user()->favorites->contains($product->id) ? 'favorited' : '' }}" 
+                                            data-product-id="{{ $product->id }}">
+                                        <svg class="favorite-icon" viewBox="0 0 24 24">
+                                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                        </svg>
+                                    </button>
                                 </div>
                                 <div style="padding: 0.75rem;">
                                     <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; font-size: 0.875rem; line-height: 1.25;">{{ $product->name }}</h3>
@@ -213,7 +266,6 @@
                         </div>
 
                         <!-- Pagination -->
-
                         @if($products->hasPages())
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
                             <!-- Previous Button--> 
@@ -269,11 +321,19 @@
 
                     <div style="display: flex; overflow-x: auto; gap: 1rem; padding-bottom: 1rem; scrollbar-width: none;">
                         @foreach($recommendedProducts as $product)
-                        <div style="flex: 0 0 auto; width: 300px; background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden; transition: all 0.3s ease;" class="product-card" data-product-id="{{ $product->id }}">
-                            <div style="width: 100%; height: 200px; background-color: #f3f4f6; overflow: hidden; margin: 0; padding: 0;">
+                        <div style="flex: 0 0 auto; width: 300px; background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden; transition: all 0.3s ease; position: relative;" class="product-card" data-product-id="{{ $product->id }}">
+                            <div style="width: 100%; height: 200px; background-color: #f3f4f6; overflow: hidden; margin: 0; padding: 0; position: relative;">
                                 <img src="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"    
                                     alt="{{ $product->name }}" 
                                     style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; margin: 0; padding: 0; display: block;">
+                                
+                                <!-- Favorite Button -->
+                                <button class="favorite-btn {{ auth()->user() && auth()->user()->favorites->contains($product->id) ? 'favorited' : '' }}" 
+                                        data-product-id="{{ $product->id }}">
+                                    <svg class="favorite-icon" viewBox="0 0 24 24">
+                                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                    </svg>
+                                </button>
                             </div>
                             <div style="padding: 0.75rem;">
                                 <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; font-size: 1rem;">{{ $product->name }}</h3>
@@ -423,6 +483,58 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+
+    // Favorite button functionality
+    document.querySelectorAll('.favorite-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            const productId = this.getAttribute('data-product-id');
+            const isFavorited = this.classList.contains('favorited');
+            
+            // Check if user is logged in
+            @if(auth()->check())
+                toggleFavorite(productId, this, !isFavorited);
+            @else
+                showNotification('Please login to add favorites', 'error');
+                // Optionally redirect to login page
+                // window.location.href = '{{ route("login") }}';
+            @endif
+        });
+    });
+    
+    function toggleFavorite(productId, button, addToFavorite) {
+        const url = addToFavorite ? '/favorites/add' : '/favorites/remove';
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                product_id: productId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (addToFavorite) {
+                    button.classList.add('favorited');
+                    showNotification('Product added to favorites!');
+                } else {
+                    button.classList.remove('favorited');
+                    showNotification('Product removed from favorites!');
+                }
+            } else {
+                showNotification(data.message || 'Operation failed', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An error occurred', 'error');
+        });
+    }
 
     // Cart count in header
     function updateCartCount(count) {
