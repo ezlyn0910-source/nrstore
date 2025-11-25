@@ -71,9 +71,10 @@
                     <span class="subtotal-amount" id="subtotal">RM {{ number_format($subtotal, 2) }}</span>
                 </div>
                 <div class="divider"></div>
-                <button class="order-btn">
+                <!-- Updated ORDER NOW button that redirects to checkout -->
+                <a href="{{ route('checkout.index') }}" class="order-btn">
                     ORDER NOW
-                </button>
+                </a>
             </div>
         </div>
         @else
@@ -126,14 +127,175 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Order now button
-    document.querySelector('.order-btn')?.addEventListener('click', function() {
-        alert('Proceeding to checkout...');
-        // Add checkout logic here
+    // Order now button - with comprehensive validation
+    document.querySelector('.order-btn')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        validateAndProceedToCheckout();
     });
 
+    // Function to validate cart and proceed to checkout
+    async function validateAndProceedToCheckout() {
+        try {
+            // Show loading state
+            const orderBtn = document.querySelector('.order-btn');
+            const originalText = orderBtn.textContent;
+            orderBtn.textContent = 'Validating...';
+            orderBtn.disabled = true;
+
+            // Validation 1: Check if cart is empty
+            const cartItemsCount = {{ $cartItems->count() }};
+            if (cartItemsCount === 0) {
+                showValidationError('Your cart is empty. Please add items to your cart before proceeding to checkout.');
+                resetButtonState(orderBtn, originalText);
+                return;
+            }
+
+            // Validation 2: Check user authentication
+            const isAuthenticated = await checkUserAuthentication();
+            if (!isAuthenticated) {
+                showValidationError('Please log in to proceed with your order.');
+                resetButtonState(orderBtn, originalText);
+                
+                // Redirect to login page
+                setTimeout(() => {
+                    window.location.href = '{{ route("login") }}?redirect=checkout';
+                }, 2000);
+                return;
+            }
+
+            // Validation 3: Check stock availability
+            const stockValidation = await validateStockAvailability();
+            if (!stockValidation.valid) {
+                showValidationError(`Sorry, "${stockValidation.outOfStockItems}" ${stockValidation.outOfStockItems > 1 ? 'items are' : 'item is'} out of stock. Please update your cart.`);
+                resetButtonState(orderBtn, originalText);
+                return;
+            }
+
+            // Validation 4: Check minimum order amount (if applicable)
+            const subtotal = {{ $subtotal }};
+            const minOrderAmount = 10.00; // Set your minimum order amount
+            if (subtotal < minOrderAmount) {
+                showValidationError(`Minimum order amount is RM ${minOrderAmount.toFixed(2)}. Please add more items to your cart.`);
+                resetButtonState(orderBtn, originalText);
+                return;
+            }
+
+            // All validations passed - proceed to checkout
+            window.location.href = '{{ route("checkout.index") }}';
+
+        } catch (error) {
+            console.error('Validation error:', error);
+            showValidationError('An error occurred while validating your cart. Please try again.');
+            resetButtonState(orderBtn, originalText);
+        }
+    }
+
+    // Helper function to check user authentication
+    async function checkUserAuthentication() {
+        try {
+            const response = await fetch('{{ route("api.check.auth") }}', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+            
+            const data = await response.json();
+            return data.authenticated;
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            return false;
+        }
+    }
+
+    // Helper function to validate stock availability
+    async function validateStockAvailability() {
+        try {
+            const response = await fetch('{{ route("cart.validate.stock") }}', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Stock validation failed:', error);
+            return { valid: false, outOfStockItems: 0 };
+        }
+    }
+
+    // Helper function to show validation errors
+    function showValidationError(message) {
+        alert(message);
+    }
+
+    // Helper function to reset button state
+    function resetButtonState(button, originalText) {
+        button.textContent = originalText;
+        button.disabled = false;
+    }
+
+    // Cart quantity functions
+    function increaseQuantity(itemId, itemElement) {
+        const input = itemElement.querySelector('.qty-input');
+        const currentValue = parseInt(input.value);
+        if (currentValue < 99) {
+            input.value = currentValue + 1;
+            updateCartItem(itemId, currentValue + 1, itemElement);
+        }
+    }
+
+    function decreaseQuantity(itemId, itemElement) {
+        const input = itemElement.querySelector('.qty-input');
+        const currentValue = parseInt(input.value);
+        if (currentValue > 1) {
+            input.value = currentValue - 1;
+            updateCartItem(itemId, currentValue - 1, itemElement);
+        }
+    }
+
+    function updateCartItem(itemId, quantity, itemElement) {
+        // Use the correct route with itemId parameter
+        fetch(`/cart/update/${itemId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                quantity: quantity
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the item total
+                const itemTotal = itemElement.querySelector('.item-total');
+                itemTotal.textContent = `RM ${data.item_subtotal.toFixed(2)}`;
+                
+                // Update the cart subtotal
+                const subtotalElement = document.getElementById('subtotal');
+                if (subtotalElement) {
+                    subtotalElement.textContent = `RM ${data.cart_subtotal.toFixed(2)}`;
+                }
+            } else {
+                alert('Failed to update cart: ' + data.message);
+                // Reset the input to previous value
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating cart');
+            location.reload();
+        });
+    }
+
     function clearCart() {
-        fetch('/cart/clear', {
+        fetch('{{ route("cart.clear") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -150,19 +312,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error:', error);
             alert('Failed to clear cart');
         });
-    }
-
-    // Your existing cart functions
-    function increaseQuantity(itemId, itemElement) {
-        // Your increase quantity logic
-    }
-
-    function decreaseQuantity(itemId, itemElement) {
-        // Your decrease quantity logic
-    }
-
-    function updateCartItem(itemId, quantity, itemElement) {
-        // Your update cart logic
     }
 });
 </script>

@@ -1,5 +1,4 @@
 <?php
-// Cart.php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -73,5 +72,39 @@ class Cart extends Model
         ]);
 
         return $this;
+    }
+
+    /**
+     * Get the cart items with product information
+     */
+    public function getCartItemsWithProducts()
+    {
+        return $this->items()->with('product')->get();
+    }
+
+    /**
+     * Get cart subtotal
+     */
+    public function getSubtotal()
+    {
+        return $this->items->sum(function($item) {
+            return $item->quantity * $item->price;
+        });
+    }
+
+    /**
+     * Check if cart is empty
+     */
+    public function isEmpty()
+    {
+        return $this->items->count() === 0;
+    }
+
+    /**
+     * Clear all items from cart
+     */
+    public function clear()
+    {
+        return $this->items()->delete();
     }
 }

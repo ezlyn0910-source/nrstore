@@ -255,21 +255,23 @@
 }
 
 .order-btn {
-    width: 100%;
-    padding: 14px;
-    background: #2c3e50;
-    color: white;
+    display: inline-block;
+    padding: 12px 30px;
+    background-color: #000;
+    color: #fff;
+    text-decoration: none;
     border: none;
-    border-radius: 6px;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 1rem;
+    border-radius: 4px;
+    font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s;
+    text-align: center;
+    transition: background-color 0.3s;
 }
 
 .order-btn:hover {
-    background: #34495e;
+    background-color: #333;
+    color: #fff;
+    text-decoration: none;
 }
 
 /* Empty Cart */
