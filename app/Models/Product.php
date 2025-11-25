@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-
 class Product extends Model
 {
     use HasFactory;
@@ -22,7 +21,12 @@ class Product extends Model
         'brand',
         'ram',
         'storage',
+        'storage_type', // Added
         'processor',
+        'graphics_card', // Added
+        'screen_size', // Added
+        'os', // Added
+        'warranty', // Added
         'stock_quantity',
         'is_featured',
         'is_recommended', 
@@ -100,7 +104,9 @@ class Product extends Model
         return $query->where(function($q) use ($searchTerm) {
             $q->where('name', 'like', "%{$searchTerm}%")
               ->orWhere('description', 'like', "%{$searchTerm}%")
-              ->orWhere('brand', 'like', "%{$searchTerm}%");
+              ->orWhere('brand', 'like', "%{$searchTerm}%")
+              ->orWhere('processor', 'like', "%{$searchTerm}%")
+              ->orWhere('graphics_card', 'like', "%{$searchTerm}%"); // Added to search
         });
     }
 
@@ -127,6 +133,32 @@ class Product extends Model
     public function scopeWithoutVariations($query)
     {
         return $query->where('has_variations', false);
+    }
+
+    // New scopes for the additional fields
+    public function scopeByStorageType($query, $storageType)
+    {
+        return $query->where('storage_type', $storageType);
+    }
+
+    public function scopeByGraphicsCard($query, $graphicsCard)
+    {
+        return $query->where('graphics_card', $graphicsCard);
+    }
+
+    public function scopeByScreenSize($query, $screenSize)
+    {
+        return $query->where('screen_size', $screenSize);
+    }
+
+    public function scopeByOs($query, $os)
+    {
+        return $query->where('os', $os);
+    }
+
+    public function scopeByWarranty($query, $warranty)
+    {
+        return $query->where('warranty', $warranty);
     }
 
     // Accessors

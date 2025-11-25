@@ -21,12 +21,7 @@ class Variation extends Model
         'processor',
         'ram',
         'storage',
-        'storage_type',
-        'graphics_card',
-        'screen_size',
-        'os',
-        'warranty',
-        'voltage',
+        // Removed: storage_type, graphics_card, screen_size, os, warranty, voltage
     ];
 
     protected $casts = [
@@ -120,12 +115,7 @@ class Variation extends Model
         if ($this->processor) $specs['Processor'] = $this->processor;
         if ($this->ram) $specs['RAM'] = $this->ram;
         if ($this->storage) $specs['Storage'] = $this->storage;
-        if ($this->storage_type) $specs['Storage Type'] = $this->storage_type;
-        if ($this->graphics_card) $specs['Graphics Card'] = $this->graphics_card;
-        if ($this->screen_size) $specs['Screen Size'] = $this->screen_size;
-        if ($this->os) $specs['Operating System'] = $this->os;
-        if ($this->warranty) $specs['Warranty'] = $this->warranty;
-        if ($this->voltage) $specs['Voltage'] = $this->voltage;
+        // Removed: storage_type, graphics_card, screen_size, os, warranty, voltage
         
         return $specs;
     }
