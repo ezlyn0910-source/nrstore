@@ -5,13 +5,14 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                "resources/sass/app.scss",
+                "resources/scss/app.scss",
                 "resources/css/home.css",
                 "resources/css/productpage.css",
                 "resources/css/homepage.css",
                 "resources/css/orders.css",
                 "resources/css/cart/index.css",
                 "resources/js/app.js",
+                "resources/css/authlayout.css",
             ],
             refresh: true,
         }),
