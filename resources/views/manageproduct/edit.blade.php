@@ -80,6 +80,22 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="type">Type</label>
+                    <input type="text" id="type" name="type" value="{{ old('type', $product->type) }}">
+                    @error('type')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="sub_type">Sub Type</label>
+                    <input type="text" id="sub_type" name="sub_type" value="{{ old('sub_type', $product->sub_type) }}">
+                    @error('sub_type')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
                     <label for="price">Price (RM) *</label>
                     <input type="number" id="price" name="price" step="0.01" min="0" value="{{ old('price', $product->price) }}" required>
                     @error('price')
@@ -94,15 +110,16 @@
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
+            </div>
+        </div>
 
-                <div class="form-group">
-                    <label for="stock_quantity">Stock Quantity *</label>
-                    <input type="number" id="stock_quantity" name="stock_quantity" min="0" value="{{ old('stock_quantity', $product->stock_quantity) }}" required>
-                    @error('stock_quantity')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-
+        <!-- Product Specifications -->
+        <div class="form-section">
+            <div class="section-header">
+                <i class="fas fa-cogs"></i>
+                <h3>Product Specifications</h3>
+            </div>
+            <div class="form-grid">
                 <div class="form-group">
                     <label for="processor">Processor</label>
                     <input type="text" id="processor" name="processor" value="{{ old('processor', $product->processor) }}">
@@ -123,6 +140,63 @@
                     <label for="storage">Storage</label>
                     <input type="text" id="storage" name="storage" value="{{ old('storage', $product->storage) }}">
                     @error('storage')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="storage_type">Storage Type</label>
+                    <input type="text" id="storage_type" name="storage_type" value="{{ old('storage_type', $product->storage_type) }}">
+                    @error('storage_type')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="graphics_card">Graphics Card</label>
+                    <input type="text" id="graphics_card" name="graphics_card" value="{{ old('graphics_card', $product->graphics_card) }}">
+                    @error('graphics_card')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="screen_size">Screen Size</label>
+                    <input type="text" id="screen_size" name="screen_size" value="{{ old('screen_size', $product->screen_size) }}">
+                    @error('screen_size')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="os">Operating System</label>
+                    <input type="text" id="os" name="os" value="{{ old('os', $product->os) }}">
+                    @error('os')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="warranty">Warranty</label>
+                    <input type="text" id="warranty" name="warranty" value="{{ old('warranty', $product->warranty) }}">
+                    @error('warranty')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock & Status -->
+        <div class="form-section">
+            <div class="section-header">
+                <i class="fas fa-cubes"></i>
+                <h3>Stock & Status</h3>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="stock_quantity">Stock Quantity *</label>
+                    <input type="number" id="stock_quantity" name="stock_quantity" min="0" value="{{ old('stock_quantity', $product->stock_quantity) }}" required>
+                    @error('stock_quantity')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
@@ -280,30 +354,6 @@
                                 <label>Storage</label>
                                 <input type="text" name="existing_variations[{{ $variation->id }}][storage]" value="{{ $variation->storage }}">
                             </div>
-                            <div class="form-group">
-                                <label>Storage Type</label>
-                                <input type="text" name="existing_variations[{{ $variation->id }}][storage_type]" value="{{ $variation->storage_type }}">
-                            </div>
-                            <div class="form-group">
-                                <label>Graphics Card</label>
-                                <input type="text" name="existing_variations[{{ $variation->id }}][graphics_card]" value="{{ $variation->graphics_card }}">
-                            </div>
-                            <div class="form-group">
-                                <label>Screen Size</label>
-                                <input type="text" name="existing_variations[{{ $variation->id }}][screen_size]" value="{{ $variation->screen_size }}">
-                            </div>
-                            <div class="form-group">
-                                <label>Operating System</label>
-                                <input type="text" name="existing_variations[{{ $variation->id }}][os]" value="{{ $variation->os }}">
-                            </div>
-                            <div class="form-group">
-                                <label>Warranty</label>
-                                <input type="text" name="existing_variations[{{ $variation->id }}][warranty]" value="{{ $variation->warranty }}">
-                            </div>
-                            <div class="form-group">
-                                <label>Voltage</label>
-                                <input type="text" name="existing_variations[{{ $variation->id }}][voltage]" value="{{ $variation->voltage }}">
-                            </div>
                         </div>
                         <div class="variation-image-upload">
                             <label>Variation Image</label>
@@ -395,30 +445,6 @@
                 <div class="form-group">
                     <label>Storage</label>
                     <input type="text" name="variations[__index__][storage]">
-                </div>
-                <div class="form-group">
-                    <label>Storage Type</label>
-                    <input type="text" name="variations[__index__][storage_type]">
-                </div>
-                <div class="form-group">
-                    <label>Graphics Card</label>
-                    <input type="text" name="variations[__index__][graphics_card]">
-                </div>
-                <div class="form-group">
-                    <label>Screen Size</label>
-                    <input type="text" name="variations[__index__][screen_size]">
-                </div>
-                <div class="form-group">
-                    <label>Operating System</label>
-                    <input type="text" name="variations[__index__][os]">
-                </div>
-                <div class="form-group">
-                    <label>Warranty</label>
-                    <input type="text" name="variations[__index__][warranty]">
-                </div>
-                <div class="form-group">
-                    <label>Voltage</label>
-                    <input type="text" name="variations[__index__][voltage]">
                 </div>
             </div>
             <div class="variation-image-upload">

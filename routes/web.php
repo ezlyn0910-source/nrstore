@@ -236,6 +236,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::prefix('bids')->name('managebid.')->controller(ManageBidController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/create', 'create')->name('create');
+        Route::post('/bulk-action', 'bulkAction')->name('bulk_action');
         Route::post('/', 'store')->name('store');
         Route::get('/{bid}', 'show')->name('show');
         Route::get('/{bid}/edit', 'edit')->name('edit');

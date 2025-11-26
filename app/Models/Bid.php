@@ -13,6 +13,7 @@ class Bid extends Model
 
     protected $fillable = [
         'product_id',
+        'variation_id',
         'starting_price',
         'current_price',
         'reserve_price',
@@ -53,6 +54,11 @@ class Bid extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function variation(): BelongsTo
+    {
+        return $this->belongsTo(Variation::class);
     }
 
     public function bids(): HasMany
@@ -98,7 +104,6 @@ class Bid extends Model
     public function getTimeRemainingAttribute()
     {
         if (!$this->end_time) return null;
-        
         return now()->diff($this->end_time);
     }
 
