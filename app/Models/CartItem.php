@@ -1,5 +1,4 @@
 <?php
-// CartItem.php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +14,9 @@ class CartItem extends Model
         'product_id',
         'variation_id',
         'quantity',
-        'price'
+        'price',
+        'product_name',
+        'image_url'
     ];
 
     protected $casts = [
@@ -25,8 +26,10 @@ class CartItem extends Model
 
     protected $appends = [
         'subtotal',
-        'product_name',
-        'image_url'
+        'display_name',
+        'display_image_url',
+        'available_stock',
+        'in_stock'
     ];
 
     public function cart(): BelongsTo
@@ -49,40 +52,129 @@ class CartItem extends Model
      */
     public function getSubtotalAttribute()
     {
-        return $this->quantity * $this->price;
-    }
-
-    /**
-     * Get product name
-     */
-    public function getProductNameAttribute()
-    {
-        if ($this->variation_id && $this->relationLoaded('variation')) {
-            return $this->product->name . ' - ' . $this->variation->model;
+        $price = $this->price;
+        
+        // If we have a variation and need to get current price
+        if ($this->variation_id && $this->relationLoaded('variation') && $this->variation) {
+            $price = $this->variation->price ?? $price;
         }
         
-        return $this->product->name ?? 'Product';
+        return $price * $this->quantity;
     }
 
     /**
-     * Get image URL
+     * Get display name with variation details
      */
-    public function getImageUrlAttribute()
+    public function getDisplayNameAttribute()
     {
-        if ($this->variation_id && $this->relationLoaded('variation')) {
-            return $this->variation->image_url;
+        $name = $this->product->name ?? 'Product';
+        
+        if ($this->variation_id && $this->relationLoaded('variation') && $this->variation) {
+            $variationDetails = [];
+            
+            // Add variation-specific details
+            if ($this->variation->model) {
+                $variationDetails[] = $this->variation->model;
+            }
+            if ($this->variation->ram) {
+                $variationDetails[] = $this->variation->ram;
+            }
+            if ($this->variation->storage) {
+                $variationDetails[] = $this->variation->storage;
+            }
+            
+            if (!empty($variationDetails)) {
+                $name .= ' - ' . implode(' | ', $variationDetails);
+            }
         }
         
-        return $this->product->main_image_url ?? asset('images/default-product.png');
+        return $name;
     }
 
     /**
-     * Increase quantity
+     * Get display image URL with null safety
+     */
+    public function getDisplayImageUrlAttribute()
+    {
+        // Priority 1: Variation image with null checks
+        if ($this->variation_id && $this->relationLoaded('variation') && $this->variation) {
+            if ($this->variation->image) {
+                return Storage::disk('public')->exists($this->variation->image)
+                    ? asset('storage/' . $this->variation->image)
+                    : asset('images/default-product.png');
+            }
+        }
+        
+        // Priority 2: Product main image with null checks
+        if ($this->relationLoaded('product') && $this->product) {
+            return $this->product->main_image_url;
+        }
+        
+        // Fallback: Default image
+        return asset('images/default-product.png');
+    }
+
+    /**
+     * Get available stock for this specific item
+     */
+    public function getAvailableStockAttribute()
+    {
+        if ($this->variation_id && $this->relationLoaded('variation') && $this->variation) {
+            return $this->variation->stock ?? 0;
+        }
+        
+        if ($this->relationLoaded('product') && $this->product) {
+            return $this->product->stock_quantity ?? 0;
+        }
+        
+        return 0;
+    }
+
+    /**
+     * Check if item is in stock
+     */
+    public function getInStockAttribute()
+    {
+        return $this->available_stock >= $this->quantity;
+    }
+
+    /**
+     * Check if item has sufficient stock for a given quantity
+     */
+    public function hasSufficientStock($quantity = null)
+    {
+        $requestedQuantity = $quantity ?? $this->quantity;
+        return $this->available_stock >= $requestedQuantity;
+    }
+
+    /**
+     * Get maximum quantity that can be added
+     */
+    public function getMaxAvailableQuantityAttribute()
+    {
+        return min($this->available_stock, 99); // Limit to 99 for UX
+    }
+
+    /**
+     * Increase quantity with stock validation
      */
     public function increaseQuantity($quantity = 1)
     {
-        $this->increment('quantity', $quantity);
+        $newQuantity = $this->quantity + $quantity;
+        
+        // Check stock before increasing
+        if ($newQuantity > $this->available_stock) {
+            throw new \Exception('Insufficient stock. Only ' . $this->available_stock . ' items available.');
+        }
+        
+        // Check maximum quantity limit
+        if ($newQuantity > 99) {
+            throw new \Exception('Maximum quantity per item is 99.');
+        }
+        
+        $this->update(['quantity' => $newQuantity]);
         $this->cart->calculateTotals();
+        
         return $this;
     }
 
@@ -91,14 +183,147 @@ class CartItem extends Model
      */
     public function decreaseQuantity($quantity = 1)
     {
-        $this->decrement('quantity', $quantity);
+        $newQuantity = $this->quantity - $quantity;
         
-        if ($this->quantity <= 0) {
+        if ($newQuantity <= 0) {
             $this->delete();
-        } else {
-            $this->cart->calculateTotals();
+            return null;
         }
         
+        $this->update(['quantity' => $newQuantity]);
+        $this->cart->calculateTotals();
+        
         return $this;
+    }
+
+    /**
+     * Update quantity with validation
+     */
+    public function updateQuantity($newQuantity)
+    {
+        if ($newQuantity < 1) {
+            $this->delete();
+            return null;
+        }
+        
+        if ($newQuantity > 99) {
+            throw new \Exception('Maximum quantity per item is 99.');
+        }
+        
+        if ($newQuantity > $this->available_stock) {
+            throw new \Exception('Insufficient stock. Only ' . $this->available_stock . ' items available.');
+        }
+        
+        $this->update(['quantity' => $newQuantity]);
+        $this->cart->calculateTotals();
+        
+        return $this;
+    }
+
+    /**
+     * Load all necessary relationships for display
+     */
+    public function loadForDisplay()
+    {
+        return $this->load([
+            'product' => function($query) {
+                $query->select('id', 'name', 'slug', 'brand', 'image', 'stock_quantity', 'has_variations')
+                      ->with(['images' => function($q) {
+                          $q->orderBy('is_primary', 'desc')->orderBy('sort_order');
+                      }]);
+            },
+            'variation' => function($query) {
+                $query->select('id', 'product_id', 'model', 'ram', 'storage', 'processor', 'image', 'stock', 'price');
+            }
+        ]);
+    }
+
+    /**
+     * Scope to include stock information
+     */
+    public function scopeWithStockInfo($query)
+    {
+        return $query->with([
+            'product' => function($q) {
+                $q->select('id', 'name', 'stock_quantity', 'has_variations');
+            },
+            'variation' => function($q) {
+                $q->select('id', 'product_id', 'stock');
+            }
+        ]);
+    }
+
+    /**
+     * Scope to find items that are out of stock
+     */
+    public function scopeOutOfStock($query)
+    {
+        return $query->where(function($q) {
+            $q->whereHas('variation', function($subQ) {
+                $subQ->whereRaw('variations.stock < cart_items.quantity');
+            })->orWhere(function($subQ) {
+                $subQ->whereNull('variation_id')
+                     ->whereHas('product', function($productQ) {
+                         $productQ->whereRaw('products.stock_quantity < cart_items.quantity');
+                     });
+            });
+        });
+    }
+
+    /**
+     * Scope to find items that are in stock
+     */
+    public function scopeInStock($query)
+    {
+        return $query->where(function($q) {
+            $q->whereHas('variation', function($subQ) {
+                $subQ->whereRaw('variations.stock >= cart_items.quantity');
+            })->orWhere(function($subQ) {
+                $subQ->whereNull('variation_id')
+                     ->whereHas('product', function($productQ) {
+                         $productQ->whereRaw('products.stock_quantity >= cart_items.quantity');
+                     });
+            });
+        });
+    }
+
+    /**
+     * Get stock status for this item
+     */
+    public function getStockStatusAttribute()
+    {
+        $availableStock = $this->available_stock;
+        $requestedQuantity = $this->quantity;
+        
+        if ($availableStock === 0) {
+            return 'out_of_stock';
+        } elseif ($availableStock < $requestedQuantity) {
+            return 'insufficient_stock';
+        } elseif ($availableStock < 10) {
+            return 'low_stock';
+        } else {
+            return 'in_stock';
+        }
+    }
+
+    /**
+     * Get stock status message
+     */
+    public function getStockStatusMessageAttribute()
+    {
+        $availableStock = $this->available_stock;
+        
+        switch ($this->stock_status) {
+            case 'out_of_stock':
+                return 'Out of stock';
+            case 'insufficient_stock':
+                return 'Only ' . $availableStock . ' items available';
+            case 'low_stock':
+                return 'Low stock - ' . $availableStock . ' items left';
+            case 'in_stock':
+                return 'In stock';
+            default:
+                return 'Stock status unknown';
+        }
     }
 }

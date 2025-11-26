@@ -6,7 +6,6 @@
 
 @section('content')
 <div class="orders-page">
-    <!-- Page Title -->
     <section class="page-title-section">
         <div class="container">
             <div class="page-title-container">
@@ -15,12 +14,9 @@
         </div>
     </section>
 
-    <!-- Main Content -->
     <section class="main-content-section">
         <div class="container">
-            <!-- Two Column Layout -->
             <div class="orders-layout">
-                <!-- Left Column - Categories -->
                 <div class="categories-column">
                     <div class="status-categories">
                         <button class="status-category active" data-status="all">
@@ -50,12 +46,9 @@
                     </div>
                 </div>
 
-                <!-- Right Column - Orders -->
                 <div class="orders-column">
-                    <!-- Orders List -->
                     <div class="orders-container">
                         @if(isset($isGuest) && $isGuest)
-                            <!-- Guest State -->
                             <div class="empty-state">
                                 <div class="empty-icon">🔒</div>
                                 <h3>Please Log In</h3>
@@ -65,7 +58,6 @@
                         @elseif($orders->count() > 0)
                             @foreach($orders as $order)
                             <div class="order-card" data-status="{{ $order->status }}">
-                                <!-- Order Header -->
                                 <div class="order-header">
                                     <div class="order-id-section">
                                         <div class="order-id-label">Order ID</div>
@@ -73,7 +65,6 @@
                                         <div class="order-date">
                                             Ordered on: {{ $order->created_at->format('M d, Y') }}
                                         </div>
-                                        <!-- Shipping Address -->
                                         <div class="shipping-address">
                                             Deliver to: 
                                             @if($order->shippingAddress)
@@ -105,7 +96,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Order Items -->
                                 <div class="order-items">
                                     @foreach($order->orderItems as $item)
                                     <div class="order-item">
@@ -122,7 +112,6 @@
                                                     <span class="item-name">{{ $item->product->name ?? 'Product Not Available' }}</span>
                                                     <span class="item-specs">
                                                         @if($item->variation)
-                                                            <!-- Show variation specifications -->
                                                             @php
                                                                 $specs = [];
                                                                 if ($item->variation->processor) $specs[] = $item->variation->processor;
@@ -133,7 +122,6 @@
                                                                 }
                                                             @endphp
                                                         @elseif($item->product)
-                                                            <!-- Show product specifications -->
                                                             @if($item->product->processor || $item->product->ram || $item->product->storage)
                                                                 @php
                                                                     $specs = [];
@@ -161,7 +149,6 @@
                                     @endforeach
                                 </div>
 
-                                <!-- Order Footer -->
                                 <div class="order-footer">
                                     <div class="order-total-section">
                                         <div class="order-total">
@@ -188,15 +175,11 @@
                                                 Cancel Order
                                             </button>
                                         @endif
-                                        <button class="details-btn" data-order-id="{{ $order->id }}">
-                                            View Details
-                                        </button>
                                     </div>
                                 </div>
                             </div>
                             @endforeach
                         @else
-                            <!-- Empty State -->
                             <div class="empty-state">
                                 <div class="empty-icon">📦</div>
                                 <h3>No Orders Yet</h3>
@@ -206,7 +189,6 @@
                         @endif
                     </div>
 
-                    <!-- Pagination -->
                     @if($orders->count() > 0 && method_exists($orders, 'hasPages') && $orders->hasPages())
                     <div class="pagination-container">
                         <div class="pagination">
@@ -218,30 +200,6 @@
             </div>
         </div>
     </section>
-</div>
-
-<!-- Order Details Modal -->
-<div class="modal fade" id="orderDetailsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Order Details - <span id="modalOrderNumber"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="orderDetailsContent">
-                <!-- Order details will be loaded here via AJAX -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Loading Spinner -->
-<div id="loadingSpinner" class="loading-spinner" style="display: none;">
-    <div class="spinner"></div>
-    <p>Loading order details...</p>
 </div>
 @endsection
 
@@ -271,15 +229,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Order details modal
-    const detailsButtons = document.querySelectorAll('.details-btn');
-    detailsButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const orderId = this.dataset.orderId;
-            loadOrderDetails(orderId);
-        });
-    });
-
     // Order cancellation
     const cancelButtons = document.querySelectorAll('.cancel-btn');
     cancelButtons.forEach(button => {
@@ -291,47 +240,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-
-function loadOrderDetails(orderId) {
-    // Show loading spinner
-    document.getElementById('loadingSpinner').style.display = 'flex';
-    
-    fetch(`/orders/${orderId}/details`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.text();
-        })
-        .then(html => {
-            document.getElementById('orderDetailsContent').innerHTML = html;
-            const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
-            
-            // Set order number in modal title
-            const orderNumberElement = document.querySelector(`.order-card[data-status] .order-id-value`);
-            if (orderNumberElement) {
-                document.getElementById('modalOrderNumber').textContent = orderNumberElement.textContent;
-            }
-            
-            modal.show();
-        })
-        .catch(error => {
-            console.error('Error loading order details:', error);
-            document.getElementById('orderDetailsContent').innerHTML = `
-                <div class="alert alert-danger">
-                    <h5>Error Loading Order Details</h5>
-                    <p>There was an error loading the order details. Please try again.</p>
-                    <button class="btn btn-primary" onclick="loadOrderDetails(${orderId})">Retry</button>
-                </div>
-            `;
-            const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
-            modal.show();
-        })
-        .finally(() => {
-            // Hide loading spinner
-            document.getElementById('loadingSpinner').style.display = 'none';
-        });
-}
 
 function cancelOrder(orderId) {
     const cancelBtn = document.querySelector(`.cancel-btn[data-order-id="${orderId}"]`);
@@ -403,12 +311,6 @@ function showNotification(message, type = 'info') {
         }
     }, 5000);
 }
-
-// Handle modal hidden event
-document.getElementById('orderDetailsModal').addEventListener('hidden.bs.modal', function () {
-    // Clear modal content when hidden
-    document.getElementById('orderDetailsContent').innerHTML = '';
-});
 </script>
 
 <style>

@@ -12,8 +12,8 @@
     position: relative;
     color: var(--white);
     overflow: hidden;
-    height: 40vh; /* Reduced from 86vh */
-    min-height: 300px; /* Reduced from 400px */
+    height: 40vh;
+    min-height: 300px;
     width: 100%;
     margin: 0;
     padding: 0 !important;
@@ -35,7 +35,7 @@
 }
 
 .hero-title {
-    font-size: 12rem; /* Reduced from 18rem */
+    font-size: 12rem;
     font-weight: bold;
     color: var(--white);
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
@@ -45,9 +45,12 @@
 /* Content Overlap Section */
 .content-overlap-section {
     padding: 0;
-    margin-top: -60px; /* Adjusted for smaller banner */
+    margin-top: -60px;
     position: relative;
     z-index: 10;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .main-content-box {
@@ -56,6 +59,7 @@
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     padding: 3rem 2rem 2rem;
     border: 1px solid var(--border-light);
+    margin: 0 2rem;
 }
 
 /* Header Row */
@@ -680,7 +684,7 @@
     }
 
     .hero-title {
-        font-size: 8rem; /* Adjusted for smaller banner */
+        font-size: 8rem;
     }
 }
 
@@ -711,16 +715,20 @@
     }
 
     .hero-section {
-        height: 40vh; /* Adjusted for mobile */
-        min-height: 250px; /* Adjusted for mobile */
+        height: 40vh;
+        min-height: 250px;
     }
 
     .hero-title {
-        font-size: 5rem; /* Adjusted for mobile */
+        font-size: 5rem;
     }
 
     .content-overlap-section {
-        margin-top: -40px; /* Adjusted for smaller banner */
+        margin-top: -40px;
+    }
+
+    .main-content-box {
+        margin: 0 1.5rem;
     }
 
     .popup-container {
@@ -741,8 +749,8 @@
 
     .main-content-box {
         padding: 1rem;
-        margin: 1rem auto;
-        width: calc(100% - 1rem);
+        margin: 0.75rem auto;
+        width: calc(100% - 1.5rem);
     }
 
     .product-buttons {
@@ -759,15 +767,15 @@
     }
 
     .hero-section {
-        height: 35vh; /* Further reduced for mobile */
-        min-height: 200px; /* Further reduced for mobile */
+        height: 35vh;
+        min-height: 200px;
     }
 
     .hero-title {
-        font-size: 3rem; /* Further reduced for mobile */
+        font-size: 3rem;
     }
 
     .content-overlap-section {
-        margin-top: -30px; /* Further adjusted for smaller banner */
+        margin-top: -30px;
     }
 }

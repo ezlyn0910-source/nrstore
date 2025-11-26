@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Order now button - with comprehensive validation
+    // Order now button - with validation
     document.querySelector('.order-btn')?.addEventListener('click', function(e) {
         e.preventDefault();
         validateAndProceedToCheckout();
@@ -165,15 +165,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Validation 3: Check stock availability
             const stockValidation = await validateStockAvailability();
+            console.log('Stock validation result:', stockValidation); // Debug log
+            
             if (!stockValidation.valid) {
-                showValidationError(`Sorry, "${stockValidation.outOfStockItems}" ${stockValidation.outOfStockItems > 1 ? 'items are' : 'item is'} out of stock. Please update your cart.`);
+                let errorMessage = 'Sorry, some items are out of stock. Please update your cart.';
+                
+                if (stockValidation.outOfStockItems > 0) {
+                    if (stockValidation.details && stockValidation.details.length > 0) {
+                        // Show specific out of stock items
+                        const itemNames = stockValidation.details.map(item => 
+                            `${item.product_name} (Available: ${item.available}, Requested: ${item.requested})`
+                        ).join(', ');
+                        errorMessage = `The following items are out of stock: ${itemNames}. Please update quantities or remove items.`;
+                    } else {
+                        errorMessage = `Sorry, ${stockValidation.outOfStockItems} item(s) are out of stock. Please update your cart.`;
+                    }
+                }
+                
+                showValidationError(errorMessage);
                 resetButtonState(orderBtn, originalText);
                 return;
             }
 
             // Validation 4: Check minimum order amount (if applicable)
             const subtotal = {{ $subtotal }};
-            const minOrderAmount = 10.00; // Set your minimum order amount
+            const minOrderAmount = 10.00;
             if (subtotal < minOrderAmount) {
                 showValidationError(`Minimum order amount is RM ${minOrderAmount.toFixed(2)}. Please add more items to your cart.`);
                 resetButtonState(orderBtn, originalText);
@@ -220,10 +236,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            
             return await response.json();
         } catch (error) {
             console.error('Stock validation failed:', error);
-            return { valid: false, outOfStockItems: 0 };
+            return { 
+                valid: false, 
+                outOfStockItems: 0,
+                message: 'Error checking stock availability'
+            };
         }
     }
 
@@ -258,7 +282,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateCartItem(itemId, quantity, itemElement) {
-        // Use the correct route with itemId parameter
         fetch(`/cart/update/${itemId}`, {
             method: 'POST',
             headers: {
@@ -272,18 +295,15 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Update the item total
                 const itemTotal = itemElement.querySelector('.item-total');
                 itemTotal.textContent = `RM ${data.item_subtotal.toFixed(2)}`;
                 
-                // Update the cart subtotal
                 const subtotalElement = document.getElementById('subtotal');
                 if (subtotalElement) {
                     subtotalElement.textContent = `RM ${data.cart_subtotal.toFixed(2)}`;
                 }
             } else {
                 alert('Failed to update cart: ' + data.message);
-                // Reset the input to previous value
                 location.reload();
             }
         })

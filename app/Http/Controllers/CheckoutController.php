@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Address;
 use App\Models\Cart;
 use App\Models\CartItem;
+use Illuminate\Support\Facades\Auth;
 
 class CheckoutController extends Controller
 {
@@ -13,233 +15,172 @@ class CheckoutController extends Controller
      */
     public function index()
     {
-        try {
-            // Get the user's cart
-            $cart = Cart::where('user_id', auth()->id())->first();
-            
-            if (!$cart || $cart->isEmpty()) {
-                return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
-            }
-            
-            // Load cart items with product relationships
-            $cartItems = $cart->getCartItemsWithProducts();
-            
-            // Calculate totals
-            $subtotal = $cart->getSubtotal();
-            $tax = $subtotal * 0.06; // Example: 6% tax
-            $shipping = 10.00; // Default shipping
-            $discount = 0; // No discount by default
-            $total = $subtotal + $tax + $shipping - $discount;
-
-            return view('checkout.index', compact(
-                'cartItems', 
-                'subtotal', 
-                'tax', 
-                'shipping', 
-                'discount', 
-                'total'
-            ));
-
-        } catch (\Exception $e) {
-            // Fallback if there are any issues
-            return $this->fallbackCheckout();
-        }
-    }
-
-    /**
-     * Fallback checkout method if main method fails
-     */
-    private function fallbackCheckout()
-    {
-        $cart = Cart::where('user_id', auth()->id())->first();
+        $user = Auth::user();
         
-        if (!$cart) {
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Please log in to checkout.');
+        }
+
+        // Get or create cart
+        $cart = $this->getOrCreateCart();
+        
+        if (!$cart || $cart->items->isEmpty()) {
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
+
+        // Get user shipping addresses
+        $addresses = Address::getShippingAddresses($user->id);
         
-        $cartItems = $cart->items;
-        
-        // Basic calculations
-        $subtotal = $cart->getSubtotal();
-        $tax = $subtotal * 0.06;
-        $shipping = 10.00;
+        // Calculate cart totals
+        $cartItems = $cart->items()->with(['product.images'])->get();
+        $subtotal = $cart->total_amount;
+        $total = $subtotal;
+        $tax = 0;
         $discount = 0;
-        $total = $subtotal + $tax + $shipping - $discount;
 
         return view('checkout.index', compact(
-            'cartItems', 
-            'subtotal', 
-            'tax', 
-            'shipping', 
-            'discount', 
-            'total'
+            'cartItems',
+            'subtotal',
+            'total',
+            'tax',
+            'discount',
+            'addresses'
         ));
     }
 
     /**
-     * Process order placement
+     * Get or create cart for authenticated user
+     */
+    private function getOrCreateCart()
+    {
+        try {
+            $user = Auth::user();
+            $sessionId = session()->getId();
+            
+            return Cart::getCart($user, $sessionId);
+        } catch (\Exception $e) {
+            \Log::error('Cart creation error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Store a new address
+     */
+    public function storeAddress(Request $request)
+    {
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'email' => 'nullable|email',
+            'state' => 'required|string|max:255',
+            'city' => 'required|string|max:255',
+            'postcode' => 'required|string|max:10',
+            'address' => 'required|string',
+            'address2' => 'nullable|string',
+            'is_primary' => 'boolean',
+        ]);
+
+        try {
+            $user = Auth::user();
+            
+            // Create shipping address using the model method
+            $address = Address::createShippingAddress([
+                'user_id' => $user->id,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'phone' => $request->phone,
+                'email' => $request->email,
+                'state' => $request->state,
+                'city' => $request->city,
+                'postcode' => $request->postcode,
+                'address' => $request->address,
+                'address2' => $request->address2,
+                'is_primary' => $request->boolean('is_primary'),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Address added successfully!',
+                'address' => $address
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Address creation error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save address. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Place order
      */
     public function placeOrder(Request $request)
     {
-        try {
-            // Validate the request
-            $validated = $request->validate([
-                'shipping_first_name' => 'required|string|max:255',
-                'shipping_last_name' => 'required|string|max:255',
-                'shipping_address' => 'required|string|max:500',
-                'shipping_city' => 'required|string|max:255',
-                'shipping_state' => 'required|string|max:255',
-                'shipping_postcode' => 'required|string|max:10',
-                'shipping_phone' => 'required|string|max:20',
-                'shipping_method' => 'required|string',
-                'payment_method' => 'required|string',
-            ]);
+        $request->validate([
+            'address_id' => 'required|exists:addresses,id',
+            'shipping_method' => 'required|in:standard,express,next_day',
+            'payment_method' => 'required|in:credit_card,paypal,bank_transfer',
+            'same_billing' => 'boolean',
+        ]);
 
-            // Get user's cart
-            $cart = Cart::where('user_id', auth()->id())->first();
+        try {
+            $user = Auth::user();
             
-            if (!$cart || $cart->isEmpty()) {
+            // Get the selected address
+            $address = Address::findOrFail($request->address_id);
+            
+            // Get the cart
+            $cart = $this->getOrCreateCart();
+            
+            if (!$cart) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Your cart is empty.'
-                ]);
+                    'message' => 'Cart not found.'
+                ], 404);
             }
 
-            // TODO: Create order logic here
-            // For now, just return success
-            $orderId = rand(10000, 99999);
-
-            // Clear the cart after successful order
-            $cart->clear();
-            $cart->calculateTotals();
+            // Here you would typically:
+            // 1. Create an order record
+            // 2. Process payment
+            // 3. Clear the cart
+            // 4. Send confirmation email
+            
+            // For now, we'll just return a success response
+            // You'll need to implement your actual order creation logic here
 
             return response()->json([
                 'success' => true,
                 'message' => 'Order placed successfully!',
-                'order_id' => $orderId,
-                'redirect_url' => route('checkout.success', ['order' => $orderId])
+                'redirect_url' => route('order.confirmation') // You'll need to create this route
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('Order placement error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error placing order: ' . $e->getMessage()
-            ]);
+                'message' => 'Failed to place order. Please try again.'
+            ], 500);
         }
     }
 
-    // ... keep the other methods the same as before ...
     /**
      * Apply promo code
      */
-    public function applyPromoCode(Request $request)
+    public function applyPromo(Request $request)
     {
+        $request->validate([
+            'promo_code' => 'required|string'
+        ]);
+
+        // Implement your promo code logic here
+        // For now, returning a dummy response
         return response()->json([
             'success' => false,
-            'message' => 'Promo code functionality coming soon'
+            'message' => 'Invalid promo code'
         ]);
-    }
-
-    /**
-     * Validate checkout
-     */
-    public function validateCheckout(Request $request)
-    {
-        return response()->json([
-            'valid' => true,
-            'message' => 'Checkout validation passed'
-        ]);
-    }
-
-    /**
-     * Calculate shipping
-     */
-    public function calculateShipping(Request $request)
-    {
-        $shippingMethod = $request->input('shipping_method', 'standard');
-        
-        $shippingCosts = [
-            'standard' => 10.00,
-            'express' => 20.00,
-            'next_day' => 35.00
-        ];
-
-        return response()->json([
-            'shipping_cost' => $shippingCosts[$shippingMethod] ?? 10.00
-        ]);
-    }
-
-    /**
-     * Get shipping methods
-     */
-    public function getShippingMethods()
-    {
-        return response()->json([
-            'methods' => [
-                ['id' => 'standard', 'name' => 'Standard Shipping', 'price' => 10.00, 'time' => '5-7 business days'],
-                ['id' => 'express', 'name' => 'Express Shipping', 'price' => 20.00, 'time' => '2-3 business days'],
-                ['id' => 'next_day', 'name' => 'Next Day Delivery', 'price' => 35.00, 'time' => 'Next business day']
-            ]
-        ]);
-    }
-
-    /**
-     * Get payment methods
-     */
-    public function getPaymentMethods()
-    {
-        return response()->json([
-            'methods' => [
-                ['id' => 'credit_card', 'name' => 'Credit/Debit Card'],
-                ['id' => 'paypal', 'name' => 'PayPal'],
-                ['id' => 'bank_transfer', 'name' => 'Bank Transfer']
-            ]
-        ]);
-    }
-
-    /**
-     * Verify stock
-     */
-    public function verifyStock()
-    {
-        $cart = Cart::where('user_id', auth()->id())->first();
-        
-        if (!$cart) {
-            return response()->json([
-                'in_stock' => false,
-                'message' => 'Cart not found'
-            ]);
-        }
-
-        $cartItems = $cart->getCartItemsWithProducts();
-        $allInStock = true;
-
-        foreach ($cartItems as $item) {
-            if ($item->product && $item->product->stock < $item->quantity) {
-                $allInStock = false;
-                break;
-            }
-        }
-
-        return response()->json([
-            'in_stock' => $allInStock,
-            'message' => $allInStock ? 'All items are in stock' : 'Some items are out of stock'
-        ]);
-    }
-
-    /**
-     * Checkout success page
-     */
-    public function success($order)
-    {
-        return view('checkout.success', ['order' => $order]);
-    }
-
-    /**
-     * Checkout failed page
-     */
-    public function failed()
-    {
-        return view('checkout.failed');
     }
 }

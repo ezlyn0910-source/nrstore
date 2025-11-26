@@ -88,42 +88,44 @@
             <div class="header-bottom">
                 <div class="container">
                     <div class="header-bottom-content">
-                        <a href="/" class="logo-link">NR INTELLITECH</a>
-                        
-                        <nav class="main-nav">
-                            <a href="/" class="nav-link">Home</a>
-                            <a href="/products" class="nav-link">Products</a>
-                            <a href="/orders" class="nav-link">Order</a>
-                            <a href="/bid" class="nav-link bid-link">
-                                <i class="fas fa-gavel"></i>
-                                <span>Bid Now</span>
-                            </a>
-                        </nav>
-                        
-                        <div class="search-actions-container">
-                            <!-- Search Field -->
-                            <div class="search-container">
-                                <form class="search-form">
-                                    <input type="text" class="search-input" placeholder="Search products...">
-                                    <button type="submit" class="search-btn">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                </form>
-                            </div>
-                            
-                            <!-- Action Icons -->
-                            <div class="action-icons">
-                                <!-- Favorite Icon - No items (badge hidden) -->
-                                <a href="/favorites" class="action-icon">
-                                    <i class="far fa-heart"></i>
-                                    <span class="action-badge" data-count="0"></span>
+                        <div class="logo-section-wrapper">
+                            <a href="/" class="logo-link">NR INTELLITECH</a>
+                        </div>
+
+                        <div class="nav-section-wrapper">
+                            <nav class="main-nav">
+                                <a href="/" class="nav-link">Home</a>
+                                <a href="/products" class="nav-link">Products</a>
+                                <a href="/orders" class="nav-link">Order</a>
+                                <a href="/bid" class="nav-link bid-link">
+                                    <i class="fas fa-gavel"></i>
+                                    <span>Bid Now</span>
                                 </a>
+                            </nav>
+                        </div>
+
+                        <div class="actions-section">
+                            <div class="search-actions-container">
+                                <div class="search-container">
+                                    <form class="search-form">
+                                        <input type="text" class="search-input" placeholder="Search products...">
+                                        <button type="submit" class="search-btn">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </form>
+                                </div>
                                 
-                                <!-- Cart Icon -->
-                                <a href="{{ route('cart.index') }}" class="action-icon" id="cart-icon">
-                                    <i class="fas fa-shopping-cart"></i>
-                                    <span class="action-badge" id="cart-badge" style="display: none;"></span>
-                                </a>
+                                <div class="action-icons">
+                                    <a href="/favorites" class="action-icon">
+                                        <i class="far fa-heart"></i>
+                                        <span class="action-badge" data-count="0"></span>
+                                    </a>
+                                    
+                                    <a href="{{ route('cart.index') }}" class="action-icon" id="cart-icon">
+                                        <i class="fas fa-shopping-cart"></i>
+                                        <span class="action-badge" id="cart-badge" style="display: none;"></span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>

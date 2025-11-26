@@ -12,6 +12,9 @@
 .page-title-container {
     text-align: center;
     width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
 }
 
 .page-title {
@@ -30,24 +33,25 @@
 }
 
 .container {
-    max-width: 100%;
-    margin: 0;
-    padding: 0 3rem; /*left and right*/
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
 }
 
 /* Two Column Layout */
 .orders-layout {
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 230px 1fr;
     gap: 1.5rem;
-    margin: 0;
-    padding: 0 0rem;
+    margin: 0 auto;
+    padding: 0;
     margin-top: -2rem;
+    max-width: 1200px;
 }
 
 /* Left Column - Categories */
 .categories-column {
-    padding: 0;
+    padding: 0 !important;
     height: fit-content;
 }
 
@@ -64,7 +68,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .status-category {
@@ -78,7 +82,7 @@
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: left;
-    width: 80%;
+    width: 100%;
     font-size: 1rem;
 }
 
@@ -183,13 +187,13 @@
 }
 
 .order-status-badge {
-    padding: 0.5rem 0.8rem; /* More vertical, slightly less horizontal padding */
+    padding: 0.5rem 0.8rem;
     border-radius: 20px;
-    font-size: 0.7rem; /* Slightly smaller font for longer text */
+    font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    width: 110px; /* Fixed width to accommodate "Processing" */
+    width: 110px;
     text-align: center;
     display: inline-block;
     white-space: nowrap;
@@ -313,7 +317,7 @@
 }
 
 .item-top-row {
-    margin-bottom: 0; /* No margin */
+    margin-bottom: 0;
 }
 
 .item-name-specs {
@@ -372,23 +376,6 @@
     font-size: 0.9rem;
     color: #6b7280;
     font-weight: 500;
-}
-
-.details-btn {
-    padding: 0.5rem 1.25rem;
-    background: var(--primary-green);
-    color: var(--white);
-    border: none;
-    border-radius: 25px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.875rem;
-}
-
-.details-btn:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
 }
 
 /* Empty State */
@@ -509,7 +496,7 @@
 
 @media (max-width: 768px) {
     .page-title-container {
-        padding: 2rem 0 1.5rem;
+        padding: 1.5rem 0 1.5rem;
     }
 
     .page-title {

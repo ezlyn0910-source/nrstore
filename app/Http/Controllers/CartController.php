@@ -7,6 +7,8 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class CartController extends Controller
 {
@@ -15,20 +17,26 @@ class CartController extends Controller
      */
     public function index()
     {
-        $cart = $this->getOrCreateCart();
-        
-        if (!$cart) {
-            $cartItems = collect();
-            $subtotal = 0;
-            $total = 0;
-        } else {
-            $cartItems = $cart->items()->with(['product.images', 'variation'])->get();
-            $cart->calculateTotals();
-            $subtotal = $cart->total_amount;
-            $total = $subtotal;
-        }
+        try {
+            $cart = $this->getOrCreateCart();
+            
+            if (!$cart) {
+                $cartItems = collect();
+                $subtotal = 0;
+                $total = 0;
+            } else {
+                $cartItems = $cart->items()->with(['product.images', 'variation'])->get();
+                $cart->calculateTotals();
+                $subtotal = $cart->total_amount;
+                $total = $subtotal;
+            }
 
-        return view('cart.index', compact('cartItems', 'subtotal', 'total', 'cart'));
+            return view('cart.index', compact('cartItems', 'subtotal', 'total', 'cart'));
+            
+        } catch (\Exception $e) {
+            Log::error('Cart index error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Unable to load cart. Please try again.');
+        }
     }
 
     /**
@@ -36,51 +44,101 @@ class CartController extends Controller
      */
     public function add(Request $request)
     {
-        \Log::info('Cart Add Request:', $request->all());
+        Log::info('Cart Add Request:', $request->all());
         
         try {
             $request->validate([
                 'product_id' => 'required|exists:products,id',
-                'quantity' => 'required|integer|min:1',
+                'quantity' => 'required|integer|min:1|max:99',
+                'variation_id' => 'nullable|exists:variations,id'
             ]);
 
             $cart = $this->getOrCreateCart();
             
             if (!$cart) {
-                \Log::error('Cart creation failed');
+                Log::error('Cart creation failed');
                 return response()->json([
                     'success' => false,
                     'message' => 'Unable to create cart. Please try again.'
                 ], 500);
             }
 
-            $product = Product::with('images')->findOrFail($request->product_id);
+            $product = Product::with(['images', 'variations'])->findOrFail($request->product_id);
+
+            // Check stock based on variation or main product
+            $availableStock = 0;
+            if ($request->has('variation_id') && $request->variation_id) {
+                $variation = $product->variations->where('id', $request->variation_id)->first();
+                if ($variation) {
+                    $availableStock = $variation->stock ?? 0;
+                }
+            } else {
+                $availableStock = $product->stock_quantity ?? 0;
+            }
+
+            // Check product stock
+            if ($availableStock < $request->quantity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient stock. Only ' . $availableStock . ' items available.'
+                ], 422);
+            }
 
             // Check if item already exists in cart
-            $existingItem = $cart->items()
-                ->where('product_id', $request->product_id)
-                ->first();
+            $existingItemQuery = $cart->items()->where('product_id', $request->product_id);
+            
+            if ($request->has('variation_id') && $request->variation_id) {
+                $existingItemQuery->where('variation_id', $request->variation_id);
+            } else {
+                $existingItemQuery->whereNull('variation_id');
+            }
+
+            $existingItem = $existingItemQuery->first();
+
+            $newQuantity = $existingItem ? 
+                $existingItem->quantity + $request->quantity : 
+                $request->quantity;
+
+            // Check if total quantity exceeds stock
+            if ($newQuantity > $availableStock) {
+                $available = $availableStock - ($existingItem ? $existingItem->quantity : 0);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot add more than available stock. You can add up to ' . $available . ' more items.'
+                ], 422);
+            }
 
             if ($existingItem) {
                 $existingItem->update([
-                    'quantity' => $existingItem->quantity + $request->quantity
+                    'quantity' => $newQuantity
                 ]);
-                \Log::info('Updated existing cart item', ['item_id' => $existingItem->id]);
+                Log::info('Updated existing cart item', ['item_id' => $existingItem->id]);
             } else {
-                $cartItem = CartItem::create([
+                $cartItemData = [
                     'cart_id' => $cart->id,
                     'product_id' => $request->product_id,
                     'quantity' => $request->quantity,
                     'price' => $product->price,
-                ]);
-                \Log::info('Created new cart item', ['item_id' => $cartItem->id]);
+                ];
+
+                // Add variation_id if provided
+                if ($request->has('variation_id') && $request->variation_id) {
+                    $variation = $product->variations->where('id', $request->variation_id)->first();
+                    if ($variation) {
+                        $cartItemData['variation_id'] = $request->variation_id;
+                        $cartItemData['price'] = $variation->price ?? $product->price;
+                    }
+                }
+
+                $cartItem = CartItem::create($cartItemData);
+                Log::info('Created new cart item', ['item_id' => $cartItem->id]);
             }
 
             // Recalculate cart totals
             $cart->calculateTotals();
             $cart->refresh();
 
-            \Log::info('Cart after add:', [
+            Log::info('Cart after add:', [
                 'cart_id' => $cart->id,
                 'item_count' => $cart->item_count,
                 'total_amount' => $cart->total_amount
@@ -93,13 +151,20 @@ class CartController extends Controller
                 'cart_total' => 'RM ' . number_format($cart->total_amount, 2)
             ]);
 
+        } catch (ValidationException $e) {
+            Log::error('Cart Add Validation Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input: ' . $e->getMessage()
+            ], 422);
+            
         } catch (\Exception $e) {
-            \Log::error('Cart Add Error: ' . $e->getMessage());
-            \Log::error('Error Stack: ' . $e->getTraceAsString());
+            Log::error('Cart Add Error: ' . $e->getMessage());
+            Log::error('Error Stack: ' . $e->getTraceAsString());
             
             return response()->json([
                 'success' => false,
-                'message' => 'Error adding product to cart: ' . $e->getMessage()
+                'message' => 'Error adding product to cart. Please try again.'
             ], 500);
         }
     }
@@ -109,32 +174,55 @@ class CartController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'quantity' => 'required|integer|min:1'
-        ]);
+        try {
+            $request->validate([
+                'quantity' => 'required|integer|min:1|max:99'
+            ]);
 
-        $cart = $this->getCart();
-        
-        if (!$cart) {
+            $cart = $this->getCart();
+            
+            if (!$cart) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cart not found'
+                ], 404);
+            }
+
+            $item = $cart->items()->with('product')->where('id', $id)->firstOrFail();
+            
+            // Check stock before updating
+            if ($request->quantity > $item->product->stock) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only ' . $item->product->stock . ' items available in stock.'
+                ], 422);
+            }
+
+            $item->update(['quantity' => $request->quantity]);
+            $cart->calculateTotals();
+            $cart->refresh();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cart updated successfully',
+                'item_total' => 'RM ' . number_format($item->subtotal, 2),
+                'cart_total' => 'RM ' . number_format($cart->total_amount, 2),
+                'cart_count' => $cart->item_count
+            ]);
+
+        } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cart not found'
-            ], 404);
+                'message' => 'Invalid quantity: ' . $e->getMessage()
+            ], 422);
+            
+        } catch (\Exception $e) {
+            Log::error('Cart Update Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating cart item. Please try again.'
+            ], 500);
         }
-
-        $item = $cart->items()->where('id', $id)->firstOrFail();
-        
-        $item->update(['quantity' => $request->quantity]);
-        $cart->calculateTotals();
-        $cart->refresh();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Cart updated successfully',
-            'item_total' => 'RM ' . number_format($item->subtotal, 2),
-            'cart_total' => 'RM ' . number_format($cart->total_amount, 2),
-            'cart_count' => $cart->item_count
-        ]);
     }
 
     /**
@@ -142,26 +230,35 @@ class CartController extends Controller
      */
     public function remove($id)
     {
-        $cart = $this->getCart();
-        
-        if (!$cart) {
+        try {
+            $cart = $this->getCart();
+            
+            if (!$cart) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cart not found'
+                ], 404);
+            }
+
+            $item = $cart->items()->where('id', $id)->firstOrFail();
+            $item->delete();
+            $cart->calculateTotals();
+            $cart->refresh();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Item removed from cart successfully',
+                'cart_count' => $cart->item_count,
+                'cart_total' => 'RM ' . number_format($cart->total_amount, 2)
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Cart Remove Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Cart not found'
-            ], 404);
+                'message' => 'Error removing item from cart. Please try again.'
+            ], 500);
         }
-
-        $item = $cart->items()->where('id', $id)->firstOrFail();
-        $item->delete();
-        $cart->calculateTotals();
-        $cart->refresh();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Item removed from cart successfully',
-            'cart_count' => $cart->item_count,
-            'cart_total' => 'RM ' . number_format($cart->total_amount, 2)
-        ]);
     }
 
     /**
@@ -169,24 +266,33 @@ class CartController extends Controller
      */
     public function clear()
     {
-        $cart = $this->getCart();
-        
-        if (!$cart) {
+        try {
+            $cart = $this->getCart();
+            
+            if (!$cart) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cart not found'
+                ], 404);
+            }
+
+            $cart->items()->delete();
+            $cart->calculateTotals();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cart cleared successfully',
+                'cart_count' => 0,
+                'cart_total' => 'RM 0.00'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Cart Clear Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Cart not found'
-            ], 404);
+                'message' => 'Error clearing cart. Please try again.'
+            ], 500);
         }
-
-        $cart->items()->delete();
-        $cart->calculateTotals();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Cart cleared successfully',
-            'cart_count' => 0,
-            'cart_total' => 'RM 0.00'
-        ]);
     }
 
     /**
@@ -194,10 +300,16 @@ class CartController extends Controller
      */
     public function getCount()
     {
-        $cart = $this->getCart();
-        $count = $cart ? $cart->item_count : 0;
+        try {
+            $cart = $this->getCart();
+            $count = $cart ? $cart->item_count : 0;
 
-        return response()->json(['count' => $count]);
+            return response()->json(['count' => $count]);
+            
+        } catch (\Exception $e) {
+            Log::error('Cart Count Error: ' . $e->getMessage());
+            return response()->json(['count' => 0]);
+        }
     }
 
     /**
@@ -205,26 +317,44 @@ class CartController extends Controller
      */
     public function increase($id)
     {
-        $cart = $this->getCart();
-        
-        if (!$cart) {
+        try {
+            $cart = $this->getCart();
+            
+            if (!$cart) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cart not found'
+                ], 404);
+            }
+
+            $item = $cart->items()->with('product')->where('id', $id)->firstOrFail();
+            
+            // Check stock before increasing
+            if ($item->quantity >= $item->product->stock) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot add more than available stock. Maximum ' . $item->product->stock . ' items available.'
+                ], 422);
+            }
+
+            $item->increaseQuantity(1);
+            $cart->refresh();
+
+            return response()->json([
+                'success' => true,
+                'quantity' => $item->quantity,
+                'item_total' => 'RM ' . number_format($item->subtotal, 2),
+                'cart_total' => 'RM ' . number_format($cart->total_amount, 2),
+                'cart_count' => $cart->item_count
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Cart Increase Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Cart not found'
-            ], 404);
+                'message' => 'Error increasing quantity. Please try again.'
+            ], 500);
         }
-
-        $item = $cart->items()->where('id', $id)->firstOrFail();
-        $item->increaseQuantity(1);
-        $cart->refresh();
-
-        return response()->json([
-            'success' => true,
-            'quantity' => $item->quantity,
-            'item_total' => 'RM ' . number_format($item->subtotal, 2),
-            'cart_total' => 'RM ' . number_format($cart->total_amount, 2),
-            'cart_count' => $cart->item_count
-        ]);
     }
 
     /**
@@ -232,31 +362,40 @@ class CartController extends Controller
      */
     public function decrease($id)
     {
-        $cart = $this->getCart();
-        
-        if (!$cart) {
+        try {
+            $cart = $this->getCart();
+            
+            if (!$cart) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cart not found'
+                ], 404);
+            }
+
+            $item = $cart->items()->where('id', $id)->firstOrFail();
+            $item->decreaseQuantity(1);
+            $cart->refresh();
+
+            $response = [
+                'success' => true,
+                'cart_total' => 'RM ' . number_format($cart->total_amount, 2),
+                'cart_count' => $cart->item_count
+            ];
+
+            if ($item->exists) {
+                $response['quantity'] = $item->quantity;
+                $response['item_total'] = 'RM ' . number_format($item->subtotal, 2);
+            }
+
+            return response()->json($response);
+
+        } catch (\Exception $e) {
+            Log::error('Cart Decrease Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Cart not found'
-            ], 404);
+                'message' => 'Error decreasing quantity. Please try again.'
+            ], 500);
         }
-
-        $item = $cart->items()->where('id', $id)->firstOrFail();
-        $item->decreaseQuantity(1);
-        $cart->refresh();
-
-        $response = [
-            'success' => true,
-            'cart_total' => 'RM ' . number_format($cart->total_amount, 2),
-            'cart_count' => $cart->item_count
-        ];
-
-        if ($item->exists) {
-            $response['quantity'] = $item->quantity;
-            $response['item_total'] = 'RM ' . number_format($item->subtotal, 2);
-        }
-
-        return response()->json($response);
     }
 
     /**
@@ -270,7 +409,7 @@ class CartController extends Controller
             
             return Cart::getCart($user, $sessionId);
         } catch (\Exception $e) {
-            \Log::error('Cart creation error: ' . $e->getMessage());
+            Log::error('Cart creation error: ' . $e->getMessage());
             return null;
         }
     }
@@ -290,8 +429,170 @@ class CartController extends Controller
             
             return Cart::where('session_id', $sessionId)->first();
         } catch (\Exception $e) {
-            \Log::error('Cart retrieval error: ' . $e->getMessage());
+            Log::error('Cart retrieval error: ' . $e->getMessage());
             return null;
+        }
+    }
+
+    /**
+     * Validate stock for all cart items
+     */
+    public function validateStock()
+    {
+        try {
+            $cart = $this->getCart();
+            
+            if (!$cart) {
+                return response()->json([
+                    'valid' => false,
+                    'outOfStockItems' => 0,
+                    'message' => 'Cart not found'
+                ]);
+            }
+
+            $cartItems = $cart->items()->with(['product.images', 'product.variations'])->get();
+            $outOfStockItems = 0;
+            $outOfStockDetails = [];
+
+            foreach ($cartItems as $item) {
+                $availableStock = 0;
+                $productName = 'Unknown Product';
+                
+                // Check if product exists
+                if ($item->product) {
+                    $productName = $item->product->name;
+                    
+                    // Check if product has variations
+                    if ($item->product->has_variations && $item->variation_id) {
+                        // Get variation stock
+                        $variation = $item->product->variations->where('id', $item->variation_id)->first();
+                        if ($variation) {
+                            $availableStock = $variation->stock ?? 0;
+                        }
+                    } else {
+                        // Get main product stock
+                        $availableStock = $item->product->stock_quantity ?? 0;
+                    }
+                    
+                    // Check stock availability
+                    if ($availableStock < $item->quantity) {
+                        $outOfStockItems++;
+                        $outOfStockDetails[] = [
+                            'product_name' => $productName,
+                            'requested' => $item->quantity,
+                            'available' => $availableStock,
+                            'item_id' => $item->id
+                        ];
+                    }
+                } else {
+                    // Product might be deleted or not found
+                    $outOfStockItems++;
+                    $outOfStockDetails[] = [
+                        'product_name' => 'Unknown Product',
+                        'requested' => $item->quantity,
+                        'available' => 0,
+                        'item_id' => $item->id
+                    ];
+                }
+            }
+
+            return response()->json([
+                'valid' => $outOfStockItems === 0,
+                'outOfStockItems' => $outOfStockItems,
+                'details' => $outOfStockDetails,
+                'message' => $outOfStockItems === 0 ? 'All items are in stock' : 'Some items are out of stock'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Stock validation error: ' . $e->getMessage());
+            return response()->json([
+                'valid' => false,
+                'outOfStockItems' => 0,
+                'message' => 'Error validating stock'
+            ]);
+        }
+    }
+
+    /**
+     * Validate quantities
+     */
+    public function validateQuantities()
+    {
+        try {
+            $cart = $this->getCart();
+            
+            if (!$cart) {
+                return response()->json([
+                    'valid' => false,
+                    'message' => 'Cart not found'
+                ]);
+            }
+
+            $cartItems = $cart->items;
+            $invalidItems = 0;
+            $invalidDetails = [];
+
+            foreach ($cartItems as $item) {
+                if ($item->quantity < 1 || $item->quantity > 99) {
+                    $invalidItems++;
+                    $invalidDetails[] = [
+                        'product_name' => $item->product->name ?? 'Unknown Product',
+                        'quantity' => $item->quantity,
+                        'item_id' => $item->id
+                    ];
+                }
+            }
+
+            return response()->json([
+                'valid' => $invalidItems === 0,
+                'invalidItems' => $invalidItems,
+                'details' => $invalidDetails,
+                'message' => $invalidItems === 0 ? 'All quantities are valid' : 'Some items have invalid quantities'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Quantity validation error: ' . $e->getMessage());
+            return response()->json([
+                'valid' => false,
+                'message' => 'Error validating quantities'
+            ]);
+        }
+    }
+
+    /**
+     * Get cart summary for checkout
+     */
+    public function getSummary()
+    {
+        try {
+            $cart = $this->getCart();
+            
+            if (!$cart) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cart not found'
+                ], 404);
+            }
+
+            $cart->calculateTotals();
+            $cartItems = $cart->items()->with(['product.images'])->get();
+
+            return response()->json([
+                'success' => true,
+                'cart' => [
+                    'item_count' => $cart->item_count,
+                    'total_amount' => $cart->total_amount,
+                    'formatted_total' => 'RM ' . number_format($cart->total_amount, 2),
+                    'items' => $cartItems
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Cart Summary Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving cart summary'
+            ], 500);
         }
     }
 }

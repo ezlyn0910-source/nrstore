@@ -75,11 +75,11 @@ class Cart extends Model
     }
 
     /**
-     * Get the cart items with product information
+     * Get the cart items with product and variation information
      */
     public function getCartItemsWithProducts()
     {
-        return $this->items()->with('product')->get();
+        return $this->items()->with(['product', 'variation'])->get();
     }
 
     /**

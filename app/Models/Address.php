@@ -14,15 +14,17 @@ class Address extends Model
     protected $fillable = [
         'user_id',
         'type',
-        'full_name',
-        'address_line_1',
-        'address_line_2',
-        'city',
-        'state',
-        'postal_code',
-        'country',
+        'first_name',
+        'last_name',
         'phone',
-        'is_default',
+        'email',
+        'state',
+        'city',
+        'postcode',
+        'address',
+        'address2',
+        'is_default', // Use the actual column name from your database
+        'country',
     ];
 
     protected $casts = [
@@ -31,6 +33,8 @@ class Address extends Model
 
     protected $appends = [
         'formatted_address',
+        'full_name',
+        'is_primary', // This is a computed attribute that maps to is_default
     ];
 
     /**
@@ -58,23 +62,55 @@ class Address extends Model
     }
 
     /**
+     * Get full name attribute
+     */
+    public function getFullNameAttribute(): string
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
+
+    /**
+     * Get is_primary attribute (alias for is_default)
+     */
+    public function getIsPrimaryAttribute(): bool
+    {
+        return $this->is_default;
+    }
+
+    /**
+     * Set is_primary attribute (alias for is_default)
+     */
+    public function setIsPrimaryAttribute($value): void
+    {
+        $this->attributes['is_default'] = $value;
+    }
+
+    /**
      * Get formatted address attribute
      */
     public function getFormattedAddressAttribute(): string
     {
-        $address = $this->address_line_1;
+        $address = $this->address;
         
-        if (!empty($this->address_line_2)) {
-            $address .= ', ' . $this->address_line_2;
+        if (!empty($this->address2)) {
+            $address .= ', ' . $this->address2;
         }
         
-        $address .= ', ' . $this->city . ', ' . $this->state . ' ' . $this->postal_code;
+        $address .= ', ' . $this->city . ', ' . $this->state . ' ' . $this->postcode;
         
         if (!empty($this->country)) {
             $address .= ', ' . $this->country;
         }
         
         return $address;
+    }
+
+    /**
+     * Get compact address for display in lists
+     */
+    public function getCompactAddressAttribute(): string
+    {
+        return $this->city . ', ' . $this->state . ' ' . $this->postcode;
     }
 
     /**
@@ -94,9 +130,9 @@ class Address extends Model
     }
 
     /**
-     * Scope a query to only include default addresses.
+     * Scope a query to only include primary addresses.
      */
-    public function scopeDefault($query)
+    public function scopePrimary($query)
     {
         return $query->where('is_default', true);
     }
@@ -110,17 +146,17 @@ class Address extends Model
     }
 
     /**
-     * Set as default address and unset others
+     * Set as primary address and unset others for the same user and type
      */
-    public function setAsDefault(): void
+    public function setAsPrimary(): void
     {
-        // Unset other default addresses of the same type for this user
+        // Unset other primary addresses of the same type for this user
         self::where('user_id', $this->user_id)
             ->where('type', $this->type)
             ->where('id', '!=', $this->id)
             ->update(['is_default' => false]);
 
-        // Set this address as default
+        // Set this address as primary
         $this->update(['is_default' => true]);
     }
 
@@ -141,21 +177,165 @@ class Address extends Model
     }
 
     /**
+     * Check if this is the primary address
+     */
+    public function isPrimary(): bool
+    {
+        return $this->is_default;
+    }
+
+    /**
+     * Create a new shipping address for user
+     */
+    public static function createShippingAddress(array $data): self
+    {
+        $data['type'] = 'shipping';
+        
+        // Convert is_primary to is_default if provided
+        if (isset($data['is_primary'])) {
+            $data['is_default'] = $data['is_primary'];
+            unset($data['is_primary']);
+        }
+        
+        // If setting as primary, unset other primary addresses
+        if (isset($data['is_default']) && $data['is_default']) {
+            self::where('user_id', $data['user_id'])
+                ->where('type', 'shipping')
+                ->update(['is_default' => false]);
+        }
+
+        return self::create($data);
+    }
+
+    /**
+     * Create a new billing address for user
+     */
+    public static function createBillingAddress(array $data): self
+    {
+        $data['type'] = 'billing';
+        
+        // Convert is_primary to is_default if provided
+        if (isset($data['is_primary'])) {
+            $data['is_default'] = $data['is_primary'];
+            unset($data['is_primary']);
+        }
+        
+        // If setting as primary, unset other primary addresses
+        if (isset($data['is_default']) && $data['is_default']) {
+            self::where('user_id', $data['user_id'])
+                ->where('type', 'billing')
+                ->update(['is_default' => false]);
+        }
+
+        return self::create($data);
+    }
+
+    /**
+     * Get primary shipping address for user
+     */
+    public static function getPrimaryShippingAddress($userId): ?self
+    {
+        return self::where('user_id', $userId)
+            ->where('type', 'shipping')
+            ->where('is_default', true)
+            ->first();
+    }
+
+    /**
+     * Get primary billing address for user
+     */
+    public static function getPrimaryBillingAddress($userId): ?self
+    {
+        return self::where('user_id', $userId)
+            ->where('type', 'billing')
+            ->where('is_default', true)
+            ->first();
+    }
+
+    /**
+     * Get all shipping addresses for user ordered by primary first
+     */
+    public static function getShippingAddresses($userId)
+    {
+        return self::where('user_id', $userId)
+            ->where('type', 'shipping')
+            ->orderBy('is_default', 'desc') // Use the actual column name
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Get all billing addresses for user ordered by primary first
+     */
+    public static function getBillingAddresses($userId)
+    {
+        return self::where('user_id', $userId)
+            ->where('type', 'billing')
+            ->orderBy('is_default', 'desc') // Use the actual column name
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
      * Boot method for address model
      */
     protected static function boot()
     {
         parent::boot();
 
-        // Auto-set as default if it's the first address of this type for the user
+        // Set default country to Malaysia if not provided
         static::creating(function ($address) {
+            if (empty($address->country)) {
+                $address->country = 'Malaysia';
+            }
+
+            // Auto-set as primary if it's the first address of this type for the user
             $existingAddress = self::where('user_id', $address->user_id)
                 ->where('type', $address->type)
                 ->exists();
 
-            if (!$existingAddress) {
+            if (!$existingAddress && !isset($address->is_default)) {
                 $address->is_default = true;
             }
         });
+
+        // Ensure only one primary address per type per user
+        static::updated(function ($address) {
+            if ($address->is_default) {
+                self::where('user_id', $address->user_id)
+                    ->where('type', $address->type)
+                    ->where('id', '!=', $address->id)
+                    ->update(['is_default' => false]);
+            }
+        });
+    }
+
+    /**
+     * Convert to array for API responses
+     */
+    public function toArray()
+    {
+        return [
+            'id' => $this->id,
+            'user_id' => $this->user_id,
+            'type' => $this->type,
+            'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
+            'full_name' => $this->full_name,
+            'phone' => $this->phone,
+            'email' => $this->email,
+            'address' => $this->address,
+            'address2' => $this->address2,
+            'city' => $this->city,
+            'state' => $this->state,
+            'postcode' => $this->postcode,
+            'country' => $this->country,
+            'is_default' => $this->is_default,
+            'is_primary' => $this->is_primary, // Include the computed attribute
+            'formatted_address' => $this->formatted_address,
+            'compact_address' => $this->compact_address,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+        ];
     }
 }
