@@ -173,8 +173,8 @@ class ManageProductController extends Controller
                 'slug' => $this->generateSlug($validated['name']),
             ]);
 
-            // Handle main image upload
-            if ($request->hasFile('main_image')) {
+            // Handle main image upload - WITH NULL CHECK
+            if ($request->hasFile('main_image') && $request->file('main_image')->isValid()) {
                 $mainImage = $request->file('main_image');
                 $imageName = 'product_' . $product->id . '_main_' . time() . '.' . $mainImage->getClientOriginalExtension();
                 $imagePath = $mainImage->storeAs('products', $imageName, 'public');
@@ -191,29 +191,30 @@ class ManageProductController extends Controller
                 ]);
             }
 
-            // Handle additional product images
+            // Handle additional product images - WITH NULL CHECK
             if ($request->hasFile('product_images')) {
                 foreach ($request->file('product_images') as $index => $image) {
-                    if ($index >= 5) break; // Limit to 5 images
-                    
-                    $imageName = 'product_' . $product->id . '_gallery_' . ($index + 1) . '_' . time() . '.' . $image->getClientOriginalExtension();
-                    $imagePath = $image->storeAs('products/gallery', $imageName, 'public');
-                    
-                    ProductImage::create([
-                        'product_id' => $product->id,
-                        'image_path' => $imagePath,
-                        'is_primary' => false,
-                        'sort_order' => $index + 1
-                    ]);
+                    // Check if file is valid and not null
+                    if ($image && $image->isValid() && $index < 5) {
+                        $imageName = 'product_' . $product->id . '_gallery_' . ($index + 1) . '_' . time() . '.' . $image->getClientOriginalExtension();
+                        $imagePath = $image->storeAs('products/gallery', $imageName, 'public');
+                        
+                        ProductImage::create([
+                            'product_id' => $product->id,
+                            'image_path' => $imagePath,
+                            'is_primary' => false,
+                            'sort_order' => $index + 1
+                        ]);
+                    }
                 }
             }
 
-            // Handle product variations
+            // Handle product variations - WITH NULL CHECK
             $hasVariations = $request->has('has_variations') && $request->has_variations;
             
             if ($hasVariations && $request->has('variations') && is_array($request->variations)) {
                 foreach ($request->variations as $variationIndex => $variationData) {
-                    // Skip if essential data is missing
+                    // Skip if essential data is missing or null
                     if (empty($variationData['sku']) || !isset($variationData['stock'])) {
                         continue;
                     }
@@ -236,8 +237,11 @@ class ManageProductController extends Controller
                         'is_active' => true,
                     ]);
 
-                    // Handle variation image upload if provided
-                    if (isset($variationData['image_file']) && $variationData['image_file'] instanceof \Illuminate\Http\UploadedFile) {
+                    // Handle variation image upload if provided - WITH NULL CHECK
+                    if (isset($variationData['image_file']) && 
+                        $variationData['image_file'] instanceof \Illuminate\Http\UploadedFile &&
+                        $variationData['image_file']->isValid()) {
+                        
                         $variationImage = $variationData['image_file'];
                         $imageName = 'variation_' . $variation->id . '_' . time() . '.' . $variationImage->getClientOriginalExtension();
                         $imagePath = $variationImage->storeAs('products/variations', $imageName, 'public');
@@ -323,14 +327,14 @@ class ManageProductController extends Controller
 
             $product->update($validated);
 
-            // Handle main image update
-            if ($request->hasFile('main_image_url')) {
+            // Handle main image update - WITH NULL CHECK
+            if ($request->hasFile('main_image') && $request->file('main_image')->isValid()) {
                 // Delete old image
                 if ($product->image) {
                     Storage::disk('public')->delete($product->image);
                 }
                 
-                $imagePath = $request->file('main_image_url')->store('products', 'public');
+                $imagePath = $request->file('main_image')->store('products', 'public');
                 $product->update(['image' => $imagePath]);
                 
                 // Update primary product image
@@ -347,18 +351,21 @@ class ManageProductController extends Controller
                 }
             }
 
-            // Handle additional images
+            // Handle additional images - WITH NULL CHECK
             if ($request->hasFile('product_images')) {
                 $currentMaxOrder = $product->images()->max('sort_order') ?? 0;
                 
                 foreach ($request->file('product_images') as $index => $image) {
-                    $imagePath = $image->store('products/gallery', 'public');
-                    ProductImage::create([
-                        'product_id' => $product->id,
-                        'image_path' => $imagePath,
-                        'is_primary' => false,
-                        'sort_order' => $currentMaxOrder + $index + 1
-                    ]);
+                    // Check if file is valid and not null
+                    if ($image && $image->isValid()) {
+                        $imagePath = $image->store('products/gallery', 'public');
+                        ProductImage::create([
+                            'product_id' => $product->id,
+                            'image_path' => $imagePath,
+                            'is_primary' => false,
+                            'sort_order' => $currentMaxOrder + $index + 1
+                        ]);
+                    }
                 }
             }
 
@@ -369,6 +376,9 @@ class ManageProductController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Product update error: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
             return redirect()->back()
                 ->with('error', 'Failed to update product: ' . $e->getMessage())
                 ->withInput();
@@ -533,5 +543,25 @@ class ManageProductController extends Controller
         }
 
         return $slug;
+    }
+
+    /**
+     * Debug method to check file upload issues
+     */
+    public function debugUpload(Request $request)
+    {
+        try {
+            $debugInfo = [
+                'has_main_image' => $request->hasFile('main_image'),
+                'main_image_valid' => $request->hasFile('main_image') ? $request->file('main_image')->isValid() : false,
+                'main_image_error' => $request->hasFile('main_image') ? $request->file('main_image')->getError() : 'No file',
+                'product_images_count' => $request->hasFile('product_images') ? count($request->file('product_images')) : 0,
+                'all_files' => $request->allFiles(),
+            ];
+
+            return response()->json($debugInfo);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()]);
+        }
     }
 }

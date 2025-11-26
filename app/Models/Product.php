@@ -161,13 +161,20 @@ class Product extends Model
         return $query->where('warranty', $warranty);
     }
 
-    // Accessors
+   /**
+     * Get total stock considering variations
+     */
     public function getTotalStockAttribute()
     {
-        if ($this->has_variations && $this->relationLoaded('variations')) {
-            return $this->variations->sum('stock');
+        if ($this->has_variations) {
+            if ($this->relationLoaded('variations')) {
+                return $this->variations->sum('stock');
+            } else {
+                // If variations are not loaded, query the database
+                return $this->variations()->sum('stock');
+            }
         }
-        return $this->stock_quantity;
+        return $this->stock_quantity ?? 0;
     }
 
     public function getHasVariationsAttribute()
@@ -215,11 +222,14 @@ class Product extends Model
         return $this->price;
     }
 
+    /**
+     * Get stock status with proper null handling
+     */
     public function getStockStatusAttribute()
     {
         $totalStock = $this->total_stock;
         
-        if ($totalStock === 0) {
+        if ($totalStock === 0 || $totalStock === null) {
             return 'out_of_stock';
         } elseif ($totalStock < 10) {
             return 'low_stock';
@@ -247,7 +257,8 @@ class Product extends Model
      */
     public function getInStockAttribute()
     {
-        return $this->total_stock > 0;
+        $totalStock = $this->total_stock;
+        return $totalStock > 0;
     }
 
     /**

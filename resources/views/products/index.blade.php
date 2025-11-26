@@ -63,7 +63,7 @@
 
     <!-- White Box Container -->
     <section class="white-box-container" style="padding: 0; margin-top: -120px; position: relative; z-index: 10; margin-bottom: 2rem;">
-        <div style="max-width: 1200px; margin: 0 auto; padding: 0 1rem;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 3rem;">
             <div style="background: white; border-radius: 1.5rem; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); padding: 3rem 2rem 2rem; border: 1px solid #e5e7eb;">
                 
                 <!-- Header Row -->
