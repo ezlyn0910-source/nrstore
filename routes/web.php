@@ -38,6 +38,7 @@ Route::controller(ProductController::class)->group(function () {
     Route::get('/products/category/{slug}', 'category')->name('products.category');
     Route::get('/products/{slug}', 'show')->name('products.show');
     Route::get('/product/search', 'quickSearch')->name('products.quick-search');
+    Route::get('/products/{product}/variations', 'getVariations')->name('products.variations');
 });
 
 // Public Cart Routes

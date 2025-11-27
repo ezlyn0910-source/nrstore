@@ -46,6 +46,155 @@
         .product-image-container {
             position: relative;
         }
+
+        /* Variation Modal Styles */
+        .variation-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+
+        .variation-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .variation-modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .variation-modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .variation-modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .variation-modal-body {
+            padding: 1.5rem;
+        }
+
+        .variation-option {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .variation-option:hover {
+            border-color: #1f2937;
+        }
+
+        .variation-option.selected {
+            border-color: #1f2937;
+            background-color: #f8fafc;
+        }
+
+        .variation-specs {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .variation-price {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 1rem;
+        }
+
+        .variation-stock {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .variation-stock.in-stock {
+            color: #10b981;
+        }
+
+        .variation-stock.out-of-stock {
+            color: #ef4444;
+        }
+
+        .variation-modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-confirm-variation {
+            flex: 1;
+            padding: 0.75rem;
+            background: #1f2937;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-confirm-variation:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .btn-cancel-variation {
+            flex: 1;
+            padding: 0.75rem;
+            background: white;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .variation-loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+
+        .no-variations {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
     </style>
 @endsection
 
@@ -228,22 +377,55 @@
                                         @if($product->ram && $product->storage)
                                         <div style="display: flex; justify-content: space-between; align-items: center;">
                                             <p style="color: #6b7280; font-size: 0.75rem; margin: 0;">{{ $product->ram }} • {{ $product->storage }}</p>
-                                            <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">RM{{ number_format($product->price, 2) }}</p>
+                                            <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">
+                                                @if($product->has_variations && $product->variations->count() > 0)
+                                                    RM{{ number_format($product->min_price, 2) }} - RM{{ number_format($product->max_price, 2) }}
+                                                @else
+                                                    RM{{ number_format($product->price, 2) }}
+                                                @endif
+                                            </p>
                                         </div>
                                         @elseif($product->ram)
                                         <div style="display: flex; justify-content: space-between; align-items: center;">
                                             <p style="color: #6b7280; font-size: 0.75rem; margin: 0;">{{ $product->ram }}</p>
-                                            <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">RM{{ number_format($product->price, 2) }}</p>
+                                            <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">
+                                                @if($product->has_variations && $product->variations->count() > 0)
+                                                    RM{{ number_format($product->min_price, 2) }} - RM{{ number_format($product->max_price, 2) }}
+                                                @else
+                                                    RM{{ number_format($product->price, 2) }}
+                                                @endif
+                                            </p>
                                         </div>
                                         @elseif($product->storage)
                                         <div style="display: flex; justify-content: space-between; align-items: center;">
                                             <p style="color: #6b7280; font-size: 0.75rem; margin: 0;">{{ $product->storage }}</p>
-                                            <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">RM{{ number_format($product->price, 2) }}</p>
+                                            <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">
+                                                @if($product->has_variations && $product->variations->count() > 0)
+                                                    RM{{ number_format($product->min_price, 2) }} - RM{{ number_format($product->max_price, 2) }}
+                                                @else
+                                                    RM{{ number_format($product->price, 2) }}
+                                                @endif
+                                            </p>
                                         </div>
                                         @else
-                                        <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">RM{{ number_format($product->price, 2) }}</p>
+                                        <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">
+                                            @if($product->has_variations && $product->variations->count() > 0)
+                                                RM{{ number_format($product->min_price, 2) }} - RM{{ number_format($product->max_price, 2) }}
+                                            @else
+                                                RM{{ number_format($product->price, 2) }}
+                                            @endif
+                                        </p>
                                         @endif
                                     </div>
+                                    
+                                    <!-- Variation Indicator -->
+                                    @if($product->has_variations && $product->variations->count() > 0)
+                                    <div style="margin-bottom: 0.5rem;">
+                                        <span style="background: #f3f4f6; color: #6b7280; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.7rem;">
+                                            {{ $product->variations->count() }} variations available
+                                        </span>
+                                    </div>
+                                    @endif
                                     
                                     <!-- Buttons Row -->
                                     <div style="display: flex; gap: 0.5rem;">
@@ -252,6 +434,7 @@
                                                 data-product-name="{{ $product->name }}"
                                                 data-product-price="{{ $product->price }}"
                                                 data-product-image="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"
+                                                data-has-variations="{{ $product->has_variations ? '1' : '0' }}"
                                                 style="flex: 1; border: 1px solid #1f2937; background: white; color: #1f2937; padding: 0.4rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem; transition: all 0.2s ease; cursor: pointer;">
                                             <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -337,13 +520,30 @@
                             </div>
                             <div style="padding: 0.75rem;">
                                 <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; font-size: 1rem;">{{ $product->name }}</h3>
-                                <p style="font-weight: bold; color: #1f2937; margin-bottom: 0.5rem; font-size: 1rem;">RM{{ number_format($product->price, 2) }}</p>
+                                <p style="font-weight: bold; color: #1f2937; margin-bottom: 0.5rem; font-size: 1rem;">
+                                    @if($product->has_variations && $product->variations->count() > 0)
+                                        RM{{ number_format($product->min_price, 2) }} - RM{{ number_format($product->max_price, 2) }}
+                                    @else
+                                        RM{{ number_format($product->price, 2) }}
+                                    @endif
+                                </p>
+                                
+                                <!-- Variation Indicator -->
+                                @if($product->has_variations && $product->variations->count() > 0)
+                                <div style="margin-bottom: 0.5rem;">
+                                    <span style="background: #f3f4f6; color: #6b7280; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.7rem;">
+                                        {{ $product->variations->count() }} variations available
+                                    </span>
+                                </div>
+                                @endif
+                                
                                 <div style="display: flex; gap: 0.25rem;">
                                     <button class="add-to-cart-btn" 
                                             data-product-id="{{ $product->id }}"
                                             data-product-name="{{ $product->name }}"
                                             data-product-price="{{ $product->price }}"
                                             data-product-image="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"
+                                            data-has-variations="{{ $product->has_variations ? '1' : '0' }}"
                                             style="flex: 1; border: 1px solid #1f2937; background: white; color: #1f2937; padding: 0.25rem 0.5rem; border-radius: 2rem; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.125rem; transition: all 0.2s ease; cursor: pointer;">
                                         <svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -362,6 +562,23 @@
     </section>
 </div>
 
+<!-- Variation Selection Modal -->
+<div id="variation-modal" class="variation-modal">
+    <div class="variation-modal-content">
+        <div class="variation-modal-header">
+            <h3 class="variation-modal-title">Select Variation</h3>
+            <button class="variation-modal-close">&times;</button>
+        </div>
+        <div class="variation-modal-body" id="variation-modal-body">
+            <!-- Variation options will be loaded here -->
+        </div>
+        <div class="variation-modal-footer">
+            <button class="btn-cancel-variation">Cancel</button>
+            <button class="btn-confirm-variation" disabled>Add to Cart</button>
+        </div>
+    </div>
+</div>
+
 <!-- Success Notification -->
 <div id="cart-notification" style="display: none; position: fixed; top: 100px; right: 20px; background: #10b981; color: white; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); z-index: 10001; transition: all 0.3s ease;">
     <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -375,6 +592,10 @@
 
 @push('scripts')
 <script>
+// Global variables for variation selection
+let selectedVariation = null;
+let currentProductData = null;
+
 function updateHeaderCartCount(count) {
     const cartBadge = document.querySelector('#cart-icon .action-badge');
     if (cartBadge) {
@@ -387,6 +608,172 @@ function updateHeaderCartCount(count) {
     }
 }
 
+function showVariationModal(productData) {
+    currentProductData = productData;
+    const modal = document.getElementById('variation-modal');
+    const modalBody = document.getElementById('variation-modal-body');
+    const confirmBtn = document.querySelector('.btn-confirm-variation');
+    
+    // Reset selection
+    selectedVariation = null;
+    confirmBtn.disabled = true;
+    
+    // Show loading
+    modalBody.innerHTML = '<div class="variation-loading">Loading variations...</div>';
+    modal.style.display = 'block';
+    
+    // Fetch variations
+    fetch(`/products/${productData.id}/variations`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.variations.length > 0) {
+                renderVariationOptions(data.variations, modalBody);
+            } else {
+                modalBody.innerHTML = '<div class="no-variations">No variations available for this product.</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading variations:', error);
+            modalBody.innerHTML = '<div class="no-variations">Error loading variations. Please try again.</div>';
+        });
+}
+
+function renderVariationOptions(variations, container) {
+    let html = '';
+    
+    variations.forEach(variation => {
+        const specs = [];
+        if (variation.processor) specs.push(variation.processor);
+        if (variation.ram) specs.push(variation.ram);
+        if (variation.storage) specs.push(variation.storage);
+        if (variation.model) specs.push(variation.model);
+        
+        const isInStock = variation.stock > 0;
+        const stockText = isInStock ? `${variation.stock} in stock` : 'Out of stock';
+        const stockClass = isInStock ? 'in-stock' : 'out-of-stock';
+        
+        html += `
+            <div class="variation-option ${!isInStock ? 'disabled' : ''}" 
+                 data-variation-id="${variation.id}" 
+                 data-variation-price="${variation.price}"
+                 data-variation-sku="${variation.sku || ''}"
+                 data-variation-stock="${variation.stock}">
+                <div class="variation-specs">
+                    ${specs.join(' • ')}
+                </div>
+                <div class="variation-price">
+                    RM ${parseFloat(variation.price).toFixed(2)}
+                </div>
+                <div class="variation-stock ${stockClass}">
+                    ${stockText}
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    
+    // Add click handlers
+    container.querySelectorAll('.variation-option:not(.disabled)').forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove selected class from all options
+            container.querySelectorAll('.variation-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked option
+            this.classList.add('selected');
+            
+            // Store selected variation data
+            selectedVariation = {
+                id: this.getAttribute('data-variation-id'),
+                price: this.getAttribute('data-variation-price'),
+                sku: this.getAttribute('data-variation-sku'),
+                stock: this.getAttribute('data-variation-stock'),
+                specs: this.querySelector('.variation-specs').textContent
+            };
+            
+            // Enable confirm button
+            document.querySelector('.btn-confirm-variation').disabled = false;
+        });
+    });
+}
+
+function addVariationToCart() {
+    if (!selectedVariation || !currentProductData) return;
+    
+    const confirmBtn = document.querySelector('.btn-confirm-variation');
+    const originalText = confirmBtn.textContent;
+    
+    // Show loading
+    confirmBtn.textContent = 'Adding...';
+    confirmBtn.disabled = true;
+    
+    const requestData = {
+        product_id: currentProductData.id,
+        variation_id: selectedVariation.id,
+        product_name: currentProductData.name,
+        price: parseFloat(selectedVariation.price),
+        quantity: 1,
+        image: currentProductData.image,
+        specs: selectedVariation.specs,
+        sku: selectedVariation.sku
+    };
+    
+    fetch('/cart/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Product added to cart successfully!');
+            updateHeaderCartCount(data.cart_count);
+            closeVariationModal();
+        } else {
+            showNotification(data.message || 'Failed to add product to cart.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding to cart:', error);
+        showNotification('Network error. Please try again.', 'error');
+    })
+    .finally(() => {
+        confirmBtn.textContent = originalText;
+        confirmBtn.disabled = false;
+    });
+}
+
+function closeVariationModal() {
+    const modal = document.getElementById('variation-modal');
+    modal.style.display = 'none';
+    selectedVariation = null;
+    currentProductData = null;
+}
+
+function showNotification(message, type = 'success') {
+    const notification = document.getElementById('cart-notification');
+    const messageElement = document.getElementById('notification-message');
+    
+    messageElement.textContent = message;
+    if (type === 'error') {
+        notification.style.background = '#ef4444';
+    } else {
+        notification.style.background = '#10b981';
+    }
+    
+    notification.style.display = 'block';
+    
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 3000);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Add to Cart functionality
     document.querySelectorAll('.add-to-cart-btn').forEach(button => {
@@ -397,94 +784,87 @@ document.addEventListener('DOMContentLoaded', function() {
             const productName = this.getAttribute('data-product-name');
             const productPrice = this.getAttribute('data-product-price');
             const productImage = this.getAttribute('data-product-image');
+            const hasVariations = this.getAttribute('data-has-variations') === '1';
             
-            console.log('=== ADD TO CART DEBUG START ===');
-            console.log('Product Data:', {
+            const productData = {
                 id: productId,
                 name: productName,
                 price: productPrice,
                 image: productImage
-            });
-            
-            // Show loading state
-            const originalText = this.querySelector('.cart-btn-text').textContent;
-            this.querySelector('.cart-btn-text').textContent = 'Adding...';
-            this.disabled = true;
-            
-            // Prepare the request data
-            const requestData = {
-                product_id: productId,
-                product_name: productName,
-                price: parseFloat(productPrice),
-                quantity: 1,
-                image: productImage
             };
             
-            console.log('Request Data:', requestData);
-            console.log('CSRF Token:', '{{ csrf_token() }}');
-            
-            // Send AJAX request to add to cart
-            fetch('/cart/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(requestData)
-            })
-            .then(response => {
-                console.log('Response Status:', response.status);
-                console.log('Response OK:', response.ok);
-                
-                if (!response.ok) {
-                    // Get the response text for more details
-                    return response.text().then(text => {
-                        console.log('Error Response Text:', text);
-                        throw new Error(`HTTP ${response.status}: ${text}`);
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Success Response:', data);
-                
-                if (data.success) {
-                    showNotification('Product added to cart successfully!');
-                    
-                    if (typeof updateHeaderCartCount === 'function') {
-                        updateHeaderCartCount(data.cart_count);
-                    }
-                    
-                    setTimeout(() => {
-                        this.querySelector('.cart-btn-text').textContent = 'Added!';
-                        setTimeout(() => {
-                            this.querySelector('.cart-btn-text').textContent = originalText;
-                            this.disabled = false;
-                        }, 1000);
-                    }, 500);
-                } else {
-                    console.error('Server Error:', data);
-                    showNotification(data.message || 'Failed to add product to cart.', 'error');
-                    this.querySelector('.cart-btn-text').textContent = originalText;
-                    this.disabled = false;
-                }
-            })
-            .catch(error => {
-                console.error('=== FETCH ERROR ===');
-                console.error('Error Name:', error.name);
-                console.error('Error Message:', error.message);
-                console.error('Error Stack:', error.stack);
-                console.log('=== END DEBUG ===');
-                
-                showNotification('Network error. Please check console for details.', 'error');
-                this.querySelector('.cart-btn-text').textContent = originalText;
-                this.disabled = false;
-            });
+            // If product has variations, show variation modal
+            if (hasVariations) {
+                showVariationModal(productData);
+            } else {
+                // Direct add to cart for products without variations
+                addToCartDirect(productData, this);
+            }
         });
     });
 
-    // Favorite button functionality
+    function addToCartDirect(productData, button) {
+        const originalText = button.querySelector('.cart-btn-text').textContent;
+        button.querySelector('.cart-btn-text').textContent = 'Adding...';
+        button.disabled = true;
+        
+        const requestData = {
+            product_id: productData.id,
+            product_name: productData.name,
+            price: parseFloat(productData.price),
+            quantity: 1,
+            image: productData.image
+        };
+        
+        fetch('/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Product added to cart successfully!');
+                updateHeaderCartCount(data.cart_count);
+                
+                setTimeout(() => {
+                    button.querySelector('.cart-btn-text').textContent = 'Added!';
+                    setTimeout(() => {
+                        button.querySelector('.cart-btn-text').textContent = originalText;
+                        button.disabled = false;
+                    }, 1000);
+                }, 500);
+            } else {
+                showNotification(data.message || 'Failed to add product to cart.', 'error');
+                button.querySelector('.cart-btn-text').textContent = originalText;
+                button.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Network error. Please try again.', 'error');
+            button.querySelector('.cart-btn-text').textContent = originalText;
+            button.disabled = false;
+        });
+    }
+
+    // Variation modal event handlers
+    document.querySelector('.variation-modal-close').addEventListener('click', closeVariationModal);
+    document.querySelector('.btn-cancel-variation').addEventListener('click', closeVariationModal);
+    document.querySelector('.btn-confirm-variation').addEventListener('click', addVariationToCart);
+
+    // Close modal when clicking outside
+    document.getElementById('variation-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeVariationModal();
+        }
+    });
+
+    // Favorite button functionality (existing)
     document.querySelectorAll('.favorite-btn').forEach(button => {
         button.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -492,13 +872,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const productId = this.getAttribute('data-product-id');
             const isFavorited = this.classList.contains('favorited');
             
-            // Check if user is logged in
             @if(auth()->check())
                 toggleFavorite(productId, this, !isFavorited);
             @else
                 showNotification('Please login to add favorites', 'error');
-                // Optionally redirect to login page
-                // window.location.href = '{{ route("login") }}';
             @endif
         });
     });
@@ -536,41 +913,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Cart count in header
-    function updateCartCount(count) {
-        const cartBadge = document.querySelector('#cart-icon .action-badge');
-        if (cartBadge) {
-            if (count > 0) {
-                cartBadge.textContent = count;
-                cartBadge.style.display = 'flex';
-            } else {
-                cartBadge.style.display = 'none';
-            }
-        }
-    }
-
-    // Show notification
-    function showNotification(message, type = 'success') {
-        const notification = document.getElementById('cart-notification');
-        const messageElement = document.getElementById('notification-message');
-        
-        // Set message and style based on type
-        messageElement.textContent = message;
-        if (type === 'error') {
-            notification.style.background = '#ef4444';
-        } else {
-            notification.style.background = '#10b981';
-        }
-        
-        // Show notification
-        notification.style.display = 'block';
-        
-        // Hide after 3 seconds
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 3000);
-    }
-
     // Type filter functionality (existing code)
     const laptopTypeCheckbox = document.getElementById('laptop-type');
     const desktopTypeCheckbox = document.getElementById('desktop-type');
@@ -604,46 +946,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // All-type selection for laptop
-    const laptopAllType = document.querySelector('input[name="laptop_type[]"][value="all-type"]');
-    if (laptopAllType) {
-        laptopAllType.addEventListener('change', function() {
-            if (this.checked) {
-                laptopSubOptions.forEach(option => {
-                    if (option !== laptopAllType) {
-                        option.checked = true;
-                    }
-                });
-            } else {
-                laptopSubOptions.forEach(option => {
-                    if (option !== laptopAllType) {
-                        option.checked = false;
-                    }
-                });
-            }
-        });
-    }
-
-    // All-type selection for desktop
-    const desktopAllType = document.querySelector('input[name="desktop_type[]"][value="all-type"]');
-    if (desktopAllType) {
-        desktopAllType.addEventListener('change', function() {
-            if (this.checked) {
-                desktopSubOptions.forEach(option => {
-                    if (option !== desktopAllType) {
-                        option.checked = true;
-                    }
-                });
-            } else {
-                desktopSubOptions.forEach(option => {
-                    if (option !== desktopAllType) {
-                        option.checked = false;
-                    }
-                });
-            }
-        });
-    }
-
     // Product card hover effects and popup functionality (existing code)
     const productCards = document.querySelectorAll('.product-card');
     productCards.forEach(card => {
@@ -663,7 +965,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Add click event to product cards for popup
         card.addEventListener('click', function(e) {
-            // Don't trigger if clicking on buttons
             if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
                 return;
             }
@@ -673,22 +974,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const priceElement = this.querySelector('p[style*="font-weight: bold"]');
             const price = priceElement ? priceElement.textContent.replace('RM', '') : '0.00';
             const image = this.querySelector('img').src;
+            const hasVariations = this.querySelector('.add-to-cart-btn').getAttribute('data-has-variations') === '1';
             
-            // Get all specs properly
             let processor = '';
             let ram = '';
             let storage = '';
             
-            // Find the specs container
             const specsContainer = this.querySelector('div[style*="margin-bottom: 0.75rem"]');
             if (specsContainer) {
-                // Get processor (first line)
                 const processorElement = specsContainer.querySelector('p[style*="color: #6b7280"][style*="margin-bottom: 0.125rem"]');
                 if (processorElement) {
                     processor = processorElement.textContent.trim();
                 }
                 
-                // Get RAM and storage (second line)
                 const ramStorageElement = specsContainer.querySelector('p[style*="color: #6b7280"]:not([style*="margin-bottom: 0.125rem"])');
                 if (ramStorageElement) {
                     const ramStorageText = ramStorageElement.textContent.trim();
@@ -711,16 +1009,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 ram: ram,
                 storage: storage,
                 brand: productName.split(' ')[0] || 'Brand',
-                description: 'High-performance device designed for professionals and enthusiasts alike.'
+                description: 'High-performance device designed for professionals and enthusiasts alike.',
+                has_variations: hasVariations
             };
             
             showProductPopup(product);
         });
     });
 
-    // Popup functionality (existing code)
+    // Popup functionality with variation support
     function showProductPopup(product) {
-        // Remove any existing popup
         const existingPopup = document.querySelector('.popup-overlay');
         if (existingPopup) {
             existingPopup.remove();
@@ -741,13 +1039,23 @@ document.addEventListener('DOMContentLoaded', function() {
             backdrop-filter: blur(5px);
         `;
 
+        // Variation selection section HTML
+        const variationSection = product.has_variations ? `
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size: 1rem; font-weight: 600; color: #1f2937; margin-bottom: 0.75rem;">Select Variation</h4>
+                <div id="popup-variations-container" style="max-height: 150px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 0.5rem;">
+                    <div style="text-align: center; color: #6b7280; padding: 1rem;">Loading variations...</div>
+                </div>
+            </div>
+        ` : '';
+
         popup.innerHTML = `
             <div style="
                 background: white;
                 border-radius: 1.5rem;
                 width: 900px;
                 max-width: 95vw;
-                height: 550px;
+                height: 600px;
                 max-height: 90vh;
                 display: flex;
                 position: relative;
@@ -828,7 +1136,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         ">${product.name}</h2>
 
                         <!-- All Specs Display -->
-                        <div style="margin-bottom: 2rem;">
+                        <div style="margin-bottom: 1rem;">
                             ${product.processor ? `
                             <div style="display: flex; align-items: center; margin-bottom: 0.75rem;">
                                 <div style="width: 4px; height: 4px; background: #1f2937; border-radius: 50%; margin-right: 0.75rem;"></div>
@@ -851,13 +1159,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             ` : ''}
                         </div>
 
+                        <!-- Variation Selection -->
+                        ${variationSection}
+
                         <!-- Price -->
                         <p style="
                             font-size: 2.25rem;
                             color: #1f2937;
-                            margin: 0 0 1.5rem 0;
+                            margin: 0 0 1rem 0;
                             font-weight: bold;
-                        ">RM${parseFloat(product.price).toFixed(2)}</p>
+                        " id="popup-price">RM${parseFloat(product.price).toFixed(2)}</p>
 
                         <!-- Description -->
                         <p style="
@@ -875,6 +1186,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 data-product-name="${product.name}"
                                 data-product-price="${product.price}"
                                 data-product-image="${product.image}"
+                                data-has-variations="${product.has_variations}"
+                                ${product.has_variations ? 'disabled' : ''}
                                 style="
                             flex: 1;
                             border: 1px solid #1f2937;
@@ -890,6 +1203,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             transition: all 0.2s ease;
                             cursor: pointer;
                             font-weight: 500;
+                            ${product.has_variations ? 'opacity: 0.5; cursor: not-allowed;' : ''}
                         ">
                             <svg style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -916,74 +1230,35 @@ document.addEventListener('DOMContentLoaded', function() {
         popup.className = 'popup-overlay';
         document.body.appendChild(popup);
 
+        // Load variations if product has them
+        if (product.has_variations) {
+            loadPopupVariations(product.id, popup);
+        }
+
         // Add event listener to popup add to cart button
         const popupCartBtn = popup.querySelector('.popup-add-to-cart');
-        if (popupCartBtn) {
+        if (popupCartBtn && !product.has_variations) {
             popupCartBtn.addEventListener('click', function() {
                 const productId = this.getAttribute('data-product-id');
                 const productName = this.getAttribute('data-product-name');
                 const productPrice = this.getAttribute('data-product-price');
                 const productImage = this.getAttribute('data-product-image');
                 
-                // Show loading state
-                const originalText = this.textContent;
-                this.textContent = 'Adding...';
-                this.disabled = true;
+                const productData = {
+                    id: productId,
+                    name: productName,
+                    price: productPrice,
+                    image: productImage
+                };
                 
-                // Send AJAX request to add to cart
-                fetch('/cart/add', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        product_id: productId,
-                        product_name: productName,
-                        price: parseFloat(productPrice),
-                        quantity: 1,
-                        image: productImage,
-                        specs: {
-                            processor: product.processor,
-                            ram: product.ram,
-                            storage: product.storage
-                        },
-                        sku: '{{ $product->sku ?? "N/A" }}'
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showNotification('Product added to cart successfully!');
-                        updateCartCount(data.cart_count);
-                        
-                        // Reset button state
-                        setTimeout(() => {
-                            this.textContent = 'Added!';
-                            setTimeout(() => {
-                                this.textContent = originalText;
-                                this.disabled = false;
-                            }, 1000);
-                        }, 500);
-                    } else {
-                        showNotification('Failed to add product to cart. Please try again.', 'error');
-                        this.textContent = originalText;
-                        this.disabled = false;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showNotification('An error occurred. Please try again.', 'error');
-                    this.textContent = originalText;
-                    this.disabled = false;
-                });
+                addToCartDirect(productData, this);
             });
         }
 
         // Add hover effects to popup buttons
         const popupButtons = popup.querySelectorAll('button');
         popupButtons.forEach(button => {
-            if (button.textContent !== '×') {
+            if (button.textContent !== '×' && !button.disabled) {
                 button.addEventListener('mouseenter', function() {
                     if (this.style.background === 'white' || this.style.background.includes('white')) {
                         this.style.background = '#f8fafc';
@@ -1008,6 +1283,147 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    function loadPopupVariations(productId, popup) {
+        const variationsContainer = popup.querySelector('#popup-variations-container');
+        const addToCartBtn = popup.querySelector('.popup-add-to-cart');
+        const priceElement = popup.querySelector('#popup-price');
+        
+        fetch(`/products/${productId}/variations`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.variations.length > 0) {
+                    let html = '';
+                    data.variations.forEach((variation, index) => {
+                        const specs = [];
+                        if (variation.processor) specs.push(variation.processor);
+                        if (variation.ram) specs.push(variation.ram);
+                        if (variation.storage) specs.push(variation.storage);
+                        if (variation.model) specs.push(variation.model);
+                        
+                        const isInStock = variation.stock > 0;
+                        const stockText = isInStock ? `${variation.stock} in stock` : 'Out of stock';
+                        
+                        html += `
+                            <div style="padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 0.25rem; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s ease; ${!isInStock ? 'opacity: 0.5; cursor: not-allowed;' : ''} ${index === 0 && isInStock ? 'border-color: #1f2937; background: #f8fafc;' : ''}" 
+                                 data-variation-id="${variation.id}"
+                                 data-variation-price="${variation.price}"
+                                 data-variation-sku="${variation.sku || ''}"
+                                 data-variation-stock="${variation.stock}"
+                                 ${isInStock ? 'onclick="selectPopupVariation(this)"' : ''}>
+                                <div style="font-size: 0.875rem; color: #1f2937; margin-bottom: 0.25rem;">${specs.join(' • ')}</div>
+                                <div style="display: flex; justify-content: between; align-items: center;">
+                                    <div style="font-weight: 600; color: #1f2937;">RM ${parseFloat(variation.price).toFixed(2)}</div>
+                                    <div style="font-size: 0.75rem; color: ${isInStock ? '#10b981' : '#ef4444'};">${stockText}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    variationsContainer.innerHTML = html;
+                    
+                    // Auto-select first available variation
+                    const firstAvailable = variationsContainer.querySelector('div[data-variation-id]:not([style*="opacity: 0.5"])');
+                    if (firstAvailable) {
+                        selectPopupVariation(firstAvailable);
+                    }
+                } else {
+                    variationsContainer.innerHTML = '<div style="text-align: center; color: #6b7280; padding: 1rem;">No variations available</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading variations:', error);
+                variationsContainer.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 1rem;">Error loading variations</div>';
+            });
+    }
 });
+
+// Global function for popup variation selection
+function selectPopupVariation(element) {
+    const container = element.parentElement;
+    const addToCartBtn = document.querySelector('.popup-add-to-cart');
+    const priceElement = document.getElementById('popup-price');
+    
+    // Remove selection from all variations
+    container.querySelectorAll('div[data-variation-id]').forEach(div => {
+        div.style.borderColor = '#e5e7eb';
+        div.style.background = 'white';
+    });
+    
+    // Add selection to clicked variation
+    element.style.borderColor = '#1f2937';
+    element.style.background = '#f8fafc';
+    
+    // Update price
+    const price = element.getAttribute('data-variation-price');
+    priceElement.textContent = `RM ${parseFloat(price).toFixed(2)}`;
+    
+    // Enable add to cart button
+    addToCartBtn.disabled = false;
+    addToCartBtn.style.opacity = '1';
+    addToCartBtn.style.cursor = 'pointer';
+    
+    // Store variation data on button
+    addToCartBtn.setAttribute('data-variation-id', element.getAttribute('data-variation-id'));
+    addToCartBtn.setAttribute('data-variation-price', price);
+    addToCartBtn.setAttribute('data-variation-sku', element.getAttribute('data-variation-sku'));
+    
+    // Update click handler
+    addToCartBtn.onclick = function() {
+        const productId = this.getAttribute('data-product-id');
+        const productName = this.getAttribute('data-product-name');
+        const productImage = this.getAttribute('data-product-image');
+        const variationId = this.getAttribute('data-variation-id');
+        const variationPrice = this.getAttribute('data-variation-price');
+        const variationSku = this.getAttribute('data-variation-sku');
+        
+        const originalText = this.textContent;
+        this.textContent = 'Adding...';
+        this.disabled = true;
+        
+        const requestData = {
+            product_id: productId,
+            variation_id: variationId,
+            product_name: productName,
+            price: parseFloat(variationPrice),
+            quantity: 1,
+            image: productImage,
+            sku: variationSku
+        };
+        
+        fetch('/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Product added to cart successfully!');
+                updateHeaderCartCount(data.cart_count);
+                
+                setTimeout(() => {
+                    this.textContent = 'Added!';
+                    setTimeout(() => {
+                        this.textContent = originalText;
+                        this.disabled = false;
+                    }, 1000);
+                }, 500);
+            } else {
+                showNotification('Failed to add product to cart. Please try again.', 'error');
+                this.textContent = originalText;
+                this.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An error occurred. Please try again.', 'error');
+            this.textContent = originalText;
+            this.disabled = false;
+        });
+    };
+}
 </script>
 @endpush

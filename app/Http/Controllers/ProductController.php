@@ -77,10 +77,14 @@ class ProductController extends Controller
         }
 
         // PAGINATION: Show 9 products per page
-        $products = $query->paginate(9);
+        $products = $query->with(['variations' => function($query) {
+            $query->active();
+        }])->paginate(9);
 
         // Get recommended products
-        $recommendedProducts = Product::active()->inRandomOrder()->limit(8)->get();
+        $recommendedProducts = Product::active()->with(['variations' => function($query) {
+            $query->active();
+        }])->inRandomOrder()->limit(8)->get();
 
         // Get categories
         $categories = Category::all();
@@ -96,7 +100,9 @@ class ProductController extends Controller
      */
     public function show($slug)
     {
-        $product = Product::with(['category', 'images', 'variations'])
+        $product = Product::with(['category', 'images', 'variations' => function($query) {
+            $query->active();
+        }])
             ->active()
             ->where('slug', $slug)
             ->firstOrFail();
@@ -119,7 +125,9 @@ class ProductController extends Controller
             abort(404);
         }
 
-        $product->load(['category', 'images', 'variations']);
+        $product->load(['category', 'images', 'variations' => function($query) {
+            $query->active();
+        }]);
         
         $relatedProducts = Product::where('category_id', $product->category_id)
                                 ->where('id', '!=', $product->id)
@@ -128,5 +136,22 @@ class ProductController extends Controller
                                 ->get();
 
         return view('products.show', compact('product', 'relatedProducts'));
+    }
+
+    /**
+     * Get product variations for AJAX request
+     */
+    public function getVariations($productId)
+    {
+        $product = Product::with(['variations' => function($query) {
+            $query->active();
+        }])->active()->findOrFail($productId);
+
+        return response()->json([
+            'success' => true,
+            'product' => $product,
+            'variations' => $product->variations,
+            'has_variations' => $product->has_variations
+        ]);
     }
 }

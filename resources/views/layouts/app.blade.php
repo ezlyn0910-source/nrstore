@@ -34,17 +34,7 @@
                 <div class="container">
                     <div class="header-top-content">
                         <div class="header-left">
-                            <div class="language-dropdown">
-                                <button class="language-btn">
-                                    EN <i class="fas fa-chevron-down"></i>
-                                </button>
-                                <div class="dropdown-content">
-                                    <a href="#" class="dropdown-item">English</a>
-                                    <a href="#" class="dropdown-item">Malay</a>
-                                </div>
-                            </div>
-                            <div class="divider"></div>
-                            <div class="warranty-text">3 Months Warranty For All Products</div>
+                            <div class="warranty-text">56 Months Warranty For All Products</div>
                         </div>
                         <div class="header-right">
                             <div class="auth-links">
