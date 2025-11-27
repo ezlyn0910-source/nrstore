@@ -33,6 +33,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // Public Product Routes
 Route::controller(ProductController::class)->group(function () {
     Route::get('/products', 'index')->name('products.index');
+    Route::post('/buy-now', 'buyNow')->name('buy-now');
     Route::get('/products/featured', 'featured')->name('products.featured');
     Route::get('/products/recommended', 'recommended')->name('products.recommended');
     Route::get('/products/category/{slug}', 'category')->name('products.category');

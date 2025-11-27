@@ -21,30 +21,46 @@ class CheckoutController extends Controller
             return redirect()->route('login')->with('error', 'Please log in to checkout.');
         }
 
-        // Get or create cart
-        $cart = $this->getOrCreateCart();
-        
-        if (!$cart || $cart->items->isEmpty()) {
-            return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
-        }
-
-        // Get user shipping addresses
-        $addresses = Address::getShippingAddresses($user->id);
-        
-        // Calculate cart totals
-        $cartItems = $cart->items()->with(['product.images'])->get();
-        $subtotal = $cart->total_amount;
-        $total = $subtotal;
+        // 1. Initialize variables
+        $cartItems = collect([]);
+        $subtotal = 0;
+        $total = 0;
         $tax = 0;
         $discount = 0;
 
+        // 2. Check for Buy Now Session Data first
+        $buyNowOrder = session('buy_now_order');
+        
+        if ($buyNowOrder && isset($buyNowOrder['is_buy_now']) && $buyNowOrder['is_buy_now']) {
+            // LOAD BUY NOW DATA
+            $cartItems = collect($buyNowOrder['items']);
+            $subtotal = $buyNowOrder['total'];
+            $total = $subtotal;
+        } else {
+            // 3. Fallback to Database Cart
+            $cart = $this->getOrCreateCart();
+            
+            if (!$cart || $cart->items->isEmpty()) {
+                return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
+            }
+
+            $cartItems = $cart->items()->with(['product.images', 'variation'])->get();
+            $subtotal = $cart->total_amount;
+            $total = $subtotal;
+        }
+
+        // 4. Get Addresses
+        $addresses = Address::getShippingAddresses($user->id);
+
+        // 5. Return View (ONLY ONCE)
         return view('checkout.index', compact(
             'cartItems',
             'subtotal',
             'total',
             'tax',
             'discount',
-            'addresses'
+            'addresses',
+            'buyNowOrder'
         ));
     }
 

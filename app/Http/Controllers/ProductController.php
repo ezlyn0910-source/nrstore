@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Variation; // Added correctly
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session; // Added correctly
 
 class ProductController extends Controller
 {
@@ -153,5 +155,120 @@ class ProductController extends Controller
             'variations' => $product->variations,
             'has_variations' => $product->has_variations
         ]);
+    }
+
+    /**
+     * Process Buy Now request
+     */
+    public function buyNow(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'variation_id' => 'nullable|exists:variations,id',
+            'quantity' => 'required|integer|min:1'
+        ]);
+
+        try {
+            $product = Product::active()->findOrFail($request->product_id);
+            
+            // Check if product has variations and no variation is selected
+            if ($product->has_variations && !$request->variation_id) {
+                return response()->json([
+                    'success' => false,
+                    'requires_variation' => true,
+                    'message' => 'Please select a variation for this product.'
+                ]);
+            }
+
+            // Get variation if selected
+            $variation = null;
+            if ($request->variation_id) {
+                $variation = Variation::active()->find($request->variation_id);
+                
+                if (!$variation) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Selected variation not available.'
+                    ]);
+                }
+            }
+
+            // Determine unit price
+            $unitPrice = $variation ? ($variation->effective_price ?? $variation->price) : $product->price;
+            
+            // Calculate total
+            $totalAmount = $unitPrice * $request->quantity;
+
+            // Store buy now data in session
+            // We cast items to objects to match the structure expected by the Checkout View
+            $buyNowData = [
+                'items' => [
+                    (object)[
+                        'product_id' => $product->id,
+                        'variation_id' => $variation ? $variation->id : null,
+                        'product' => $product,     // Pass full Product model
+                        'variation' => $variation, // Pass full Variation model
+                        'name' => $product->name,
+                        'product_name' => $product->name,
+                        'variation_name' => $variation ? $this->getVariationName($variation) : null,
+                        'price' => $unitPrice,
+                        'quantity' => $request->quantity,
+                        'image' => $request->image ?? $product->image,
+                        'specs' => $request->specs ?? $this->getProductSpecs($product, $variation),
+                        'total' => $totalAmount
+                    ]
+                ],
+                'subtotal' => $totalAmount,
+                'total' => $totalAmount,
+                'is_buy_now' => true,
+                'created_at' => now()
+            ];
+
+            Session::put('buy_now_order', $buyNowData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Redirecting to checkout...',
+                'redirect_url' => route('checkout.index')
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Buy Now error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Helper: Get variation display name/specs
+     */
+    private function getVariationName($variation)
+    {
+        $specs = [];
+        if (!empty($variation->model)) $specs[] = $variation->model;
+        if (!empty($variation->processor)) $specs[] = $variation->processor;
+        if (!empty($variation->ram)) $specs[] = $variation->ram;
+        if (!empty($variation->storage)) $specs[] = $variation->storage;
+        
+        return implode(' • ', $specs);
+    }
+
+    /**
+     * Helper: Get product specs for display
+     */
+    private function getProductSpecs($product, $variation = null)
+    {
+        if ($variation) {
+            return $this->getVariationName($variation);
+        }
+
+        $specs = [];
+        if (!empty($product->processor)) $specs[] = $product->processor;
+        if (!empty($product->ram)) $specs[] = $product->ram;
+        if (!empty($product->storage)) $specs[] = $product->storage;
+        
+        return implode(' • ', $specs);
     }
 }
