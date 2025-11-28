@@ -36,12 +36,13 @@
     margin-top: 2rem;
 }
 
+/* Remove container styles from checkout sections */
 .checkout-section {
-    background: white;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    border: 1px solid #e5e7eb;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: 0;
+    border: none;
 }
 
 .checkout-section h2 {
@@ -51,6 +52,14 @@
     margin: 0 0 1.5rem 0;
     padding-bottom: 0.75rem;
     border-bottom: 1px solid #e5e7eb;
+}
+
+/* Section Divider */
+.section-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 2rem 0;
+    width: 100%;
 }
 
 /* Address List */
@@ -66,6 +75,7 @@
     border-radius: 0.5rem;
     overflow: hidden;
     transition: all 0.2s ease;
+    background: white;
 }
 
 .address-item:hover {
@@ -125,6 +135,7 @@
     background: #f9fafb;
     border-radius: 0.5rem;
     margin-bottom: 1.5rem;
+    border: 1px solid #e5e7eb;
 }
 
 .no-address-icon {
@@ -160,6 +171,218 @@
 
 .add-address-btn:hover {
     background: #374151;
+}
+
+/* ===== PAYMENT METHOD STYLES ===== */
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.payment-method {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.payment-method:hover {
+    border-color: #d1d5db;
+}
+
+.payment-method input {
+    display: none;
+}
+
+.payment-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.payment-method input:checked + .payment-label {
+    background: #f8fafc;
+    border-color: #1f2937;
+}
+
+.payment-method input:checked + .payment-label .radio-indicator {
+    background: #1f2937;
+    border-color: #1f2937;
+}
+
+.payment-method input:checked + .payment-label .radio-indicator::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    background: white;
+    border-radius: 50%;
+}
+
+.payment-method-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.payment-logo {
+    width: 40px;
+    height: 40px;
+    background: #f3f4f6;
+    border-radius: 0.375rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #374151;
+}
+
+.payment-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.method-name {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.95rem;
+}
+
+.method-desc {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.radio-indicator {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #d1d5db;
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+/* Payment Details Dropdown */
+.payment-details-dropdown {
+    display: none;
+    padding: 1rem;
+    background: #f8fafc;
+    border-top: 1px solid #e5e7eb;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Bank List Styles */
+.bank-list h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 1rem 0;
+}
+
+.bank-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+}
+
+.bank-option {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.bank-option:hover {
+    border-color: #d1d5db;
+}
+
+.bank-option input {
+    display: none;
+}
+
+.bank-option label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.bank-option input:checked + label {
+    background: #f3f4f6;
+    border-color: #1f2937;
+}
+
+.bank-option label img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    border-radius: 0.25rem;
+}
+
+.bank-option label span {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+/* Credit Card Form Styles */
+.card-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.card-form .form-group {
+    margin-bottom: 0;
+    position: relative;
+}
+
+.card-form .card-icons {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    color: #6b7280;
+}
+
+.card-form input {
+    padding-right: 4rem;
+}
+
+.card-form .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
 }
 
 /* Modal Styles */
@@ -265,78 +488,6 @@
 
 .form-check input {
     width: auto;
-}
-
-/* Shipping and Payment Methods */
-.shipping-methods,
-.payment-methods {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.shipping-method,
-.payment-method {
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    overflow: hidden;
-}
-
-.shipping-method input,
-.payment-method input {
-    display: none;
-}
-
-.shipping-method label,
-.payment-method label {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.shipping-method input:checked + label,
-.payment-method input:checked + label {
-    background: #f3f4f6;
-    border-color: #1f2937;
-}
-
-.shipping-method:hover label,
-.payment-method:hover label {
-    background: #f9fafb;
-}
-
-.method-name {
-    font-weight: 500;
-    color: #374151;
-}
-
-.method-price {
-    font-weight: 600;
-    color: #1f2937;
-}
-
-.method-time {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin-left: auto;
-    margin-right: 1rem;
-}
-
-.card-icons {
-    display: flex;
-    gap: 0.5rem;
-    font-size: 1.25rem;
-}
-
-.payment-form {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: #f9fafb;
-    border-radius: 0.5rem;
-    border: 1px solid #e5e7eb;
 }
 
 /* Order Summary */
@@ -585,6 +736,32 @@
         align-items: flex-start;
         gap: 0.5rem;
     }
+
+    .bank-options {
+        grid-template-columns: 1fr;
+    }
+
+    .card-form .row {
+        grid-template-columns: 1fr;
+    }
+
+    .payment-method-info {
+        gap: 0.75rem;
+    }
+
+    .payment-logo {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+
+    .method-name {
+        font-size: 0.9rem;
+    }
+
+    .method-desc {
+        font-size: 0.75rem;
+    }
 }
 
 @media (max-width: 576px) {
@@ -597,19 +774,7 @@
     }
 
     .checkout-section {
-        padding: 1rem;
-    }
-
-    .shipping-method label,
-    .payment-method label {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-
-    .method-time {
-        margin-left: 0;
-        margin-right: 0;
+        padding: 0;
     }
 
     .modal-body {
@@ -622,5 +787,17 @@
 
     .modal-footer button {
         width: 100%;
+    }
+
+    .payment-label {
+        padding: 0.75rem;
+    }
+
+    .payment-details {
+        gap: 0.125rem;
+    }
+
+    .bank-option label {
+        padding: 0.5rem;
     }
 }

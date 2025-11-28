@@ -27,16 +27,19 @@
 </head>
 <body>
     <div id="app">
-        @if (!request()->is('login') && !request()->is('register'))
-            <!-- Global Header (from home.css) -->
+        <!-- Global Header (ALWAYS show on all pages except auth pages) -->
+        @if (!in_array(Route::currentRouteName(), ['login', 'register', 'password.request', 'password.reset']))
             <!-- First Header -->
             <div class="header-top">
                 <div class="container">
                     <div class="header-top-content">
-                        <div class="header-left">
-                            <div class="warranty-text">56 Months Warranty For All Products</div>
+                        <!-- Left Column - Aligns with logo in bottom header -->
+                        <div class="header-top-left">
+                            <div class="warranty-text">3 Months Warranty For All Products</div>
                         </div>
-                        <div class="header-right">
+                        
+                        <!-- Right Column - Aligns with cart icon in bottom header -->
+                        <div class="header-top-right">
                             <div class="auth-links">
                                 @auth
                                     <!-- Show user menu when logged in -->
@@ -78,22 +81,24 @@
             <div class="header-bottom">
                 <div class="container">
                     <div class="header-bottom-content">
+                        <!-- Left Column - Logo -->
                         <div class="logo-section-wrapper">
                             <a href="/" class="logo-link">NR INTELLITECH</a>
                         </div>
 
+                        <!-- Center Column - Navigation -->
                         <div class="nav-section-wrapper">
                             <nav class="main-nav">
                                 <a href="/" class="nav-link">Home</a>
                                 <a href="/products" class="nav-link">Products</a>
                                 <a href="/orders" class="nav-link">Order</a>
                                 <a href="/bid" class="nav-link bid-link">
-                                    <i class="fas fa-gavel"></i>
                                     <span>Bid Now</span>
                                 </a>
                             </nav>
                         </div>
 
+                        <!-- Right Column - Search and Cart -->
                         <div class="actions-section">
                             <div class="search-actions-container">
                                 <div class="search-container">
@@ -105,17 +110,11 @@
                                     </form>
                                 </div>
                                 
-                                <div class="action-icons">
-                                    <a href="/favorites" class="action-icon">
-                                        <i class="far fa-heart"></i>
-                                        <span class="action-badge" data-count="0"></span>
-                                    </a>
-                                    
-                                    <a href="{{ route('cart.index') }}" class="action-icon" id="cart-icon">
-                                        <i class="fas fa-shopping-cart"></i>
-                                        <span class="action-badge" id="cart-badge" style="display: none;"></span>
-                                    </a>
-                                </div>
+                                <!-- Cart Icon Only -->
+                                <a href="{{ route('cart.index') }}" class="action-icon" id="cart-icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                    <span class="action-badge" id="cart-badge" style="display: none;"></span>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -127,8 +126,8 @@
             @yield('content')
         </main>
 
-        <!-- Global Footer -->
-        @if (!request()->is('login') && !request()->is('register'))
+        <!-- Global Footer (ALWAYS show on all pages except auth pages) -->
+        @if (!in_array(Route::currentRouteName(), ['login', 'register', 'password.request', 'password.reset']))
             <footer class="footer-dark">
                 <div class="container">
                     <div class="footer-content">
@@ -231,15 +230,25 @@
 
     // Load cart count on page load for ALL pages
     document.addEventListener('DOMContentLoaded', function() {
-        // Fetch the current cart count via AJAX on page load
-        fetch('/cart/count')
-            .then(response => response.json())
-            .then(data => {
-                updateHeaderCartCount(data.count);
-            })
-            .catch(error => {
-                console.error('Error fetching cart count:', error);
-            });
+        // Only fetch cart count if user is logged in and header is visible
+        const headerExists = document.querySelector('.header-bottom');
+        if (headerExists) {
+            fetch('/cart/count')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    updateHeaderCartCount(data.count);
+                })
+                .catch(error => {
+                    console.error('Error fetching cart count:', error);
+                    // Optional: You can set a default value or hide the badge on error
+                    updateHeaderCartCount(0);
+                });
+        }
     });
 
     // Make the function globally available
