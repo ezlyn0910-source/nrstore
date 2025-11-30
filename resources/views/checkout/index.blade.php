@@ -78,60 +78,139 @@
                 <section class="checkout-section">
                     <h2>Payment Method</h2>
                     <div class="payment-methods">
+                        <!-- Touch N Go E-Wallet -->
                         <div class="payment-method">
-                            <input type="radio" id="credit_card" name="payment_method" value="credit_card" checked>
-                            <label for="credit_card">
-                                <span class="method-name">Credit/Debit Card</span>
-                                <div class="card-icons">
-                                    <i class="fab fa-cc-visa"></i>
-                                    <i class="fab fa-cc-mastercard"></i>
-                                    <i class="fab fa-cc-amex"></i>
+                            <input type="radio" id="tng_ewallet" name="payment_method" value="tng_ewallet">
+                            <label for="tng_ewallet" class="payment-label">
+                                <div class="payment-method-info">
+                                    <div class="payment-logo">
+                                        <i class="fas fa-wallet"></i>
+                                    </div>
+                                    <div class="payment-details">
+                                        <span class="method-name">Touch N Go E-Wallet</span>
+                                        <span class="method-desc">Pay with your TNG e-wallet</span>
+                                    </div>
                                 </div>
+                                <div class="radio-indicator"></div>
                             </label>
                         </div>
-                        <div class="payment-method">
-                            <input type="radio" id="paypal" name="payment_method" value="paypal">
-                            <label for="paypal">
-                                <span class="method-name">PayPal</span>
-                                <i class="fab fa-cc-paypal"></i>
-                            </label>
-                        </div>
-                        <div class="payment-method">
-                            <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer">
-                            <label for="bank_transfer">
-                                <span class="method-name">Bank Transfer</span>
-                                <i class="fas fa-university"></i>
-                            </label>
-                        </div>
-                    </div>
 
-                    <!-- Credit Card Form -->
-                    <div id="creditCardForm" class="payment-form">
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group">
-                                    <label for="card_number">Card Number *</label>
-                                    <input type="text" id="card_number" name="card_number" placeholder="1234 5678 9012 3456">
+                        <!-- Online Banking -->
+                        <div class="payment-method">
+                            <input type="radio" id="online_banking" name="payment_method" value="online_banking">
+                            <label for="online_banking" class="payment-label">
+                                <div class="payment-method-info">
+                                    <div class="payment-logo">
+                                        <i class="fas fa-university"></i>
+                                    </div>
+                                    <div class="payment-details">
+                                        <span class="method-name">Online Banking</span>
+                                        <span class="method-desc">Pay via online banking</span>
+                                    </div>
+                                </div>
+                                <div class="radio-indicator"></div>
+                            </label>
+                            
+                            <!-- Online Banking Details (Hidden by default) -->
+                            <div class="payment-details-dropdown" id="onlineBankingDetails">
+                                <div class="bank-list">
+                                    <h4>Select Your Bank</h4>
+                                    <div class="bank-options">
+                                        <div class="bank-option">
+                                            <input type="radio" id="bank_maybank" name="selected_bank" value="maybank">
+                                            <label for="bank_maybank">
+                                                <img src="{{ asset('images/banks/maybank.png') }}" alt="Maybank" onerror="this.src='{{ asset('images/banks/default.png') }}'">
+                                                <span>Maybank</span>
+                                            </label>
+                                        </div>
+                                        <div class="bank-option">
+                                            <input type="radio" id="bank_cimb" name="selected_bank" value="cimb">
+                                            <label for="bank_cimb">
+                                                <img src="{{ asset('images/banks/cimb.png') }}" alt="CIMB" onerror="this.src='{{ asset('images/banks/default.png') }}'">
+                                                <span>CIMB</span>
+                                            </label>
+                                        </div>
+                                        <div class="bank-option">
+                                            <input type="radio" id="bank_public" name="selected_bank" value="public_bank">
+                                            <label for="bank_public">
+                                                <img src="{{ asset('images/banks/public.png') }}" alt="Public Bank" onerror="this.src='{{ asset('images/banks/default.png') }}'">
+                                                <span>Public Bank</span>
+                                            </label>
+                                        </div>
+                                        <div class="bank-option">
+                                            <input type="radio" id="bank_rhb" name="selected_bank" value="rhb">
+                                            <label for="bank_rhb">
+                                                <img src="{{ asset('images/banks/rhb.png') }}" alt="RHB" onerror="this.src='{{ asset('images/banks/default.png') }}'">
+                                                <span>RHB Bank</span>
+                                            </label>
+                                        </div>
+                                        <div class="bank-option">
+                                            <input type="radio" id="bank_hongleong" name="selected_bank" value="hong_leong">
+                                            <label for="bank_hongleong">
+                                                <img src="{{ asset('images/banks/hongleong.png') }}" alt="Hong Leong" onerror="this.src='{{ asset('images/banks/default.png') }}'">
+                                                <span>Hong Leong Bank</span>
+                                            </label>
+                                        </div>
+                                        <div class="bank-option">
+                                            <input type="radio" id="bank_ambank" name="selected_bank" value="ambank">
+                                            <label for="bank_ambank">
+                                                <img src="{{ asset('images/banks/ambank.png') }}" alt="AmBank" onerror="this.src='{{ asset('images/banks/default.png') }}'">
+                                                <span>AmBank</span>
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="card_expiry">Expiry Date *</label>
-                                    <input type="text" id="card_expiry" name="card_expiry" placeholder="MM/YY">
+
+                        <!-- Credit Card -->
+                        <div class="payment-method">
+                            <input type="radio" id="credit_card" name="payment_method" value="credit_card">
+                            <label for="credit_card" class="payment-label">
+                                <div class="payment-method-info">
+                                    <div class="payment-logo">
+                                        <i class="far fa-credit-card"></i>
+                                    </div>
+                                    <div class="payment-details">
+                                        <span class="method-name">Credit/Debit Card</span>
+                                        <span class="method-desc">Pay with your card</span>
+                                    </div>
+                                </div>
+                                <div class="radio-indicator"></div>
+                            </label>
+                            
+                            <!-- Credit Card Details (Hidden by default) -->
+                            <div class="payment-details-dropdown" id="creditCardDetails">
+                                <div class="card-form">
+                                    <div class="form-group">
+                                        <label for="card_number">Card Number *</label>
+                                        <input type="text" id="card_number" name="card_number" placeholder="1234 5678 9012 3456" maxlength="19">
+                                        <div class="card-icons">
+                                            <i class="fab fa-cc-visa"></i>
+                                            <i class="fab fa-cc-mastercard"></i>
+                                            <i class="fab fa-cc-amex"></i>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="card_expiry">Expiry Date *</label>
+                                                <input type="text" id="card_expiry" name="card_expiry" placeholder="MM/YY" maxlength="5">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="card_cvc">CVC *</label>
+                                                <input type="text" id="card_cvc" name="card_cvc" placeholder="123" maxlength="4">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="card_name">Name on Card *</label>
+                                        <input type="text" id="card_name" name="card_name" placeholder="John Doe">
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="card_cvc">CVC *</label>
-                                    <input type="text" id="card_cvc" name="card_cvc" placeholder="123">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="card_name">Name on Card *</label>
-                            <input type="text" id="card_name" name="card_name">
                         </div>
                     </div>
                 </section>
@@ -406,11 +485,11 @@ document.addEventListener('DOMContentLoaded', function() {
         saveAddress();
     });
 
-    // Toggle payment forms
+    // Payment method selection
     const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
     paymentMethods.forEach(method => {
         method.addEventListener('change', function() {
-            togglePaymentForm(this.value);
+            togglePaymentDetails(this.value);
         });
     });
 
@@ -430,7 +509,26 @@ document.addEventListener('DOMContentLoaded', function() {
             placeOrder();
         });
     }
+
+    // Initialize payment method display
+    togglePaymentDetails(document.querySelector('input[name="payment_method"]:checked')?.value);
 });
+
+function togglePaymentDetails(method) {
+    // Hide all payment details
+    const allDetails = document.querySelectorAll('.payment-details-dropdown');
+    allDetails.forEach(detail => {
+        detail.style.display = 'none';
+    });
+
+    // Show details for selected method
+    if (method === 'online_banking') {
+        document.getElementById('onlineBankingDetails').style.display = 'block';
+    } else if (method === 'credit_card') {
+        document.getElementById('creditCardDetails').style.display = 'block';
+    }
+    // TNG E-Wallet doesn't have additional details
+}
 
 function saveAddress() {
     const formData = new FormData(document.getElementById('addressForm'));
@@ -454,18 +552,6 @@ function saveAddress() {
         console.error('Error:', error);
         alert('Error saving address. Please try again.');
     });
-}
-
-function togglePaymentForm(method) {
-    const creditCardForm = document.getElementById('creditCardForm');
-    
-    if (creditCardForm) {
-        if (method === 'credit_card') {
-            creditCardForm.style.display = 'block';
-        } else {
-            creditCardForm.style.display = 'none';
-        }
-    }
 }
 
 function applyPromoCode(promoCode) {
@@ -525,6 +611,33 @@ function placeOrder() {
         return;
     }
 
+    // Validate payment method is selected
+    const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+    if (!selectedPayment) {
+        alert('Please select a payment method');
+        return;
+    }
+
+    // Validate payment details based on method
+    if (selectedPayment.value === 'online_banking') {
+        const selectedBank = document.querySelector('input[name="selected_bank"]:checked');
+        if (!selectedBank) {
+            alert('Please select your bank');
+            return;
+        }
+    } else if (selectedPayment.value === 'credit_card') {
+        // Validate credit card details
+        const cardNumber = document.getElementById('card_number').value;
+        const cardExpiry = document.getElementById('card_expiry').value;
+        const cardCvc = document.getElementById('card_cvc').value;
+        const cardName = document.getElementById('card_name').value;
+        
+        if (!cardNumber || !cardExpiry || !cardCvc || !cardName) {
+            alert('Please fill in all credit card details');
+            return;
+        }
+    }
+
     // Validate required fields
     const agreeTerms = document.getElementById('agree_terms');
     if (!agreeTerms.checked) {
@@ -538,11 +651,22 @@ function placeOrder() {
     formData.append('address_id', selectedAddress.value);
     
     // Add payment method
-    const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
-    if (paymentMethod) {
-        formData.append('payment_method', paymentMethod.value);
+    formData.append('payment_method', selectedPayment.value);
+    
+    // Add bank selection if online banking
+    if (selectedPayment.value === 'online_banking') {
+        const selectedBank = document.querySelector('input[name="selected_bank"]:checked');
+        formData.append('selected_bank', selectedBank.value);
     }
     
+    // Add credit card details if credit card
+    if (selectedPayment.value === 'credit_card') {
+        formData.append('card_number', document.getElementById('card_number').value);
+        formData.append('card_expiry', document.getElementById('card_expiry').value);
+        formData.append('card_cvc', document.getElementById('card_cvc').value);
+        formData.append('card_name', document.getElementById('card_name').value);
+    }
+
     // Show loading state
     const placeOrderBtn = document.getElementById('placeOrderBtn');
     const originalText = placeOrderBtn.textContent;

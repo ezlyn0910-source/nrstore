@@ -16,32 +16,32 @@
     --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-/* Homepage Container - EXACTLY like orders page */
+/* FIXED: Remove all default margins and padding from homepage */
 .homepage {
     background: #f8f9fa;
     min-height: 100vh;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
-/* Main Content Section - EXACTLY like orders page */
 .main-content-section {
     padding: 0;
     position: relative;
     margin-top: 0;
 }
 
-/* Container - EXACTLY like orders page */
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    /* REDUCED PADDING to expand content area (was 3rem) */
     padding: 0 2rem;
 }
 
-/* Hero Slider Section - Full width */
+/* FIXED: Hero Slider Section - Completely remove all spacing */
 .hero-slider-section {
     width: 100%;
-    padding: 0;
-    margin: 0;
+    padding: 0 !important;
+    margin: 0 !important;
+    position: relative;
 }
 
 .hero-slider {
@@ -51,14 +51,16 @@
     height: 86vh;
     min-height: 600px;
     width: 100%;
-    margin: 0;
-    padding: 0;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .slider-container {
     height: 100%;
     width: 100%;
     position: relative;
+    margin: 0;
+    padding: 0;
 }
 
 .slide {
@@ -73,6 +75,8 @@
     opacity: 0;
     transition: opacity 0.5s ease-in-out;
     z-index: 1;
+    margin: 0;
+    padding: 0;
 }
 
 .slide.active {
@@ -112,7 +116,7 @@
     transform: scale(1.1);
 }
 
-/* FIXED: Categories Section - Same margin as header */
+/* FIXED: Categories Section - Remove top spacing */
 .categories-section {
     padding: 2rem 0;
     margin: 0 auto;
@@ -212,7 +216,7 @@
     background: transparent;
 }
 
-/* FIXED: Products Section - Same margin as header */
+/* FIXED: Products Section */
 .products-section {
     padding: 2rem 0;
     margin: 0 auto;
@@ -368,7 +372,6 @@
 }
 
 @media (max-width: 768px) {
-    /* Updated from 2rem to 1.5rem */
     .container {
         padding: 0 1.5rem;
     }
@@ -376,7 +379,6 @@
     .categories-section,
     .products-section {
         margin: 0 auto;
-        /* Updated from 2rem to 1.5rem */
         padding-left: 1.5rem;
         padding-right: 1.5rem;
     }
@@ -416,7 +418,6 @@
 }
 
 @media (max-width: 576px) {
-    /* Updated from 1.5rem to 1rem */
     .container {
         padding: 0 1rem;
     }
@@ -424,7 +425,6 @@
     .categories-section,
     .products-section {
         margin: 0 auto;
-        /* Updated from 1.5rem to 1rem */
         padding-left: 1rem;
         padding-right: 1rem;
     }
