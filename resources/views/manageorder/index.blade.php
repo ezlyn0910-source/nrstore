@@ -26,12 +26,12 @@
         </div>
         
         <div class="stat-card">
-            <div class="stat-icon pending">
+            <div class="stat-icon paid">
                 <i class="fas fa-clock"></i>
             </div>
             <div class="stat-content">
-                <h3 class="stat-number">{{ $stats['pending'] }}</h3>
-                <p class="stat-label">Pending</p>
+                <h3 class="stat-number">{{ $stats['paid'] }}</h3>
+                <p class="stat-label">Paid</p>
             </div>
         </div>
         
@@ -50,8 +50,8 @@
                 <i class="fas fa-check-circle"></i>
             </div>
             <div class="stat-content">
-                <h3 class="stat-number">{{ $stats['delivered'] }}</h3>
-                <p class="stat-label">Delivered</p>
+                <h3 class="stat-number">{{ $stats['shipped'] }}</h3>
+                <p class="stat-label">Shipped</p>
             </div>
         </div>
     </div>
@@ -81,7 +81,6 @@
                         <th>Date</th>
                         <th>Amount</th>
                         <th>Status</th>
-                        <th>Payment</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -103,18 +102,13 @@
                                 {{ ucfirst($order->status) }}
                             </span>
                         </td>
-                        <td class="payment-status">
-                            <span class="payment-badge payment-{{ $order->payment_status ?? 'pending' }}">
-                                {{ ucfirst($order->payment_status ?? 'pending') }}
-                            </span>
-                        </td>
                         <td class="order-actions">
                             <a href="{{ route('admin.manageorder.show', $order) }}" class="action-btn view-btn" title="View Order">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <button class="action-btn edit-btn" title="Edit Order">
+                            <a href="{{ route('admin.manageorder.edit', $order) }}" class="action-btn edit-btn" title="Edit Order">
                                 <i class="fas fa-edit"></i>
-                            </button>
+                            </a>
                         </td>
                     </tr>
                     @empty
@@ -155,11 +149,9 @@
                 <label>Status</label>
                 <select id="statusFilter">
                     <option value="">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
+                    <option value="paid">Paid</option>
                     <option value="processing">Processing</option>
                     <option value="shipped">Shipped</option>
-                    <option value="delivered">Delivered</option>
                     <option value="cancelled">Cancelled</option>
                 </select>
             </div>

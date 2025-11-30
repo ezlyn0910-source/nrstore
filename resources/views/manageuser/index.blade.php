@@ -118,7 +118,6 @@
                             <th>Phone</th>
                             <th>Status</th>
                             <th>Registered</th>
-                            <th>Last Login</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -141,19 +140,9 @@
                             </td>
                             <td>{{ $user->created_at->format('M d, Y') }}</td>
                             <td>
-                                @if($user->last_login_at)
-                                    {{ $user->last_login_at->diffForHumans() }}
-                                @else
-                                    Never
-                                @endif
-                            </td>
-                            <td>
                                 <div class="action-buttons">
                                     <a href="{{ route('admin.manageuser.show', $user) }}" class="btn btn-info btn-sm action-btn" title="View Details">
                                         <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('admin.manageuser.edit', $user) }}" class="btn btn-primary btn-sm action-btn" title="Edit User">
-                                        <i class="fas fa-edit"></i>
                                     </a>
                                     @if($user->status === 'active')
                                     <form action="{{ route('admin.manageuser.suspend', $user) }}" method="POST" class="d-inline">
@@ -200,7 +189,6 @@
                             <th>Email</th>
                             <th>Status</th>
                             <th>Registered</th>
-                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -216,13 +204,6 @@
                                 @endif
                             </td>
                             <td>{{ $user->created_at->format('M d, Y') }}</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <a href="{{ route('admin.manageuser.show', $user) }}" class="btn btn-info btn-sm action-btn" title="View Details">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </div>
-                            </td>
                         </tr>
                         @endforeach
                     </tbody>
