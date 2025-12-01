@@ -156,9 +156,19 @@ Route::middleware(['auth'])->group(function () {
      * Payment Processing Routes
      */
     Route::prefix('payment')->name('payment.')->controller(PaymentController::class)->group(function () {
+        // Called from your "Place Order" button
         Route::post('/process', 'process')->name('process');
+
+        // iPay88: browser redirect + callbacks
+        Route::post('/ipay88/redirect', 'ipay88Redirect')->name('ipay88.redirect');   // (optional helper – can be unused if you redirect via view)
+        Route::post('/ipay88/response', 'ipay88Response')->name('ipay88.response');   // ResponseURL (user browser)
+        Route::post('/ipay88/backend',  'ipay88Backend')->name('ipay88.backend');     // BackendURL (server-to-server)
+
+        // (Optional) generic success/cancel pages if you still use them
         Route::get('/success', 'success')->name('success');
         Route::get('/cancel', 'cancel')->name('cancel');
+
+        // Any webhooks (if you add other gateways later)
         Route::post('/webhook/{gateway}', 'webhook')->name('webhook');
     });
 

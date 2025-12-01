@@ -197,55 +197,7 @@
                             <div id="online_banking_banks" class="online-banking-dropdown" style="display:none; margin-top:10px;">
                                 <div class="bank-option">
                                     <div class="bank-info">
-                                        <img src="/images/banks/ambank.png" alt="AmBank" class="bank-logo">
-                                        <span class="bank-name">AmBank</span>
-                                    </div>
-                                    <input type="radio" name="online_banking_bank" value="ambank" class="bank-radio">
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="/images/banks/bank-islam.png" alt="Bank Islam" class="bank-logo">
-                                        <span class="bank-name">Bank Islam</span>
-                                    </div>
-                                    <input type="radio" name="online_banking_bank" value="bank_islam" class="bank-radio">
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="/images/banks/bank-rakyat.png" alt="Bank Rakyat" class="bank-logo">
-                                        <span class="bank-name">Bank Rakyat</span>
-                                    </div>
-                                    <input type="radio" name="online_banking_bank" value="bank_rakyat" class="bank-radio">
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="/images/banks/cimb.png" alt="CIMB Bank" class="bank-logo">
-                                        <span class="bank-name">CIMB Bank</span>
-                                    </div>
-                                    <input type="radio" name="online_banking_bank" value="cimb" class="bank-radio">
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="/images/banks/hong-leong.png" alt="Hong Leong Bank" class="bank-logo">
-                                        <span class="bank-name">Hong Leong Bank</span>
-                                    </div>
-                                    <input type="radio" name="online_banking_bank" value="hong_leong" class="bank-radio">
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="/images/banks/hsbc.png" alt="HSBC" class="bank-logo">
-                                        <span class="bank-name">HSBC Bank Malaysia</span>
-                                    </div>
-                                    <input type="radio" name="online_banking_bank" value="hsbc" class="bank-radio">
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="/images/banks/maybank.png" alt="Maybank" class="bank-logo">
+                                        <img src="{{ asset('/images/banks/maybank.png') }}" alt="Maybank" class="bank-logo">
                                         <span class="bank-name">Maybank</span>
                                     </div>
                                     <input type="radio" name="online_banking_bank" value="maybank" class="bank-radio">
@@ -253,15 +205,15 @@
 
                                 <div class="bank-option">
                                     <div class="bank-info">
-                                        <img src="/images/banks/ocbc.png" alt="OCBC" class="bank-logo">
-                                        <span class="bank-name">OCBC Bank</span>
+                                        <img src="{{ asset('/images/banks/cimb.png') }}" alt="CIMB Bank" class="bank-logo">
+                                        <span class="bank-name">CIMB Bank</span>
                                     </div>
-                                    <input type="radio" name="online_banking_bank" value="ocbc" class="bank-radio">
+                                    <input type="radio" name="online_banking_bank" value="cimb" class="bank-radio">
                                 </div>
 
                                 <div class="bank-option">
                                     <div class="bank-info">
-                                        <img src="/images/banks/public-bank.png" alt="Public Bank" class="bank-logo">
+                                        <img src="{{ asset('/images/banks/public-bank.png') }}" alt="Public Bank" class="bank-logo">
                                         <span class="bank-name">Public Bank</span>
                                     </div>
                                     <input type="radio" name="online_banking_bank" value="public_bank" class="bank-radio">
@@ -269,7 +221,7 @@
 
                                 <div class="bank-option">
                                     <div class="bank-info">
-                                        <img src="/images/banks/rhb.png" alt="RHB Bank" class="bank-logo">
+                                        <img src="{{ asset('/images/banks/rhb.png') }}" alt="RHB Bank" class="bank-logo">
                                         <span class="bank-name">RHB Bank</span>
                                     </div>
                                     <input type="radio" name="online_banking_bank" value="rhb" class="bank-radio">
@@ -277,25 +229,69 @@
 
                                 <div class="bank-option">
                                     <div class="bank-info">
-                                        <img src="/images/banks/standard-chartered.png" alt="Standard Chartered" class="bank-logo">
-                                        <span class="bank-name">Standard Chartered</span>
+                                        <img src="{{ asset('/images/banks/hong-leong.png') }}" alt="Hong Leong Bank" class="bank-logo">
+                                        <span class="bank-name">Hong Leong Bank</span>
                                     </div>
-                                    <input type="radio" name="online_banking_bank" value="standard_chartered" class="bank-radio">
+                                    <input type="radio" name="online_banking_bank" value="hong_leong" class="bank-radio">
                                 </div>
 
                                 <div class="bank-option">
                                     <div class="bank-info">
-                                        <img src="/images/banks/uob.png" alt="UOB" class="bank-logo">
+                                        <img src="{{ asset('/images/banks/bank-islam.png') }}" alt="Bank Islam" class="bank-logo">
+                                        <span class="bank-name">Bank Islam</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="bank_islam" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="{{ asset('/images/banks/ambank.png') }}" alt="AmBank" class="bank-logo">
+                                        <span class="bank-name">AmBank</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="ambank" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="{{ asset('/images/banks/bank-rakyat.png') }}" alt="Bank Rakyat" class="bank-logo">
+                                        <span class="bank-name">Bank Rakyat</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="bank_rakyat" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="{{ asset('/images/banks/hsbc.png') }}" alt="HSBC" class="bank-logo">
+                                        <span class="bank-name">HSBC Bank Malaysia</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="hsbc" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="{{ asset('/images/banks/ocbc.png') }}" alt="OCBC" class="bank-logo">
+                                        <span class="bank-name">OCBC Bank</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="ocbc" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="{{ asset('/images/banks/uob.png') }}" alt="UOB" class="bank-logo">
                                         <span class="bank-name">UOB Bank</span>
                                     </div>
                                     <input type="radio" name="online_banking_bank" value="uob" class="bank-radio">
                                 </div>
 
-                                <button type="button" id="bankListToggle" class="bank-list-toggle" style="display:none;">
-                                    Change bank <i class="fas fa-chevron-down"></i>
-                                </button>
-
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="{{ asset('/images/banks/standard-chartered.png') }}" alt="Standard Chartered" class="bank-logo">
+                                        <span class="bank-name">Standard Chartered</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="standard_chartered" class="bank-radio">
+                                </div>
                             </div>
+
                         </div>
 
                         <div class="payment-method">
@@ -307,62 +303,11 @@
                                     </div>
                                     <div class="payment-details">
                                         <span class="method-name">Credit/Debit Card</span>
-                                        <span class="method-desc">Pay with your card</span>
+                                        <span class="method-desc">You will be redirected to a secure iPay88 card payment page</span>
                                     </div>
                                 </div>
                                 <div class="radio-indicator"></div>
                             </label>
-
-                            <div id="card_details" class="card-details" style="display:none; margin-top:10px;">
-                                <div class="form-group">
-                                    <label for="card_name">Name on Card</label>
-                                    <input 
-                                        type="text" 
-                                        id="card_name" 
-                                        name="card_name" 
-                                        placeholder="JOHN DOE" 
-                                        data-card-required="1">
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="card_number">Card Number</label>
-                                    <input 
-                                        type="text" 
-                                        id="card_number" 
-                                        name="card_number" 
-                                        inputmode="numeric" 
-                                        autocomplete="cc-number"
-                                        placeholder="XXXX XXXX XXXX XXXX"
-                                        maxlength="19"
-                                        data-card-required="1">
-                                </div>
-
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="card_expiry">Expiry Date</label>
-                                        <input 
-                                            type="text" 
-                                            id="card_expiry" 
-                                            name="card_expiry" 
-                                            placeholder="MM/YY"
-                                            autocomplete="cc-exp"
-                                            maxlength="5"
-                                            data-card-required="1">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="card_cvv">CVV</label>
-                                        <input 
-                                            type="password" 
-                                            id="card_cvv" 
-                                            name="card_cvv" 
-                                            inputmode="numeric"
-                                            autocomplete="cc-csc"
-                                            placeholder="123"
-                                            maxlength="4"
-                                            data-card-required="1">
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -417,14 +362,18 @@
                         </div>
                     </div>
 
-                    <!-- Terms and Place Order -->
                     <div class="checkout-actions">
-                        <div class="terms-agreement">
-                            <input type="checkbox" id="agree_terms" required>
-                            <label for="agree_terms">I agree to the Terms and Conditions</label>
-                        </div>
                         <button type="button" id="placeOrderBtn" class="btn btn-primary btn-lg">Place Order</button>
                     </div>
+                    {{-- Hidden form that actually posts to payment.process --}}
+                    <form id="placeOrderForm" method="POST" action="{{ route('payment.process') }}" style="display:none;">
+                        @csrf
+                        <input type="hidden" name="selected_address" id="po_selected_address">
+                        <input type="hidden" name="payment_method" id="po_payment_method">
+                        <input type="hidden" name="online_banking_bank" id="po_online_banking_bank">
+                        <input type="hidden" name="amount" id="po_amount" value="{{ $total }}">
+                    </form>
+
                 </div>
             </div>
         </div>
@@ -928,6 +877,64 @@
 
         // Initial state on load (no method selected → hide card details)
         updateCardDetailsUI();
+
+        // ============================
+        // PLACE ORDER → PAYMENT.PROCESS
+        // ============================
+        const placeOrderBtn = document.getElementById('placeOrderBtn');
+
+        if (placeOrderBtn) {
+            placeOrderBtn.addEventListener('click', function () {
+
+                // 1. Check address selected
+                const addressRadio = document.querySelector('input[name="selected_address"]:checked');
+                if (!addressRadio) {
+                    alert('Please select a shipping address.');
+                    return;
+                }
+
+                // 2. Check payment method selected
+                const paymentMethodRadio = document.querySelector('input[name="payment_method"]:checked');
+                if (!paymentMethodRadio) {
+                    alert('Please select a payment method.');
+                    return;
+                }
+
+                const methodValue = paymentMethodRadio.value; // 'online_banking' or 'credit_card'
+                let onlineBankKey = null;
+
+                if (methodValue === 'online_banking') {
+                    // Find the checked bank
+                    const selectedBank = document.querySelector('input.bank-radio:checked');
+                    if (!selectedBank) {
+                        alert('Please select your bank.');
+                        return;
+                    }
+                    onlineBankKey = selectedBank.value; // e.g. 'maybank'
+                }
+
+                // 3. Fill the hidden Laravel form
+                const form = document.getElementById('placeOrderForm');
+                if (!form) {
+                    console.error('placeOrderForm not found');
+                    alert('Something went wrong. Please refresh and try again.');
+                    return;
+                }
+
+                const addrInput   = document.getElementById('po_selected_address');
+                const pmInput     = document.getElementById('po_payment_method');
+                const bankInput   = document.getElementById('po_online_banking_bank');
+                const amountInput = document.getElementById('po_amount');
+
+                if (addrInput)   addrInput.value   = addressRadio.value;
+                if (pmInput)     pmInput.value     = methodValue;
+                if (bankInput)   bankInput.value   = onlineBankKey || '';
+                if (amountInput) amountInput.value = "{{ $total }}"; // or recompute in backend
+
+                // 4. Submit the real form (with @csrf)
+                form.submit();
+            });
+        }
 
     }); // end load
 })(); // IIFE
