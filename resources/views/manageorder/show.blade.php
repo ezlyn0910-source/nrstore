@@ -16,7 +16,7 @@
         <div class="header-right">
             <form action="{{ route('admin.manageorder.update-status', $order) }}" method="POST" class="status-form">
                 @csrf
-                @method('PATCH')
+                @method('PUT')
                 <select name="status" class="status-select" onchange="this.form.submit()">
                     @foreach($statusOptions as $value => $label)
                         <option value="{{ $value }}" {{ $order->status == $value ? 'selected' : '' }}>
@@ -82,15 +82,21 @@
                     </span>
                 </div>
                 <div class="info-item">
-                    <strong>Payment Status:</strong>
-                    <span class="payment-badge payment-{{ $order->payment_status ?? 'pending' }}">
-                        {{ ucfirst($order->payment_status ?? 'pending') }}
-                    </span>
-                </div>
-                <div class="info-item">
                     <strong>Total Amount:</strong>
                     <span class="amount">RM {{ number_format($order->total_amount, 2) }}</span>
                 </div>
+                @if($order->tracking_number)
+                <div class="info-item">
+                    <strong>Tracking Number:</strong>
+                    <span class="tracking-number">{{ $order->tracking_number }}</span>
+                </div>
+                @endif
+                @if($order->shipped_at)
+                <div class="info-item">
+                    <strong>Shipped Date:</strong>
+                    <span>{{ $order->shipped_at->format('M d, Y h:i A') }}</span>
+                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -153,14 +159,10 @@
             Back to Orders
         </a>
         <div class="action-group">
-            <button class="btn btn-print">
-                <i class="fas fa-print"></i>
-                Print Invoice
-            </button>
-            <button class="btn btn-email">
-                <i class="fas fa-envelope"></i>
-                Email Customer
-            </button>
+            <a href="{{ route('admin.manageorder.edit', $order) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i>
+                Edit Order Details
+            </a>
         </div>
     </div>
 </div>

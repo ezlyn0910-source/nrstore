@@ -123,8 +123,6 @@
                         <th class="category-column">Category</th>
                         <th class="price-column">Price</th>
                         <th class="stock-column">Stock</th>
-                        <th class="status-column">Status</th>
-                        <th class="featured-column">Featured</th>
                         <th class="actions-column">Actions</th>
                     </tr>
                 </thead>
@@ -146,6 +144,18 @@
                                             @if($product->has_variations)
                                                 <span class="variation-badge">{{ $product->variations->count() }} variations</span>
                                             @endif
+                                            <div class="status-indicators">
+                                                @if($product->is_featured)
+                                                    <span class="featured-indicator" title="Featured Product">
+                                                        <i class="fas fa-star"></i>
+                                                    </span>
+                                                @endif
+                                                @if(!$product->is_active)
+                                                    <span class="inactive-indicator" title="Inactive Product">
+                                                        <i class="fas fa-eye-slash"></i>
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -170,25 +180,6 @@
                                     <span class="stock-label {{ $product->stock_status }}">{{ $product->stock_status_label }}</span>
                                 </div>
                             </td>
-                            <td class="status-column">
-                                <form action="{{ route('admin.manageproduct.update-status', $product) }}" method="POST" class="status-form">
-                                    @csrf
-                                    @method('PUT')
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" name="is_active" value="1" {{ $product->is_active ? 'checked' : '' }} class="status-toggle">
-                                        <span class="toggle-slider"></span>
-                                    </label>
-                                </form>
-                            </td>
-                            <td class="featured-column">
-                                <form action="{{ route('admin.manageproduct.toggle-featured', $product) }}" method="POST" class="featured-form">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="featured-toggle {{ $product->is_featured ? 'featured' : '' }}" title="{{ $product->is_featured ? 'Remove from featured' : 'Add to featured' }}">
-                                        <i class="fas fa-star"></i>
-                                    </button>
-                                </form>
-                            </td>
                             <td class="actions-column">
                                 <div class="action-buttons">
                                     <a href="{{ route('admin.manageproduct.edit', $product) }}" class="btn-action edit" title="Edit Product">
@@ -209,7 +200,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="no-products">
+                            <td colspan="6" class="no-products">
                                 <div class="empty-state">
                                     <i class="fas fa-box-open"></i>
                                     <h3>No Products Found</h3>
@@ -225,27 +216,71 @@
             </table>
         </div>
 
-        <!-- Pagination -->
+        <!-- Enhanced Pagination -->
         @if($products->hasPages())
             <div class="pagination-container">
-                {{ $products->links() }}
+                <div class="pagination-wrapper">
+                    <div class="pagination-info">
+                        Showing {{ $products->firstItem() ?? 0 }} to {{ $products->lastItem() ?? 0 }} of {{ $products->total() }} results
+                    </div>
+                    <div class="pagination-controls">
+                        <nav>
+                            <ul class="pagination">
+                                {{-- Previous Page Link --}}
+                                @if ($products->onFirstPage())
+                                    <li class="page-item disabled" aria-disabled="true">
+                                        <span class="page-link">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </span>
+                                    </li>
+                                @else
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ $products->previousPageUrl() }}" rel="prev">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                @endif
+
+                                {{-- Pagination Elements --}}
+                                @foreach ($products->getUrlRange(1, $products->lastPage()) as $page => $url)
+                                    @if ($page == $products->currentPage())
+                                        <li class="page-item active" aria-current="page">
+                                            <span class="page-link">{{ $page }}</span>
+                                        </li>
+                                    @else
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                        </li>
+                                    @endif
+                                @endforeach
+
+                                {{-- Next Page Link --}}
+                                @if ($products->hasMorePages())
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ $products->nextPageUrl() }}" rel="next">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                @else
+                                    <li class="page-item disabled" aria-disabled="true">
+                                        <span class="page-link">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </span>
+                                    </li>
+                                @endif
+                            </ul>
+                        </nav>
+                    </div>
+                    <div class="pagination-perpage">
+                        <select class="perpage-select" onchange="window.location.href = this.value">
+                            <option value="{{ request()->fullUrlWithQuery(['per_page' => 10]) }}" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 per page</option>
+                            <option value="{{ request()->fullUrlWithQuery(['per_page' => 25]) }}" {{ request('per_page', 10) == 25 ? 'selected' : '' }}>25 per page</option>
+                            <option value="{{ request()->fullUrlWithQuery(['per_page' => 50]) }}" {{ request('per_page', 10) == 50 ? 'selected' : '' }}>50 per page</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         @endif
-    </div>
-</div>
-
-<!-- Quick Edit Modal -->
-<div class="modal fade" id="quickEditModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Quick Edit Product</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Quick edit form will be loaded here via AJAX -->
-            </div>
-        </div>
     </div>
 </div>
 @endsection
@@ -287,14 +322,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     bulkActionSelect?.addEventListener('change', updateBulkActionButton);
-
-    // Status toggle
-    const statusToggles = document.querySelectorAll('.status-toggle');
-    statusToggles.forEach(toggle => {
-        toggle.addEventListener('change', function() {
-            this.closest('form').submit();
-        });
-    });
 
     // Search functionality
     const searchInput = document.getElementById('searchInput');

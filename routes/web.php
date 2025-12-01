@@ -283,6 +283,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::prefix('orders')->name('manageorder.')->controller(ManageOrderController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/{order}', 'show')->name('show');
+        Route::get('/{order}/edit', 'edit')->name('edit');
         Route::put('/{order}/status', 'updateStatus')->name('update-status');
         Route::put('/{order}/update', 'update')->name('update');
         Route::delete('/{order}', 'destroy')->name('destroy');

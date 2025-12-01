@@ -49,7 +49,7 @@ class ManageUserController extends Controller
     public function create()
     {
         // Not needed for user management from admin side
-        return redirect()->route('manageuser.index');
+        return redirect()->route('admin.manageuser.index');
     }
 
     /**
@@ -58,67 +58,67 @@ class ManageUserController extends Controller
     public function store(Request $request)
     {
         // Not needed for user management from admin side
-        return redirect()->route('manageuser.index');
+        return redirect()->route('admin.manageuser.index');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(User $manageuser)
+    public function show(User $user)  // Changed from $manageuser to $user
     {
-        return view('manageuser.show', compact('manageuser'));
+        return view('manageuser.show', compact('user'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(User $manageuser)
+    public function edit(User $user)  // Changed from $manageuser to $user
     {
-        return view('manageuser.edit', compact('manageuser'));
+        return view('manageuser.edit', compact('user'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, User $manageuser)
+    public function update(Request $request, User $user)  // Changed from $manageuser to $user
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $manageuser->id,
+            'email' => 'required|email|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
             'status' => 'required|in:active,suspended',
         ]);
 
-        $manageuser->update($validated);
+        $user->update($validated);
 
-        return redirect()->route('manageuser.show', $manageuser)
+        return redirect()->route('admin.manageuser.show', $user)
             ->with('success', 'User updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(User $manageuser)
+    public function destroy(User $user)  // Changed from $manageuser to $user
     {
         // Not implementing delete for now, use suspend instead
-        return redirect()->route('manageuser.index');
+        return redirect()->route('admin.manageuser.index');
     }
 
     /**
      * Suspend user
      */
-    public function suspend(User $manageuser)
+    public function suspend(User $user)  // Changed from $manageuser to $user
     {
-        $manageuser->update(['status' => 'suspended']);
+        $user->update(['status' => 'suspended']);
         return back()->with('success', 'User has been suspended.');
     }
 
     /**
      * Activate user
      */
-    public function activate(User $manageuser)
+    public function activate(User $user)  // Changed from $manageuser to $user
     {
-        $manageuser->update(['status' => 'active']);
+        $user->update(['status' => 'active']);
         return back()->with('success', 'User has been activated.');
     }
 
