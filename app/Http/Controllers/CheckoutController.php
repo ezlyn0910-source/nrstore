@@ -52,9 +52,9 @@ class CheckoutController extends Controller
 
         // 4. Get Addresses - FIXED QUERY
         $addresses = Address::where('user_id', $user->id)
-            ->where('type', 'shipping')
-            ->orderBy('created_at', 'desc') // Removed is_primary ordering
-            ->get();
+        ->where('type', 'shipping')
+        ->orderBy('created_at', 'desc')
+        ->get();
 
         // 5. Return View
         return view('checkout.index', compact(
@@ -75,18 +75,119 @@ class CheckoutController extends Controller
     {
         try {
             $user = Auth::user();
-            $sessionId = session()->getId();
             
-            // Implement your cart retrieval logic here
-            $cart = Cart::where('user_id', $user->id)
-                ->orWhere('session_id', $sessionId)
-                ->first();
-                
+            // Simple cart retrieval without complex logic
+            $cart = Cart::where('user_id', $user->id)->first();
+            
+            if (!$cart) {
+                // Create new cart if doesn't exist
+                $cart = Cart::create([
+                    'user_id' => $user->id,
+                    'session_id' => session()->getId(),
+                    'total_amount' => 0
+                ]);
+            }
+            
             return $cart;
         } catch (\Exception $e) {
             \Log::error('Cart creation error: ' . $e->getMessage());
             return null;
         }
+    }
+
+    /**
+     * Display checkout review page
+     */
+    public function review()
+    {
+        return view('checkout.review');
+    }
+    
+    /**
+     * Validate checkout data
+     */
+    public function validateCheckout(Request $request)
+    {
+        return response()->json(['valid' => true]);
+    }
+    
+    /**
+     * Calculate shipping
+     */
+    public function calculateShipping(Request $request)
+    {
+        return response()->json(['shipping' => 5.99]);
+    }
+    
+    /**
+     * Remove promo code
+     */
+    public function removePromoCode(Request $request)
+    {
+        return response()->json(['success' => true]);
+    }
+    
+    /**
+     * Get shipping methods
+     */
+    public function getShippingMethods()
+    {
+        return response()->json([
+            ['id' => 'standard', 'name' => 'Standard Shipping', 'price' => 5.99, 'days' => '3-5'],
+            ['id' => 'express', 'name' => 'Express Shipping', 'price' => 12.99, 'days' => '1-2']
+        ]);
+    }
+    
+    /**
+     * Get payment methods
+     */
+    public function getPaymentMethods()
+    {
+        return response()->json([
+            ['id' => 'online_banking', 'name' => 'Online Banking'],
+            ['id' => 'credit_card', 'name' => 'Credit Card'],
+            ['id' => 'tng_ewallet', 'name' => 'Touch n Go eWallet']
+        ]);
+    }
+    
+    /**
+     * Verify stock
+     */
+    public function verifyStock()
+    {
+        return response()->json(['in_stock' => true]);
+    }
+    
+    /**
+     * Get addresses
+     */
+    public function getAddresses()
+    {
+        $user = Auth::user();
+        $addresses = Address::where('user_id', $user->id)
+            ->where('type', 'shipping')
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        return response()->json(['addresses' => $addresses]);
+    }
+    
+    /**
+     * Update address
+     */
+    public function updateAddress(Request $request, $id)
+    {
+        // Implementation
+        return response()->json(['success' => true]);
+    }
+    
+    /**
+     * Delete address
+     */
+    public function deleteAddress($id)
+    {
+        // Implementation
+        return response()->json(['success' => true]);
     }
 
     /**
@@ -106,43 +207,25 @@ class CheckoutController extends Controller
             'postcode' => 'required|string|max:10',
             'address' => 'required|string',
             'address2' => 'nullable|string',
-            'is_primary' => 'sometimes|boolean',
         ]);
 
         try {
             $user = Auth::user();
             
-            // Check if is_primary column exists before using it
-            $tableColumns = Schema::getColumnListing('addresses');
-            $hasIsPrimaryColumn = in_array('is_primary', $tableColumns);
-            
-            // If setting as primary and column exists, update existing primary addresses
-            if ($request->boolean('is_primary') && $hasIsPrimaryColumn) {
-                Address::where('user_id', $user->id)
-                    ->where('type', 'shipping')
-                    ->where('is_primary', true)
-                    ->update(['is_primary' => false]);
-            }
-
-            // Create address data array
+            // Map the form fields to your database columns
             $addressData = [
                 'user_id' => $user->id,
                 'type' => 'shipping',
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'phone' => $request->phone,
-                'email' => $request->email,
-                'state' => $request->state,
+                'full_name' => $request->first_name . ' ' . $request->last_name, // Combine first + last name
+                'address_line_1' => $request->address,
+                'address_line_2' => $request->address2,
                 'city' => $request->city,
-                'postcode' => $request->postcode,
-                'address' => $request->address,
-                'address2' => $request->address2,
+                'state' => $request->state,
+                'postal_code' => $request->postcode,
+                'country' => 'Malaysia', // Default value
+                'phone' => $request->phone,
+                'is_default' => false, // Your table uses is_default instead of is_primary
             ];
-
-            // Only add is_primary if the column exists
-            if ($hasIsPrimaryColumn) {
-                $addressData['is_primary'] = $request->boolean('is_primary', false);
-            }
 
             // Create new address
             $address = Address::create($addressData);

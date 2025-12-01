@@ -2,7 +2,6 @@
 
 @section('styles')
     @vite(['resources/css/checkout.css'])
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 @endsection
 
 @section('content')
@@ -40,12 +39,14 @@
                                     class="address-radio" required>
                                 <label for="address_{{ $address->id }}" class="address-label">
                                     <div class="address-header">
-                                        <strong>{{ $address->first_name }} {{ $address->last_name }}</strong>
-                                        <!-- Removed primary badge since is_primary doesn't exist -->
+                                        <strong>{{ $address->full_name }}</strong>
+                                        @if($address->is_default)
+                                            <span class="primary-badge">Default</span>
+                                        @endif
                                     </div>
                                     <div class="address-details">
                                         <p>{{ $address->phone }}</p>
-                                        <p>{{ $address->address }}{{ $address->address2 ? ', ' . $address->address2 : '' }}, {{ $address->city }}, {{ $address->state }} {{ $address->postcode }}</p>
+                                        <p>{{ $address->address_line_1 }}{{ $address->address_line_2 ? ', ' . $address->address_line_2 : '' }}, {{ $address->city }}, {{ $address->state }} {{ $address->postal_code }}</p>
                                     </div>
                                 </label>
                             </div>
@@ -70,23 +71,6 @@
                 <section class="checkout-section">
                     <h2>Payment Method</h2>
                     <div class="payment-methods">
-                        <!-- Touch N Go E-Wallet -->
-                        <div class="payment-method">
-                            <input type="radio" id="tng_ewallet" name="payment_method" value="tng_ewallet" required>
-                            <label for="tng_ewallet" class="payment-label">
-                                <div class="payment-method-info">
-                                    <div class="payment-logo">
-                                        <i class="fas fa-wallet"></i>
-                                    </div>
-                                    <div class="payment-details">
-                                        <span class="method-name">Touch N Go E-Wallet</span>
-                                        <span class="method-desc">Pay with your TNG e-wallet</span>
-                                    </div>
-                                </div>
-                                <div class="radio-indicator"></div>
-                            </label>
-                        </div>
-
                         <!-- Online Banking -->
                         <div class="payment-method">
                             <input type="radio" id="online_banking" name="payment_method" value="online_banking" required>
@@ -263,7 +247,7 @@
                         </div>
                         <div class="summary-row">
                             <span>Shipping</span>
-                            <span>FREE</span>
+                            <span>RM5.99</span>
                         </div>
                         <div class="summary-row">
                             <span>Tax</span>
@@ -384,22 +368,6 @@
                     <label for="address2">Address 2 (Optional)</label>
                     <textarea id="address2" name="address2" rows="2"></textarea>
                 </div>
-
-                <!-- Map Section -->
-                <div class="form-group">
-                    <label>Pin Your Location</label>
-                    <div class="map-container">
-                        <div id="addressMap" style="height: 300px; border-radius: 8px;"></div>
-                        <div class="map-actions">
-                            <button type="button" id="detectLocation" class="btn btn-secondary">
-                                <i class="fas fa-location-arrow"></i> Detect My Location
-                            </button>
-                            <button type="button" id="searchLocation" class="btn btn-secondary">
-                                <i class="fas fa-search"></i> Search Address
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="cancelAddress">Cancel</button>
@@ -411,7 +379,6 @@
 @endsection
 
 @section('scripts')
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // Malaysian states and their cities
 const malaysiaCities = {
@@ -433,10 +400,6 @@ const malaysiaCities = {
     'Terengganu': ['Kuala Terengganu', 'Kemaman', 'Dungun', 'Marang', 'Hulu Terengganu']
 };
 
-// Map variables
-let map;
-let marker;
-
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded - checkout page');
     
@@ -446,8 +409,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelBtn = document.getElementById('cancelAddress');
     const stateSelect = document.getElementById('state');
     const citySelect = document.getElementById('city');
-    const detectLocationBtn = document.getElementById('detectLocation');
-    const searchLocationBtn = document.getElementById('searchLocation');
 
     // Debug: Check if elements exist
     console.log('Add button:', addBtn);
@@ -459,8 +420,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Add address button clicked');
             if (modal) {
                 modal.style.display = 'block';
-                // Initialize map when modal opens
-                setTimeout(initMap, 100);
             }
         });
     }
@@ -477,11 +436,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (citySelect) {
             citySelect.disabled = true;
             citySelect.innerHTML = '<option value="">Select State First</option>';
-        }
-        // Remove map if exists
-        if (map) {
-            map.remove();
-            map = null;
         }
     }
 
@@ -563,176 +517,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (initialPaymentMethod) {
         togglePaymentDetails(initialPaymentMethod.value);
     }
-
-    // Location detection
-    if (detectLocationBtn) {
-        detectLocationBtn.addEventListener('click', detectUserLocation);
-    }
-
-    // Search location
-    if (searchLocationBtn) {
-        searchLocationBtn.addEventListener('click', searchLocation);
-    }
 });
-
-// Initialize map
-function initMap() {
-    console.log('Initializing map...');
-    try {
-        // Default to Kuala Lumpur coordinates
-        const defaultLat = 3.1390;
-        const defaultLng = 101.6869;
-        
-        // Initialize map
-        map = L.map('addressMap').setView([defaultLat, defaultLng], 13);
-        
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-        
-        // Initialize marker
-        marker = L.marker([defaultLat, defaultLng], {
-            draggable: true
-        }).addTo(map);
-        
-        // Add marker drag event
-        marker.on('dragend', function(event) {
-            const position = marker.getLatLng();
-            reverseGeocode(position.lat, position.lng);
-        });
-        
-        // Add click event to map to place marker
-        map.on('click', function(event) {
-            marker.setLatLng(event.latlng);
-            reverseGeocode(event.latlng.lat, event.latlng.lng);
-        });
-        
-        console.log('Map initialized successfully');
-    } catch (error) {
-        console.error('Error initializing map:', error);
-    }
-}
-
-// Detect user's current location
-function detectUserLocation() {
-    if (!navigator.geolocation) {
-        alert('Geolocation is not supported by this browser.');
-        return;
-    }
-    
-    navigator.geolocation.getCurrentPosition(
-        function(position) {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            
-            // Update map view
-            map.setView([lat, lng], 15);
-            
-            // Update marker position
-            marker.setLatLng([lat, lng]);
-            
-            // Reverse geocode to get address
-            reverseGeocode(lat, lng);
-        },
-        function(error) {
-            console.error('Error getting location:', error);
-            alert('Unable to get your location. Please make sure location services are enabled.');
-        }
-    );
-}
-
-// Search for location by address
-function searchLocation() {
-    const address = document.getElementById('address').value;
-    const city = document.getElementById('city').value;
-    const state = document.getElementById('state').value;
-    const postcode = document.getElementById('postcode').value;
-    
-    if (!address && !city && !state) {
-        alert('Please enter some address information to search.');
-        return;
-    }
-    
-    const searchQuery = `${address}, ${city}, ${state}, ${postcode}, Malaysia`;
-    
-    // Use OpenStreetMap Nominatim for geocoding
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data && data.length > 0) {
-                const lat = parseFloat(data[0].lat);
-                const lng = parseFloat(data[0].lon);
-                
-                // Update map view
-                map.setView([lat, lng], 15);
-                
-                // Update marker position
-                marker.setLatLng([lat, lng]);
-                
-                // Update address fields with the found location
-                updateAddressFields(data[0]);
-            } else {
-                alert('Location not found. Please try a different address.');
-            }
-        })
-        .catch(error => {
-            console.error('Error searching location:', error);
-            alert('Error searching for location. Please try again.');
-        });
-}
-
-// Reverse geocode coordinates to address
-function reverseGeocode(lat, lng) {
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data && data.address) {
-                updateAddressFields(data);
-            }
-        })
-        .catch(error => {
-            console.error('Error reverse geocoding:', error);
-        });
-}
-
-// Update address fields with geocoded data
-function updateAddressFields(geocodeData) {
-    const address = geocodeData.address;
-    
-    // Update address field
-    if (geocodeData.display_name) {
-        document.getElementById('address').value = geocodeData.display_name;
-    }
-    
-    // Update city field if available
-    if (address.city || address.town || address.village) {
-        const city = address.city || address.town || address.village;
-        document.getElementById('city').value = city;
-    }
-    
-    // Update state field if available
-    if (address.state) {
-        document.getElementById('state').value = address.state;
-        
-        // Trigger state change to populate cities
-        const stateSelect = document.getElementById('state');
-        stateSelect.dispatchEvent(new Event('change'));
-        
-        // Set city after a short delay to allow options to populate
-        setTimeout(() => {
-            if (address.city || address.town || address.village) {
-                const city = address.city || address.town || address.village;
-                document.getElementById('city').value = city;
-            }
-        }, 100);
-    }
-    
-    // Update postcode if available
-    if (address.postcode) {
-        document.getElementById('postcode').value = address.postcode;
-    }
-}
 
 function togglePaymentDetails(method) {
     console.log('Toggle payment details:', method);
@@ -765,9 +550,18 @@ function saveAddress() {
     const originalText = saveBtn.textContent;
     saveBtn.textContent = 'Saving...';
     saveBtn.disabled = true;
+
+    fetch('/checkout/address', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+        }
+    })
     
     // FIXED: Use the correct route name
-    fetch('{{ route("checkout.save-address") }}', {
+    fetch('{{ route("checkout.address.store") }}', {
         method: 'POST',
         body: formData,
         headers: {

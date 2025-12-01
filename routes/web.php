@@ -123,33 +123,32 @@ Route::get('/terms-conditions', function () {
 Route::middleware(['auth'])->group(function () {
     
     // Checkout Routes (Authentication Required)
-    Route::prefix('checkout')->name('checkout.')->controller(CheckoutController::class)->group(function () {
-        // Checkout pages
-        Route::get('/', 'index')->name('index');
-        Route::get('/review', 'review')->name('review');
+    Route::prefix('checkout')->name('checkout.')->group(function () {
+        Route::get('/', [CheckoutController::class, 'index'])->name('index');
+        Route::get('/review', [CheckoutController::class, 'review'])->name('review');
         
         // Checkout actions
-        Route::post('/place-order', 'placeOrder')->name('place-order');
-        Route::post('/validate', 'validateCheckout')->name('validate');
-        Route::post('/calculate-shipping', 'calculateShipping')->name('calculate-shipping');
-        Route::post('/apply-promo', 'applyPromoCode')->name('apply-promo');
-        Route::post('/remove-promo', 'removePromoCode')->name('remove-promo');
-        Route::post('/save-address', 'saveAddress')->name('save-address');
+        Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('place-order');
+        Route::post('/validate', [CheckoutController::class, 'validateCheckout'])->name('validate');
+        Route::post('/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('calculate-shipping');
+        Route::post('/apply-promo', [CheckoutController::class, 'applyPromo'])->name('apply-promo');
+        Route::post('/remove-promo', [CheckoutController::class, 'removePromoCode'])->name('remove-promo');
+        Route::post('/save-address', [CheckoutController::class, 'saveAddress'])->name('save-address');
         
         // Address routes - ADD THESE NEW ROUTES
-        Route::post('/address', 'storeAddress')->name('address.store');
-        Route::get('/addresses', 'getAddresses')->name('addresses.index');
-        Route::put('/address/{address}', 'updateAddress')->name('address.update');
-        Route::delete('/address/{address}', 'deleteAddress')->name('address.delete');
+        Route::post('/address', [CheckoutController::class, 'storeAddress'])->name('address.store');
+        Route::get('/addresses', [CheckoutController::class, 'getAddresses'])->name('addresses.index');
+        Route::put('/address/{address}', [CheckoutController::class, 'updateAddress'])->name('address.update');
+        Route::delete('/address/{address}', [CheckoutController::class, 'deleteAddress'])->name('address.delete');
         
         // Checkout data
-        Route::get('/shipping-methods', 'getShippingMethods')->name('shipping-methods');
-        Route::get('/payment-methods', 'getPaymentMethods')->name('payment-methods');
-        Route::get('/verify-stock', 'verifyStock')->name('verify-stock');
+        Route::get('/shipping-methods', [CheckoutController::class, 'getShippingMethods'])->name('shipping-methods');
+        Route::get('/payment-methods', [CheckoutController::class, 'getPaymentMethods'])->name('payment-methods');
+        Route::get('/verify-stock', [CheckoutController::class, 'verifyStock'])->name('verify-stock');
         
         // Checkout results
-        Route::get('/success/{order}', 'success')->name('success');
-        Route::get('/failed', 'failed')->name('failed');
+        Route::get('/success/{order}', [CheckoutController::class, 'success'])->name('success');
+        Route::get('/failed', [CheckoutController::class, 'failed'])->name('failed');
     });
 
     // Payment Processing Routes

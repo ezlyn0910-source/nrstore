@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Address extends Model
 {
@@ -14,17 +13,15 @@ class Address extends Model
     protected $fillable = [
         'user_id',
         'type',
-        'first_name',
-        'last_name',
-        'phone',
-        'email',
-        'state',
+        'full_name',
+        'address_line_1',
+        'address_line_2',
         'city',
-        'postcode',
-        'address',
-        'address2',
-        'is_default', // Use the actual column name from your database
+        'state',
+        'postal_code',
         'country',
+        'phone',
+        'is_default',
     ];
 
     protected $casts = [
@@ -33,8 +30,7 @@ class Address extends Model
 
     protected $appends = [
         'formatted_address',
-        'full_name',
-        'is_primary', // This is a computed attribute that maps to is_default
+        'is_primary',
     ];
 
     /**
@@ -43,30 +39,6 @@ class Address extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * Get the shipping orders for this address.
-     */
-    public function shippingOrders(): HasMany
-    {
-        return $this->hasMany(Order::class, 'shipping_address_id');
-    }
-
-    /**
-     * Get the billing orders for this address.
-     */
-    public function billingOrders(): HasMany
-    {
-        return $this->hasMany(Order::class, 'billing_address_id');
-    }
-
-    /**
-     * Get full name attribute
-     */
-    public function getFullNameAttribute(): string
-    {
-        return $this->first_name . ' ' . $this->last_name;
     }
 
     /**
@@ -90,27 +62,19 @@ class Address extends Model
      */
     public function getFormattedAddressAttribute(): string
     {
-        $address = $this->address;
+        $address = $this->address_line_1;
         
-        if (!empty($this->address2)) {
-            $address .= ', ' . $this->address2;
+        if (!empty($this->address_line_2)) {
+            $address .= ', ' . $this->address_line_2;
         }
         
-        $address .= ', ' . $this->city . ', ' . $this->state . ' ' . $this->postcode;
+        $address .= ', ' . $this->city . ', ' . $this->state . ' ' . $this->postal_code;
         
         if (!empty($this->country)) {
             $address .= ', ' . $this->country;
         }
         
         return $address;
-    }
-
-    /**
-     * Get compact address for display in lists
-     */
-    public function getCompactAddressAttribute(): string
-    {
-        return $this->city . ', ' . $this->state . ' ' . $this->postcode;
     }
 
     /**
@@ -185,52 +149,6 @@ class Address extends Model
     }
 
     /**
-     * Create a new shipping address for user
-     */
-    public static function createShippingAddress(array $data): self
-    {
-        $data['type'] = 'shipping';
-        
-        // Convert is_primary to is_default if provided
-        if (isset($data['is_primary'])) {
-            $data['is_default'] = $data['is_primary'];
-            unset($data['is_primary']);
-        }
-        
-        // If setting as primary, unset other primary addresses
-        if (isset($data['is_default']) && $data['is_default']) {
-            self::where('user_id', $data['user_id'])
-                ->where('type', 'shipping')
-                ->update(['is_default' => false]);
-        }
-
-        return self::create($data);
-    }
-
-    /**
-     * Create a new billing address for user
-     */
-    public static function createBillingAddress(array $data): self
-    {
-        $data['type'] = 'billing';
-        
-        // Convert is_primary to is_default if provided
-        if (isset($data['is_primary'])) {
-            $data['is_default'] = $data['is_primary'];
-            unset($data['is_primary']);
-        }
-        
-        // If setting as primary, unset other primary addresses
-        if (isset($data['is_default']) && $data['is_default']) {
-            self::where('user_id', $data['user_id'])
-                ->where('type', 'billing')
-                ->update(['is_default' => false]);
-        }
-
-        return self::create($data);
-    }
-
-    /**
      * Get primary shipping address for user
      */
     public static function getPrimaryShippingAddress($userId): ?self
@@ -259,7 +177,7 @@ class Address extends Model
     {
         return self::where('user_id', $userId)
             ->where('type', 'shipping')
-            ->orderBy('is_default', 'desc') // Use the actual column name
+            ->orderBy('is_default', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -271,7 +189,7 @@ class Address extends Model
     {
         return self::where('user_id', $userId)
             ->where('type', 'billing')
-            ->orderBy('is_default', 'desc') // Use the actual column name
+            ->orderBy('is_default', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -319,21 +237,17 @@ class Address extends Model
             'id' => $this->id,
             'user_id' => $this->user_id,
             'type' => $this->type,
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
             'full_name' => $this->full_name,
             'phone' => $this->phone,
-            'email' => $this->email,
-            'address' => $this->address,
-            'address2' => $this->address2,
+            'address_line_1' => $this->address_line_1,
+            'address_line_2' => $this->address_line_2,
             'city' => $this->city,
             'state' => $this->state,
-            'postcode' => $this->postcode,
+            'postal_code' => $this->postal_code,
             'country' => $this->country,
             'is_default' => $this->is_default,
-            'is_primary' => $this->is_primary, // Include the computed attribute
+            'is_primary' => $this->is_primary,
             'formatted_address' => $this->formatted_address,
-            'compact_address' => $this->compact_address,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
