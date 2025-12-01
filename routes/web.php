@@ -135,7 +135,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/remove-promo', [CheckoutController::class, 'removePromoCode'])->name('remove-promo');
         Route::post('/save-address', [CheckoutController::class, 'saveAddress'])->name('save-address');
         
-        // Address routes - ADD THESE NEW ROUTES
+        // Address routes 
         Route::post('/address', [CheckoutController::class, 'storeAddress'])->name('address.store');
         Route::get('/addresses', [CheckoutController::class, 'getAddresses'])->name('addresses.index');
         Route::put('/address/{address}', [CheckoutController::class, 'updateAddress'])->name('address.update');

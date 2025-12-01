@@ -159,20 +159,6 @@ class CheckoutController extends Controller
     }
     
     /**
-     * Get addresses
-     */
-    public function getAddresses()
-    {
-        $user = Auth::user();
-        $addresses = Address::where('user_id', $user->id)
-            ->where('type', 'shipping')
-            ->orderBy('created_at', 'desc')
-            ->get();
-            
-        return response()->json(['addresses' => $addresses]);
-    }
-    
-    /**
      * Update address
      */
     public function updateAddress(Request $request, $id)
@@ -195,79 +181,84 @@ class CheckoutController extends Controller
      */
     public function storeAddress(Request $request)
     {
-        \Log::debug('=== STORE ADDRESS START ===');
-        \Log::debug('Request data:', $request->all());
-        \Log::debug('CSRF Token:', [$request->header('X-CSRF-TOKEN')]);
-        \Log::debug('User:', [Auth::id(), Auth::user() ? Auth::user()->email : 'No user']);
-        
-        $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'email' => 'nullable|email',
-            'state' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
-            'postcode' => 'required|string|max:10',
-            'address' => 'required|string',
-            'address2' => 'nullable|string',
-        ]);
-
         try {
             $user = Auth::user();
             
-            // Check if user already has this address to avoid duplicates
-            $existingAddress = Address::where('user_id', $user->id)
-                ->where('address_line_1', $request->address)
-                ->where('city', $request->city)
-                ->where('postal_code', $request->postcode)
-                ->first();
-                
-            if ($existingAddress) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This address already exists in your address book.'
-                ], 409); // 409 Conflict
+            $request->validate([
+                'full_name' => 'required|string|max:255',
+                'phone' => 'required|string|max:20',
+                'address_line_1' => 'required|string|max:255',
+                'address_line_2' => 'nullable|string|max:255',
+                'city' => 'required|string|max:100',
+                'state' => 'required|string|max:100',
+                'postal_code' => 'required|string|max:10',
+                'country' => 'required|string|max:100',
+                'is_default' => 'nullable|boolean'
+            ]);
+
+            // If setting as default, update other addresses
+            if ($request->boolean('is_default')) {
+                Address::where('user_id', $user->id)
+                    ->where('type', 'shipping')
+                    ->update(['is_default' => false]);
             }
             
-            // Check if this is the first address - make it default
-            $isFirstAddress = !Address::where('user_id', $user->id)->exists();
+            // Check if this is the first address
+            $isFirstAddress = !Address::where('user_id', $user->id)
+                ->where('type', 'shipping')
+                ->exists();
             
-            // Map the form fields to your database columns
-            $addressData = [
+            $address = Address::create([
                 'user_id' => $user->id,
                 'type' => 'shipping',
-                'full_name' => trim($request->first_name . ' ' . $request->last_name),
-                'address_line_1' => $request->address,
-                'address_line_2' => $request->address2,
+                'full_name' => $request->full_name,
+                'phone' => $request->phone,
+                'address_line_1' => $request->address_line_1,
+                'address_line_2' => $request->address_line_2,
                 'city' => $request->city,
                 'state' => $request->state,
-                'postal_code' => $request->postcode,
-                'country' => 'Malaysia',
-                'phone' => $request->phone,
-                'is_default' => $isFirstAddress, // Make first address default
-            ];
-
-            // Create new address
-            $address = Address::create($addressData);
-
-            \Log::info('Address created successfully:', [
-                'address_id' => $address->id,
-                'user_id' => $user->id,
-                'is_default' => $isFirstAddress
+                'postal_code' => $request->postal_code,
+                'country' => $request->country ?? 'Malaysia',
+                'is_default' => $isFirstAddress || $request->boolean('is_default')
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Address added successfully!',
-                'address' => $address,
-                'is_default' => $isFirstAddress
+                'message' => 'Address saved successfully!',
+                'address' => $address
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Address creation error: ' . $e->getMessage());
+            \Log::error('Address save error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to save address. Please check your information and try again.'
+                'message' => 'Failed to save address. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get user addresses
+     */
+    public function getAddresses()
+    {
+        try {
+            $user = Auth::user();
+            $addresses = Address::where('user_id', $user->id)
+                ->where('type', 'shipping')
+                ->orderBy('is_default', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+                
+            return response()->json([
+                'success' => true,
+                'addresses' => $addresses
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error getting addresses: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load addresses'
             ], 500);
         }
     }
