@@ -184,6 +184,12 @@ class CheckoutController extends Controller
         try {
             $user = Auth::user();
             
+            \Log::info('Store Address Request:', [
+                'user_id' => $user->id,
+                'data' => $request->all(),
+                'headers' => $request->headers->all()
+            ]);
+            
             $request->validate([
                 'full_name' => 'required|string|max:255',
                 'phone' => 'required|string|max:20',
@@ -196,6 +202,8 @@ class CheckoutController extends Controller
                 'is_default' => 'nullable|boolean'
             ]);
 
+            \Log::info('Validation passed');
+            
             // If setting as default, update other addresses
             if ($request->boolean('is_default')) {
                 Address::where('user_id', $user->id)
@@ -222,6 +230,8 @@ class CheckoutController extends Controller
                 'is_default' => $isFirstAddress || $request->boolean('is_default')
             ]);
 
+            \Log::info('Address created:', ['address_id' => $address->id]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Address saved successfully!',
@@ -230,9 +240,11 @@ class CheckoutController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Address save error: ' . $e->getMessage());
+            \Log::error('Error trace: ' . $e->getTraceAsString());
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to save address. Please try again.'
+                'message' => 'Failed to save address: ' . $e->getMessage()
             ], 500);
         }
     }

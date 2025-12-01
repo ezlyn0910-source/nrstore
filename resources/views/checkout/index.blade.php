@@ -250,27 +250,156 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // Dropdown toggle functionality - FIXED VERSION
-    const dropdownContent = document.getElementById('addressDropdownContent');
-    const dropdownToggle = document.getElementById('dropdownToggle');
-    const dropdownHeader = document.getElementById('addressDropdownHeader');
+(function () {
+    // Helpers
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const SELECTORS = [
+        'full_name',
+        'phone',
+        'address_line_1',
+        // address_line_2 is optional
+        'city',
+        'state',
+        'postal_code',
+        'country'
+    ];
 
-    console.log('Dropdown elements found:', {
-        dropdownToggle: !!dropdownToggle,
-        dropdownContent: !!dropdownContent,
-        dropdownHeader: !!dropdownHeader
-    });
+    function createErrorEl(message) {
+        const el = document.createElement('div');
+        el.className = 'error-text';
+        el.setAttribute('role', 'alert');
+        el.style.color = '#dc2626'; // red
+        el.style.fontSize = '0.875rem';
+        el.style.marginTop = '0.375rem';
+        return el;
+    }
 
-    if (dropdownToggle && dropdownContent && dropdownHeader) {
-        // Initialize dropdown state on page load
-        updateToggleState(dropdownContent.classList.contains('show'));
-        
-        // Function to update toggle state
+    function showFieldError(inputEl, message) {
+        if (!inputEl) return;
+        // add error class
+        inputEl.classList.add('input-error');
+        inputEl.setAttribute('aria-invalid', 'true');
+
+        // if existing error text, update it, else create
+        let next = inputEl.nextElementSibling;
+        // if next is label (in some structures) find below container
+        // remove any existing .error-text right after input or inside parent
+        let existing = null;
+
+        if (next && next.classList && next.classList.contains('error-text')) {
+            existing = next;
+        } else {
+            // try parent's last-child
+            const parent = inputEl.parentElement;
+            if (parent) {
+                existing = parent.querySelector('.error-text');
+            }
+        }
+
+        if (existing) {
+            existing.textContent = message;
+        } else {
+            const err = createErrorEl(message);
+            // try to insert after input
+            if (inputEl.nextSibling) {
+                inputEl.parentNode.insertBefore(err, inputEl.nextSibling);
+            } else {
+                inputEl.parentNode.appendChild(err);
+            }
+        }
+    }
+
+    function clearFieldError(inputEl) {
+        if (!inputEl) return;
+        inputEl.classList.remove('input-error');
+        inputEl.removeAttribute('aria-invalid');
+
+        // remove any error-text in parent
+        const parent = inputEl.parentElement;
+        if (!parent) return;
+        const existing = parent.querySelector('.error-text');
+        if (existing) existing.remove();
+    }
+
+    // Small utility to trim and get value (works for select too)
+    function getVal(name, form) {
+        const el = form.querySelector('[name="' + name + '"]');
+        if (!el) return '';
+        return (el.value || '').toString().trim();
+    }
+
+    // validate phone basic
+    function validatePhone(value) {
+        // allow digits, spaces, + and hyphens; but ensure at least 6 chars
+        const v = value.replace(/\s+/g, '');
+        return /^[\d\+\-\s]{6,20}$/.test(value) && v.length >= 6;
+    }
+
+    // validate postal code basic (Malaysia: 5 digits) but we'll allow 3-10 chars
+    function validatePostal(value) {
+        return /^[A-Za-z0-9\- ]{3,10}$/.test(value);
+    }
+
+    // validate all required fields: returns object {valid: bool, errors: {name:message}}
+    function validateFormClient(form) {
+        const errors = {};
+
+        // check required selectors
+        SELECTORS.forEach(name => {
+            // address_line_2 is not in SELECTORS -> optional
+            const val = getVal(name, form);
+            if (name === 'country') {
+                // country is readonly but still required — ensure value present
+                if (!val) errors[name] = 'Country is required.';
+                return;
+            }
+            if (!val) {
+                errors[name] = (name === 'postal_code') ? 'Postal code is required.' : (name === 'full_name' ? 'Full name is required.' : 'This field is required.');
+                return;
+            }
+
+            // extra checks
+            if (name === 'phone' && !validatePhone(val)) {
+                errors[name] = 'Please enter a valid phone number.';
+            }
+            if (name === 'postal_code' && !validatePostal(val)) {
+                errors[name] = 'Please enter a valid postal code.';
+            }
+        });
+
+        // check state select explicitly (empty string not allowed)
+        const stateVal = getVal('state', form);
+        if (!stateVal) {
+            errors['state'] = 'Please select a state.';
+        }
+
+        return { valid: Object.keys(errors).length === 0, errors };
+    }
+
+    // Add input/change listeners to remove errors when user types/selects
+    function attachLiveClear(form) {
+        SELECTORS.forEach(name => {
+            const el = form.querySelector('[name="' + name + '"]');
+            if (!el) return;
+            const ev = (el.tagName.toLowerCase() === 'select' || el.type === 'checkbox' || el.type === 'radio') ? 'change' : 'input';
+            el.addEventListener(ev, function () {
+                clearFieldError(el);
+            });
+        });
+    }
+
+    // Main script hooking
+    window.addEventListener('load', function () {
+        // Dropdown elements (safe to keep)
+        const dropdownContent = document.getElementById('addressDropdownContent');
+        const dropdownToggle = document.getElementById('dropdownToggle');
+        const dropdownHeader = document.getElementById('addressDropdownHeader');
+
+        // Toggle behavior (keeps simple)
         function updateToggleState(isShowing) {
+            if (!dropdownToggle || !dropdownHeader || !dropdownContent) return;
             if (isShowing) {
                 dropdownToggle.innerHTML = '<i class="fas fa-chevron-up"></i>';
                 dropdownHeader.classList.add('active');
@@ -281,183 +410,127 @@ document.addEventListener('DOMContentLoaded', function() {
                 dropdownContent.style.display = 'none';
             }
         }
+        if (dropdownToggle) {
+            dropdownToggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const isOpen = dropdownContent && dropdownContent.style.display === 'block';
+                updateToggleState(!isOpen);
+            });
+        }
+        if (dropdownHeader) {
+            dropdownHeader.addEventListener('click', function (e) {
+                if (e.target === dropdownToggle || (dropdownToggle && dropdownToggle.contains(e.target))) return;
+                const isOpen = dropdownContent && dropdownContent.style.display === 'block';
+                updateToggleState(!isOpen);
+            });
+        }
 
-        // Handle click on the dropdown toggle button
-        dropdownToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const isShowing = dropdownContent.style.display === 'block' || 
-                             dropdownContent.classList.contains('show');
-            
-            if (isShowing) {
-                // Hide dropdown
-                dropdownContent.style.display = 'none';
-                dropdownContent.classList.remove('show');
-            } else {
-                // Show dropdown
-                dropdownContent.style.display = 'block';
-                dropdownContent.classList.add('show');
-            }
-            
-            updateToggleState(!isShowing);
-        });
-        
-        // Handle click on the entire Header area
-        dropdownHeader.addEventListener('click', function(e) {
-            // Don't trigger if clicking on the button
-            if (e.target === dropdownToggle || dropdownToggle.contains(e.target)) {
-                return;
-            }
-            
-            const isShowing = dropdownContent.style.display === 'block' || 
-                             dropdownContent.classList.contains('show');
-            
-            if (isShowing) {
-                // Hide dropdown
-                dropdownContent.style.display = 'none';
-                dropdownContent.classList.remove('show');
-            } else {
-                // Show dropdown
-                dropdownContent.style.display = 'block';
-                dropdownContent.classList.add('show');
-            }
-            
-            updateToggleState(!isShowing);
-        });
-    }
+        // form handling
+        const addressForm = document.getElementById('addressForm');
+        if (!addressForm) return;
 
-    // Cancel button functionality
-    const cancelBtn = document.querySelector('.cancel-btn');
-    if (cancelBtn && dropdownContent) {
-        cancelBtn.addEventListener('click', function() {
-            dropdownContent.style.display = 'none';
-            dropdownContent.classList.remove('show');
-            
-            if (dropdownToggle) {
-                dropdownToggle.innerHTML = '<i class="fas fa-chevron-down"></i>';
-            }
-            if (dropdownHeader) {
-                dropdownHeader.classList.remove('active');
-            }
-            
-            const addressForm = document.getElementById('addressForm');
-            if (addressForm) {
-                addressForm.reset();
-            }
-        });
-    }
-    
-    // Handle address form submission
-    const addressForm = document.getElementById('addressForm');
-    if (addressForm) {
-        addressForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
+        attachLiveClear(addressForm);
+
+        addressForm.addEventListener('submit', function (evt) {
+            evt.preventDefault();
+
+            // remove any previous server-side error list
+            const globalErr = document.querySelector('.form-global-error');
+            if (globalErr) globalErr.remove();
+
             const saveBtn = this.querySelector('.save-btn');
-            const originalText = saveBtn.textContent;
-            
-            saveBtn.textContent = 'Saving...';
-            saveBtn.disabled = true;
-            
+            const originalText = saveBtn ? saveBtn.textContent : 'Save';
+
+            // Client-side validation
+            const validated = validateFormClient(this);
+            // Clear all prior field errors first
+            SELECTORS.forEach(name => {
+                const el = this.querySelector('[name="' + name + '"]');
+                if (el) clearFieldError(el);
+            });
+
+            if (!validated.valid) {
+                // show inline errors
+                Object.keys(validated.errors).forEach(key => {
+                    const el = this.querySelector('[name="' + key + '"]');
+                    if (el) {
+                        showFieldError(el, validated.errors[key]);
+                        // scroll first invalid into view
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+                return; // do not submit
+            }
+
+            // everything ok client-side, submit via AJAX
+            if (saveBtn) {
+                saveBtn.textContent = 'Saving...';
+                saveBtn.disabled = true;
+            }
+
+            const formData = new FormData(this);
+
             fetch(this.action, {
                 method: 'POST',
-                body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: formData
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert('Address saved successfully!');
-                    // Close dropdown and reset form
-                    if (dropdownContent) {
-                        dropdownContent.style.display = 'none';
-                        dropdownContent.classList.remove('show');
-                    }
-                    if (dropdownToggle) {
-                        dropdownToggle.innerHTML = '<i class="fas fa-chevron-down"></i>';
-                    }
-                    if (dropdownHeader) {
-                        dropdownHeader.classList.remove('active');
-                    }
+            .then(async res => {
+                const contentType = res.headers.get('content-type') || '';
+                const isJson = contentType.includes('application/json');
+                const data = isJson ? await res.json() : null;
+
+                if (res.ok && data && data.success) {
+                    // success
+                    alert(data.message || 'Address saved successfully!');
+                    // close dropdown if present
+                    if (typeof updateToggleState === 'function') updateToggleState(false);
                     this.reset();
-                    // Reload page to show new address
+                    // reload to show saved address
                     window.location.reload();
+                    return;
+                }
+
+                // handle validation 422
+                if (res.status === 422 && data && data.errors) {
+                    // data.errors is an object from Laravel validation
+                    Object.keys(data.errors).forEach(key => {
+                        const el = this.querySelector('[name="' + key + '"]');
+                        if (el) {
+                            showFieldError(el, data.errors[key][0] || data.errors[key]);
+                        } else {
+                            // if unknown field, show global
+                            const g = createErrorEl(data.errors[key][0] || data.errors[key]);
+                            g.classList.add('form-global-error');
+                            this.prepend(g);
+                        }
+                    });
                 } else {
-                    alert('Error: ' + (data.message || 'Failed to save address'));
+                    // other errors: show message from response or generic message
+                    const msg = (data && data.message) ? data.message : 'Failed to save address. Please try again.';
+                    const g = createErrorEl(msg);
+                    g.classList.add('form-global-error');
+                    this.prepend(g);
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error saving address. Please try again.');
+            .catch(err => {
+                console.error('Address save error:', err);
+                const g = createErrorEl('Network error. Please try again.');
+                g.classList.add('form-global-error');
+                this.prepend(g);
             })
             .finally(() => {
-                saveBtn.textContent = originalText;
-                saveBtn.disabled = false;
+                if (saveBtn) {
+                    saveBtn.textContent = originalText;
+                    saveBtn.disabled = false;
+                }
             });
         });
-    }
-    
-    // Handle place order button
-    const placeOrderBtn = document.getElementById('placeOrderBtn');
-    if (placeOrderBtn) {
-        placeOrderBtn.addEventListener('click', function() {
-            const selectedAddress = document.querySelector('input[name="selected_address"]:checked');
-            const agreeTerms = document.getElementById('agree_terms');
-            
-            if (!selectedAddress) {
-                alert('Please select a shipping address');
-                return;
-            }
-            
-            if (!agreeTerms.checked) {
-                alert('Please agree to the terms and conditions');
-                return;
-            }
-            
-            const originalText = this.textContent;
-            this.textContent = 'Processing...';
-            this.disabled = true;
-            
-            const formData = new FormData();
-            formData.append('address_id', selectedAddress.value);
-            formData.append('payment_method', document.querySelector('input[name="payment_method"]:checked').value);
-            
-            fetch('{{ route("checkout.place-order") }}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.redirect_url) {
-                    window.location.href = data.redirect_url;
-                } else {
-                    alert('Error: ' + (data.message || 'Failed to place order'));
-                    this.textContent = originalText;
-                    this.disabled = false;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error placing order. Please try again.');
-                this.textContent = originalText;
-                this.disabled = false;
-            });
-        });
-    }
-});
+    }); // end load
+})(); // IIFE
 </script>
-@endsection
+@endpush
