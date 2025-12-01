@@ -47,7 +47,8 @@ class Bid extends Model
         'has_started',
         'reserve_met',
         'formatted_starting_price',
-        'formatted_current_price'
+        'formatted_current_price',
+        'formatted_winning_bid_amount'
     ];
 
     // Relationships
@@ -138,5 +139,11 @@ class Bid extends Model
     public function getFormattedCurrentPriceAttribute()
     {
         return 'RM ' . number_format($this->current_price, 2);
+    }
+
+    public function getFormattedWinningBidAmountAttribute()
+    {
+        if (!$this->winning_bid_amount) return 'N/A';
+        return 'RM ' . number_format($this->winning_bid_amount, 2);
     }
 }

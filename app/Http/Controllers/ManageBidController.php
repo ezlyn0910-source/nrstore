@@ -82,7 +82,14 @@ class ManageBidController extends Controller
             'total' => $allBids->count()
         ];
 
-        return view('managebid.index', compact('bids', 'stats'));
+        // Calculate page-specific statistics (for the quick stats bar)
+        $pageStats = [
+            'participants' => $bids->sum('bid_count'), // Total bids placed on current page
+            'total_value' => $bids->sum('current_price'), // Total current bid value on page
+            'winners' => $bids->where('winner_id', '!=', null)->count() // Winners on current page
+        ];
+
+        return view('managebid.index', compact('bids', 'stats', 'pageStats'));
     }
 
     /**
@@ -91,12 +98,10 @@ class ManageBidController extends Controller
     public function create()
     {
         // Fetch products that are active
-        // Eager load variations that are active and have stock
         $products = Product::active()
             ->with(['variations' => function($q) {
                 $q->active()->where('stock', '>', 0);
             }])
-            // We want products that have stock themselves OR have variations with stock
             ->where(function($query) {
                 $query->where('stock_quantity', '>', 0)
                       ->orWhereHas('variations', function($q) {
@@ -214,8 +219,7 @@ class ManageBidController extends Controller
      */
     public function edit(Bid $bid)
     {
-        // Load products similar to create method
-         $products = Product::active()
+        $products = Product::active()
             ->with(['variations' => function($q) {
                 $q->active()->where('stock', '>', 0);
             }])

@@ -10,21 +10,8 @@
     <!-- Header -->
     <div class="order-header">
         <div class="header-left">
-            <h1 class="order-title">Order #{{ $order->id }}</h1>
+            <h1 class="order-title">Order #{{ $order->order_number }}</h1>
             <p class="order-date">Placed on {{ $order->created_at->format('F d, Y \\a\\t h:i A') }}</p>
-        </div>
-        <div class="header-right">
-            <form action="{{ route('admin.manageorder.update-status', $order) }}" method="POST" class="status-form">
-                @csrf
-                @method('PUT')
-                <select name="status" class="status-select" onchange="this.form.submit()">
-                    @foreach($statusOptions as $value => $label)
-                        <option value="{{ $value }}" {{ $order->status == $value ? 'selected' : '' }}>
-                            {{ $label }}
-                        </option>
-                    @endforeach
-                </select>
-            </form>
         </div>
     </div>
 
@@ -78,7 +65,7 @@
                 <div class="info-item">
                     <strong>Status:</strong>
                     <span class="status-badge status-{{ $order->status }}">
-                        {{ ucfirst($order->status) }}
+                        {{ $order->status_label }}
                     </span>
                 </div>
                 <div class="info-item">
@@ -95,6 +82,12 @@
                 <div class="info-item">
                     <strong>Shipped Date:</strong>
                     <span>{{ $order->shipped_at->format('M d, Y h:i A') }}</span>
+                </div>
+                @endif
+                @if($order->payment_method)
+                <div class="info-item">
+                    <strong>Payment Method:</strong>
+                    <span>{{ ucfirst($order->payment_method) }}</span>
                 </div>
                 @endif
             </div>
@@ -135,16 +128,26 @@
         <div class="order-totals">
             <div class="total-row">
                 <span>Subtotal:</span>
-                <span>RM {{ number_format($order->total_amount, 2) }}</span>
+                <span>RM {{ number_format($order->orderItems->sum(function($item) { return $item->quantity * $item->price; }), 2) }}</span>
             </div>
+            @if($order->shipping_cost > 0)
             <div class="total-row">
                 <span>Shipping:</span>
-                <span>RM 0.00</span>
+                <span>RM {{ number_format($order->shipping_cost, 2) }}</span>
             </div>
+            @endif
+            @if($order->tax_amount > 0)
             <div class="total-row">
                 <span>Tax:</span>
-                <span>RM 0.00</span>
+                <span>RM {{ number_format($order->tax_amount, 2) }}</span>
             </div>
+            @endif
+            @if($order->discount_amount > 0)
+            <div class="total-row">
+                <span>Discount:</span>
+                <span>-RM {{ number_format($order->discount_amount, 2) }}</span>
+            </div>
+            @endif
             <div class="total-row grand-total">
                 <span>Total:</span>
                 <span>RM {{ number_format($order->total_amount, 2) }}</span>

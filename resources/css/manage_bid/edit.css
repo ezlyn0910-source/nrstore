@@ -22,19 +22,10 @@
     overflow: hidden;
 }
 
-.edit-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--accent-gold), var(--primary-green));
-}
 
 .header-left .page-title {
     color: var(--primary-dark);
-    font-size: 2.2rem;
+    font-size: 1.5rem;
     font-weight: 800;
     margin-bottom: 8px;
     background: linear-gradient(135deg, var(--primary-dark), var(--primary-green));
@@ -45,7 +36,7 @@
 
 .header-left .page-subtitle {
     color: var(--light-text);
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     margin: 0 0 15px 0;
     font-weight: 500;
 }
@@ -571,7 +562,7 @@
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, #dc3545, #e83e8c);
+    background: #dc3545;
     border: none;
     color: var(--white);
 }
@@ -713,31 +704,31 @@
 }
 
 .status-active { 
-    background: linear-gradient(135deg, #28a745, #20c997); 
+    background:  #28a745; 
     color: var(--white);
 }
 .status-active .status-icon { background: var(--white); }
 
 .status-draft { 
-    background: linear-gradient(135deg, #ffc107, #fd7e14); 
+    background: #ffc107; 
     color: var(--primary-dark);
 }
 .status-draft .status-icon { background: var(--primary-dark); }
 
 .status-paused { 
-    background: linear-gradient(135deg, #17a2b8, #6f42c1); 
+    background: #17a2b8; 
     color: var(--white);
 }
 .status-paused .status-icon { background: var(--white); }
 
 .status-completed { 
-    background: linear-gradient(135deg, var(--primary-green), #28a745); 
+    background:#28a745; 
     color: var(--white);
 }
 .status-completed .status-icon { background: var(--white); }
 
 .status-cancelled { 
-    background: linear-gradient(135deg, #dc3545, #e83e8c); 
+    background: #dc3545; 
     color: var(--white);
 }
 .status-cancelled .status-icon { background: var(--white); }
