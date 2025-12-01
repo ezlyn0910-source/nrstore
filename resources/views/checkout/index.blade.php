@@ -542,8 +542,18 @@ function togglePaymentDetails(method) {
 }
 
 function saveAddress() {
-    console.log('Saving address...');
+    console.log('DEBUG: Starting saveAddress function');
+    console.log('DEBUG: Form element:', document.getElementById('addressForm'));
+    console.log('DEBUG: CSRF Token:', '{{ csrf_token() }}');
+    console.log('DEBUG: Route:', '{{ route("checkout.address.store") }}');
+    
     const formData = new FormData(document.getElementById('addressForm'));
+    
+    // Log form data
+    console.log('DEBUG: FormData entries:');
+    for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+    }
     
     // Show loading state
     const saveBtn = document.querySelector('#addressForm button[type="submit"]');
@@ -551,16 +561,8 @@ function saveAddress() {
     saveBtn.textContent = 'Saving...';
     saveBtn.disabled = true;
 
-    fetch('/checkout/address', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Accept': 'application/json'
-        }
-    })
+    console.log('DEBUG: Making fetch request...');
     
-    // FIXED: Use the correct route name
     fetch('{{ route("checkout.address.store") }}', {
         method: 'POST',
         body: formData,
@@ -570,14 +572,12 @@ function saveAddress() {
         }
     })
     .then(response => {
-        console.log('Response status:', response.status);
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
+        console.log('DEBUG: Response status:', response.status);
+        console.log('DEBUG: Response headers:', response.headers);
         return response.json();
     })
     .then(data => {
-        console.log('Response data:', data);
+        console.log('DEBUG: Response data:', data);
         if (data.success) {
             alert('Address saved successfully!');
             location.reload();
@@ -589,8 +589,9 @@ function saveAddress() {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Error saving address. Please check console for details.');
+        console.error('DEBUG: Error:', error);
+        console.error('DEBUG: Error stack:', error.stack);
+        alert('Error saving address: ' + error.message);
         // Reset button
         saveBtn.textContent = originalText;
         saveBtn.disabled = false;

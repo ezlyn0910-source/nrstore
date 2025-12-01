@@ -195,7 +195,10 @@ class CheckoutController extends Controller
      */
     public function storeAddress(Request $request)
     {
-        \Log::info('Store Address Request:', $request->all());
+        \Log::debug('=== STORE ADDRESS START ===');
+        \Log::debug('Request data:', $request->all());
+        \Log::debug('CSRF Token:', [$request->header('X-CSRF-TOKEN')]);
+        \Log::debug('User:', [Auth::id(), Auth::user() ? Auth::user()->email : 'No user']);
         
         $request->validate([
             'first_name' => 'required|string|max:255',
@@ -212,39 +215,85 @@ class CheckoutController extends Controller
         try {
             $user = Auth::user();
             
+            // Check if user already has this address to avoid duplicates
+            $existingAddress = Address::where('user_id', $user->id)
+                ->where('address_line_1', $request->address)
+                ->where('city', $request->city)
+                ->where('postal_code', $request->postcode)
+                ->first();
+                
+            if ($existingAddress) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This address already exists in your address book.'
+                ], 409); // 409 Conflict
+            }
+            
+            // Check if this is the first address - make it default
+            $isFirstAddress = !Address::where('user_id', $user->id)->exists();
+            
             // Map the form fields to your database columns
             $addressData = [
                 'user_id' => $user->id,
                 'type' => 'shipping',
-                'full_name' => $request->first_name . ' ' . $request->last_name, // Combine first + last name
+                'full_name' => trim($request->first_name . ' ' . $request->last_name),
                 'address_line_1' => $request->address,
                 'address_line_2' => $request->address2,
                 'city' => $request->city,
                 'state' => $request->state,
                 'postal_code' => $request->postcode,
-                'country' => 'Malaysia', // Default value
+                'country' => 'Malaysia',
                 'phone' => $request->phone,
-                'is_default' => false, // Your table uses is_default instead of is_primary
+                'is_default' => $isFirstAddress, // Make first address default
             ];
 
             // Create new address
             $address = Address::create($addressData);
 
-            \Log::info('Address created successfully:', ['address_id' => $address->id]);
+            \Log::info('Address created successfully:', [
+                'address_id' => $address->id,
+                'user_id' => $user->id,
+                'is_default' => $isFirstAddress
+            ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Address added successfully!',
-                'address' => $address
+                'address' => $address,
+                'is_default' => $isFirstAddress
             ]);
 
         } catch (\Exception $e) {
             \Log::error('Address creation error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to save address: ' . $e->getMessage()
+                'message' => 'Failed to save address. Please check your information and try again.'
             ], 500);
         }
+    }
+
+    /**
+     * Save address (alias for storeAddress for backward compatibility)
+     */
+    public function saveAddress(Request $request)
+    {
+        return $this->storeAddress($request);
+    }
+
+    /**
+     * Display success page
+     */
+    public function success(Request $request)
+    {
+        return view('checkout.success');
+    }
+
+    /**
+     * Display failed order page
+     */
+    public function failed()
+    {
+        return view('checkout.failed');
     }
 
     /**
