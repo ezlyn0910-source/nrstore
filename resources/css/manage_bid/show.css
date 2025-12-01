@@ -41,7 +41,7 @@
 
 .header-left .page-title {
     color: var(--primary-dark);
-    font-size: 2.2rem;
+    font-size: 2rem;
     font-weight: 800;
     margin-bottom: 8px;
     background: linear-gradient(135deg, var(--primary-dark), var(--primary-green));
@@ -247,21 +247,20 @@
 }
 
 .stat-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--accent-gold), var(--primary-green));
-    color: var(--white);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    color: var(--accent-gold);
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 12px;
-    font-size: 1.2rem;
+    font-size: 1rem;
 }
 
 .stat-value {
     color: var(--primary-green);
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: 800;
     margin-bottom: 5px;
     line-height: 1;
@@ -269,7 +268,7 @@
 
 .stat-label {
     color: var(--light-text);
-    font-size: 0.85rem;
+    font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -293,7 +292,7 @@
 .price-item label {
     display: block;
     color: var(--light-text);
-    font-size: 0.9rem;
+    font-size: 0.7rem;
     font-weight: 600;
     margin-bottom: 8px;
     text-transform: uppercase;
@@ -302,13 +301,13 @@
 
 .price-value {
     color: var(--primary-dark);
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 700;
 }
 
 .price-value.current {
     color: var(--primary-green);
-    font-size: 1.5rem;
+    font-size: 1.2rem;
 }
 
 .price-value.reserve {
@@ -758,31 +757,31 @@
 }
 
 .status-active { 
-    background: linear-gradient(135deg, #28a745, #20c997); 
+    background: #28a745; 
     color: var(--white);
 }
 .status-active .status-icon { background: var(--white); }
 
 .status-draft { 
-    background: linear-gradient(135deg, #ffc107, #fd7e14); 
+    background: #ffc107; 
     color: var(--primary-dark);
 }
 .status-draft .status-icon { background: var(--primary-dark); }
 
 .status-paused { 
-    background: linear-gradient(135deg, #17a2b8, #6f42c1); 
+    background: #17a2b8; 
     color: var(--white);
 }
 .status-paused .status-icon { background: var(--white); }
 
 .status-completed { 
-    background: linear-gradient(135deg, var(--primary-green), #28a745); 
+    background:  #28a745; 
     color: var(--white);
 }
 .status-completed .status-icon { background: var(--white); }
 
 .status-cancelled { 
-    background: linear-gradient(135deg, #dc3545, #e83e8c); 
+    background:#dc3545; 
     color: var(--white);
 }
 .status-cancelled .status-icon { background: var(--white); }

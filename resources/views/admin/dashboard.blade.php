@@ -29,7 +29,7 @@
         <table class="table table-striped align-middle">
             <thead>
                 <tr>
-                    <th>#</th>
+                    <th>Order ID</th>
                     <th>Customer</th>
                     <th>Product</th>
                     <th>Status</th>
@@ -54,16 +54,14 @@
                     </td>
                     <td>
                         <span class="badge bg-{{ 
-                            $order->status == 'processing' ? 'warning text-dark' : 
+                            $order->status == 'paid' ? 'success' :
+                            ($order->status == 'processing' ? 'warning text-dark' : 
                             ($order->status == 'shipped' ? 'info' : 
                             ($order->status == 'delivered' ? 'success' : 
-                            ($order->status == 'cancelled' ? 'danger' : 'secondary'))) 
+                            ($order->status == 'cancelled' ? 'danger' : 'secondary')))) 
                         }}">
                             {{ $order->status_label }}
                         </span>
-                        @if($order->payment_status == 'paid')
-                        <span class="badge bg-success ms-1">Paid</span>
-                        @endif
                     </td>
                     <td>{{ $order->created_at->format('Y-m-d') }}</td>
                     <td>

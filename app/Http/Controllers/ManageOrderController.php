@@ -21,10 +21,10 @@ class ManageOrderController extends Controller
 
         $stats = [
             'total' => Order::count(),
-            'paid' => Order::where('status', 'paid')->count(),
-            'processing' => Order::where('status', 'processing')->count(),
-            'shipped' => Order::where('status', 'shipped')->count(),
-            'cancelled' => Order::where('status', 'cancelled')->count(),
+            'paid' => Order::where('status', Order::STATUS_PAID)->count(),
+            'processing' => Order::where('status', Order::STATUS_PROCESSING)->count(),
+            'shipped' => Order::where('status', Order::STATUS_SHIPPED)->count(),
+            'cancelled' => Order::where('status', Order::STATUS_CANCELLED)->count(),
         ];
 
         return view('manageorder.index', compact('orders', 'stats'));
@@ -40,14 +40,15 @@ class ManageOrderController extends Controller
             'shippingAddress',
             'billingAddress',
             'orderItems.product',
-            'orderItems.variation'
+            'orderItems.variation',
+            'statusHistory'
         ]);
 
         $statusOptions = [
-            'paid' => 'Paid',
-            'processing' => 'Processing',
-            'shipped' => 'Shipped',
-            'cancelled' => 'Cancelled'
+            Order::STATUS_PAID => 'Paid',
+            Order::STATUS_PROCESSING => 'Processing',
+            Order::STATUS_SHIPPED => 'Shipped',
+            Order::STATUS_CANCELLED => 'Cancelled'
         ];
 
         return view('manageorder.show', compact('order', 'statusOptions'));
@@ -63,14 +64,15 @@ class ManageOrderController extends Controller
             'shippingAddress',
             'billingAddress',
             'orderItems.product',
-            'orderItems.variation'
+            'orderItems.variation',
+            'statusHistory'
         ]);
 
         $statusOptions = [
-            'paid' => 'Paid',
-            'processing' => 'Processing',
-            'shipped' => 'Shipped',
-            'cancelled' => 'Cancelled'
+            Order::STATUS_PAID => 'Paid',
+            Order::STATUS_PROCESSING => 'Processing',
+            Order::STATUS_SHIPPED => 'Shipped',
+            Order::STATUS_CANCELLED => 'Cancelled'
         ];
 
         return view('manageorder.edit', compact('order', 'statusOptions'));
@@ -82,40 +84,29 @@ class ManageOrderController extends Controller
     public function update(Request $request, Order $order): RedirectResponse
     {
         $request->validate([
-            'status' => 'required|in:paid,processing,shipped,cancelled',
-            'tracking_number' => 'nullable|string|max:255|required_if:status,shipped'
+            'status' => 'required|in:' . implode(',', [
+                Order::STATUS_PAID,
+                Order::STATUS_PROCESSING,
+                Order::STATUS_SHIPPED,
+                Order::STATUS_CANCELLED
+            ]),
+            'tracking_number' => 'nullable|string|max:255|required_if:status,' . Order::STATUS_SHIPPED
         ], [
             'tracking_number.required_if' => 'Tracking number is required when status is set to Shipped.'
         ]);
 
         $oldStatus = $order->status;
-        
-        $updateData = [
-            'status' => $request->status,
-            'updated_at' => now()
-        ];
-        
-        // Handle tracking number for shipped orders
-        if ($request->status === 'shipped') {
-            if (empty($request->tracking_number)) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors(['tracking_number' => 'Tracking number is required when status is set to Shipped.']);
-            }
-            
-            $updateData['tracking_number'] = $request->tracking_number;
-            $updateData['shipped_at'] = now();
-        } else {
-            // Clear tracking number if status is not shipped
-            $updateData['tracking_number'] = null;
-            $updateData['shipped_at'] = null;
+
+        // Use the model's updateStatus method for consistency
+        if ($request->status === Order::STATUS_SHIPPED && $request->tracking_number) {
+            $order->setTrackingNumber($request->tracking_number);
         }
 
-        $order->update($updateData);
+        $order->updateStatus($request->status, "Status updated via admin panel");
 
         return redirect()->route('admin.manageorder.show', $order)
             ->with('success', 
-                "Order status updated from " . ucfirst($oldStatus) . " to " . ucfirst($request->status)
+                "Order status updated from " . $order->getStatusLabelAttribute() . " to " . ucfirst($request->status)
             );
     }
 
@@ -125,35 +116,45 @@ class ManageOrderController extends Controller
     public function updateStatus(Request $request, Order $order): RedirectResponse
     {
         $request->validate([
-            'status' => 'required|in:paid,processing,shipped,cancelled'
+            'status' => 'required|in:' . implode(',', [
+                Order::STATUS_PAID,
+                Order::STATUS_PROCESSING,
+                Order::STATUS_SHIPPED,
+                Order::STATUS_CANCELLED
+            ])
         ]);
 
         $oldStatus = $order->status;
-        
-        $updateData = ['status' => $request->status];
-        
+
         // If status is changed to shipped and no tracking number exists, redirect to edit page
-        if ($request->status === 'shipped' && empty($order->tracking_number)) {
-            return redirect()->route('manageorder.edit', $order)
+        if ($request->status === Order::STATUS_SHIPPED && empty($order->tracking_number)) {
+            return redirect()->route('admin.manageorder.edit', $order)
                 ->with('info', 'Please enter tracking number for shipped order.');
         }
-        
-        // If status is shipped, ensure shipped_at is set
-        if ($request->status === 'shipped' && !$order->shipped_at) {
-            $updateData['shipped_at'] = now();
-        }
-        
-        // If status is changed from shipped, clear tracking info
-        if ($oldStatus === 'shipped' && $request->status !== 'shipped') {
-            $updateData['tracking_number'] = null;
-            $updateData['shipped_at'] = null;
-        }
 
-        $order->update($updateData);
+        $order->updateStatus($request->status, "Quick status update via admin panel");
 
         return redirect()->back()->with('success', 
             "Order status updated from " . ucfirst($oldStatus) . " to " . ucfirst($request->status)
         );
+    }
+
+    /**
+     * Update tracking number
+     */
+    public function updateTracking(Request $request, Order $order): RedirectResponse
+    {
+        $validated = $request->validate([
+            'tracking_number' => 'required|string|max:100'
+        ]);
+
+        try {
+            $order->setTrackingNumber($validated['tracking_number']);
+            
+            return redirect()->back()->with('success', 'Tracking number updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update tracking number: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -164,7 +165,7 @@ class ManageOrderController extends Controller
         $orderId = $order->id;
         $order->delete();
         
-        return redirect()->route('manageorder.index')
+        return redirect()->route('admin.manageorder.index')
             ->with('success', "Order #{$orderId} deleted successfully");
     }
 
@@ -191,13 +192,18 @@ class ManageOrderController extends Controller
                     
                 case 'update_status':
                     $request->validate([
-                        'bulk_status' => 'required|in:paid,processing,shipped,cancelled'
+                        'bulk_status' => 'required|in:' . implode(',', [
+                            Order::STATUS_PAID,
+                            Order::STATUS_PROCESSING,
+                            Order::STATUS_SHIPPED,
+                            Order::STATUS_CANCELLED
+                        ])
                     ]);
                     
-                    Order::whereIn('id', $orderIds)->update([
-                        'status' => $request->bulk_status,
-                        'updated_at' => now()
-                    ]);
+                    $orders = Order::whereIn('id', $orderIds)->get();
+                    foreach ($orders as $order) {
+                        $order->updateStatus($request->bulk_status, "Bulk status update");
+                    }
                     $message = count($orderIds) . ' order(s) status updated to ' . ucfirst($request->bulk_status);
                     break;
                     

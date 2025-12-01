@@ -25,69 +25,6 @@
                     <i class="fas fa-edit"></i>
                     Edit Bid
                 </a>
-                <div class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown">
-                        <i class="fas fa-cog"></i>
-                        Actions
-                    </button>
-                    <div class="dropdown-menu">
-                        <a href="{{ route('admin.managebid.participants', $bid) }}" class="dropdown-item">
-                            <i class="fas fa-users"></i> View Participants
-                        </a>
-                        @if($bid->status === 'draft')
-                        <form action="{{ route('admin.managebid.start', $bid) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="dropdown-item">
-                                <i class="fas fa-play"></i> Start Bid
-                            </button>
-                        </form>
-                        @endif
-
-                        @if($bid->status === 'active')
-                        <form action="{{ route('admin.managebid.pause', $bid) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="dropdown-item">
-                                <i class="fas fa-pause"></i> Pause Bid
-                            </button>
-                        </form>
-                        @endif
-
-                        @if($bid->status === 'paused')
-                        <form action="{{ route('admin.managebid.start', $bid) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="dropdown-item">
-                                <i class="fas fa-play"></i> Resume Bid
-                            </button>
-                        </form>
-                        @endif
-
-                        @if(in_array($bid->status, ['active', 'paused']))
-                        <form action="{{ route('admin.managebid.complete', $bid) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="dropdown-item" 
-                                    onclick="return confirm('Are you sure you want to complete this bid?')">
-                                <i class="fas fa-flag-checkered"></i> Complete Bid
-                            </button>
-                        </form>
-                        @endif
-
-                        @if(!$bid->winner && $bid->has_ended)
-                        <a href="#" class="dropdown-item" onclick="assignWinner({{ $bid->id }})">
-                            <i class="fas fa-trophy"></i> Assign Winner
-                        </a>
-                        @endif
-
-                        <div class="dropdown-divider"></div>
-                        <form action="{{ route('admin.managebid.destroy', $bid) }}" method="POST" class="d-inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="dropdown-item text-danger" 
-                                    onclick="return confirm('Are you sure you want to delete this bid?')">
-                                <i class="fas fa-trash"></i> Delete Bid
-                            </button>
-                        </form>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

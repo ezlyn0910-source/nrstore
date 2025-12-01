@@ -18,10 +18,6 @@
                     <i class="fas fa-plus"></i>
                     Create New Bid
                 </a>
-                <button class="btn btn-secondary" id="bulkActionsBtn">
-                    <i class="fas fa-layer-group"></i>
-                    Bulk Actions
-                </button>
             </div>
         </div>
     </div>
@@ -67,29 +63,20 @@
     <div class="quick-stats-bar">
         <div class="quick-stat">
             <i class="fas fa-users"></i>
-            <span>Page Participants: <strong id="totalParticipants">0</strong></span>
+            <span>Page Participants: <strong id="totalParticipants">{{ $pageStats['participants'] }}</strong></span>
         </div>
         <div class="quick-stat">
             <i class="fas fa-money-bill-wave"></i>
-            <span>Page Bid Value: <strong id="totalBidValue">RM 0.00</strong></span>
+            <span>Page Bid Value: <strong id="totalBidValue">RM {{ number_format($pageStats['total_value'], 2) }}</strong></span>
         </div>
         <div class="quick-stat">
             <i class="fas fa-trophy"></i>
-            <span>Page Winners: <strong id="activeWinners">0</strong></span>
+            <span>Page Winners: <strong id="activeWinners">{{ $pageStats['winners'] }}</strong></span>
         </div>
     </div>
 
     <div class="filters-section">
         <form action="{{ route('admin.managebid.index') }}" method="GET" class="filters-left" id="filterForm">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" name="search" id="searchInput" value="{{ request('search') }}" placeholder="Search by product, winner...">
-                @if(request('search'))
-                <button type="button" class="search-clear" id="searchClear" onclick="clearSearch()">
-                    <i class="fas fa-times"></i>
-                </button>
-                @endif
-            </div>
             
             <select name="status" id="statusFilter" class="filter-select" onchange="this.form.submit()">
                 <option value="">All Status</option>
@@ -109,26 +96,13 @@
                 <option value="month" {{ request('time_filter') == 'month' ? 'selected' : '' }}>This Month</option>
                 <option value="past" {{ request('time_filter') == 'past' ? 'selected' : '' }}>Past Bids</option>
             </select>
-        </form>
 
-        <div class="filters-right">
-            <div class="view-controls">
-                <button class="view-btn active" data-view="table" title="Table View">
-                    <i class="fas fa-table"></i>
-                </button>
-                <button class="view-btn" data-view="grid" title="Grid View">
-                    <i class="fas fa-th-large"></i>
-                </button>
-            </div>
-            <button class="btn btn-secondary" id="exportBtn">
-                <i class="fas fa-download"></i>
-                Export CSV
-            </button>
             <a href="{{ route('admin.managebid.index') }}" class="btn btn-secondary" id="refreshBtn">
                 <i class="fas fa-sync-alt"></i>
                 Refresh
             </a>
-        </div>
+            
+        </form>
     </div>
 
     <form id="bulkActionForm" action="{{ route('admin.managebid.bulk_action') }}" method="POST" style="display: none;">
@@ -178,7 +152,6 @@
                     </thead>
                     <tbody>
                         @forelse($bids as $bid) 
-                        {{-- NOTE: data-end-time format changed to 'c' (ISO 8601) for reliable JS parsing --}}
                         <tr class="bid-row" 
                             data-id="{{ $bid->id }}"
                             data-start-time="{{ $bid->start_time->format('c') }}"
@@ -304,7 +277,6 @@
                     Showing <strong>{{ $bids->firstItem() ?? 0 }}-{{ $bids->lastItem() ?? 0 }}</strong> of <strong>{{ $bids->total() }}</strong> bids
                 </div>
                 <div class="pagination-container">
-                    {{-- Append query parameters to pagination links --}}
                     {{ $bids->appends(request()->query())->links() }}
                 </div>
             </div>
@@ -343,13 +315,11 @@ function initBidManagement() {
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-            // Safer text assignment
             const dEl = timer.querySelector('.days'); if(dEl) dEl.textContent = String(days).padStart(2, '0');
             const hEl = timer.querySelector('.hours'); if(hEl) hEl.textContent = String(hours).padStart(2, '0');
             const mEl = timer.querySelector('.minutes'); if(mEl) mEl.textContent = String(minutes).padStart(2, '0');
             const sEl = timer.querySelector('.seconds'); if(sEl) sEl.textContent = String(seconds).padStart(2, '0');
 
-            // Progress Bar
             const row = timer.closest('.bid-row');
             if (row) {
                 const startStr = row.getAttribute('data-start-time');
@@ -366,25 +336,9 @@ function initBidManagement() {
         });
     }
     setInterval(updateCountdowns, 1000);
-    updateCountdowns(); // Run immediately
+    updateCountdowns();
 
-    // 2. VIEW TOGGLE
-    const viewButtons = document.querySelectorAll('.view-btn');
-    const tableView = document.getElementById('tableView');
-    const gridView = document.getElementById('gridView');
-
-    viewButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            viewButtons.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            const view = this.getAttribute('data-view');
-            tableView.style.display = view === 'table' ? 'block' : 'none';
-            gridView.style.display = view === 'grid' ? 'block' : 'none';
-            localStorage.setItem('bidViewPreference', view);
-        });
-    });
-
-    // 3. BULK ACTIONS UI
+    // 2. BULK ACTIONS UI
     const selectAll = document.getElementById('selectAllCheckbox');
     const checkboxes = document.querySelectorAll('.bid-checkbox');
     const bulkBar = document.getElementById('bulkActionsBar');
@@ -415,71 +369,6 @@ function initBidManagement() {
             updateBulkUI();
         });
     }
-
-    // 4. EXPORT CSV
-    document.getElementById('exportBtn').addEventListener('click', function() {
-        let csv = [];
-        const rows = document.querySelectorAll("table tr");
-        
-        for (let i = 0; i < rows.length; i++) {
-            let row = [], cols = rows[i].querySelectorAll("td, th");
-            for (let j = 1; j < cols.length - 1; j++) { // Skip checkbox and actions
-                let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, " ").replace(/(\s\s)/gm, " ");
-                data = data.replace(/"/g, '""');
-                row.push('"' + data + '"');
-            }
-            csv.push(row.join(","));
-        }
-
-        const csvFile = new Blob([csv.join("\n")], {type: "text/csv"});
-        const downloadLink = document.createElement("a");
-        downloadLink.download = "bids_export.csv";
-        downloadLink.href = window.URL.createObjectURL(csvFile);
-        downloadLink.style.display = "none";
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-    });
-
-    // 5. QUICK STATS (Calculate from current page view)
-    updateQuickStats();
 }
-
-function updateQuickStats() {
-    let totalVal = 0;
-    let participants = 0;
-    let winners = 0;
-
-    document.querySelectorAll('.bid-row').forEach(row => {
-        // Simple parsing from DOM text
-        const priceTxt = row.querySelector('.current-price')?.innerText || "0";
-        totalVal += parseFloat(priceTxt.replace(/[^0-9.-]+/g,"")) || 0;
-        
-        const bidsTxt = row.querySelector('.bids-count')?.innerText || "0";
-        participants += parseInt(bidsTxt) || 0;
-
-        if (row.querySelector('.winner-info')) winners++;
-    });
-
-    document.getElementById('totalBidValue').innerText = 'RM ' + totalVal.toLocaleString(undefined, {minimumFractionDigits: 2});
-    document.getElementById('totalParticipants').innerText = participants;
-    document.getElementById('activeWinners').innerText = winners;
-}
-
-function clearSearch() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('filterForm').submit();
-}
-
-// Bulk Action Submission
-window.submitBulkAction = function(action) {
-    const selected = Array.from(document.querySelectorAll('.bid-checkbox:checked')).map(cb => cb.value);
-    if (selected.length === 0) return;
-    
-    if (confirm('Are you sure you want to ' + action + ' ' + selected.length + ' items?')) {
-        document.getElementById('bulkActionInput').value = action;
-        document.getElementById('bulkIdsInput').value = JSON.stringify(selected);
-        document.getElementById('bulkActionForm').submit();
-    }
-};
 </script>
 @endsection

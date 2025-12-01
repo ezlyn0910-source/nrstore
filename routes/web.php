@@ -290,11 +290,6 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::post('/bulk-action', 'bulkAction')->name('bulk-action');
     });
 
-    // Reports & Analytics
-    Route::prefix('reports')->name('managereport.')->controller(ManageReportController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/export/{type}', 'export')->name('export');
-    });
 });
 
 // Fallback Route (404 Page)

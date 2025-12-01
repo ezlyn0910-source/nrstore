@@ -25,7 +25,6 @@
             <li><a href="{{ route('admin.manageproduct.index') }}" class="{{ request()->routeIs('manageproduct.*') ? 'active' : '' }}">Product Management</a></li>
             <li><a href="{{ route('admin.manageorder.index') }}" class="{{ request()->routeIs('manageorder.*') ? 'active' : '' }}">Order Management</a></li>
             <li><a href="{{ route('admin.managebid.index') }}" class="{{ request()->routeIs('managebid.*') ? 'active' : '' }}">Bid Management</a></li>
-            <li><a href="{{ route('admin.managereport.index')}}" class="{{ request()->routeIs('managereport.*') ? 'active' : '' }}">Reports</a></li>
         </ul>
     </aside>
 

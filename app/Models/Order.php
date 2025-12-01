@@ -21,11 +21,10 @@ class Order extends Model
         'tax_amount',
         'discount_amount',
         'status',
-        'payment_status',
+        'tracking_number',
         'payment_method',
         'notes',
         'shipped_at',
-        'delivered_at',
         'cancelled_at',
     ];
 
@@ -35,15 +34,24 @@ class Order extends Model
         'tax_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'shipped_at' => 'datetime',
-        'delivered_at' => 'datetime',
         'cancelled_at' => 'datetime',
     ];
 
     protected $appends = [
         'formatted_total_amount',
         'status_label',
-        'payment_status_label'
+        'is_shipped',
+        'is_cancelled'
     ];
+
+    /**
+     * Status constants for consistency
+     */
+    const STATUS_PENDING = 'pending';
+    const STATUS_PAID = 'paid';
+    const STATUS_PROCESSING = 'processing';
+    const STATUS_SHIPPED = 'shipped';
+    const STATUS_CANCELLED = 'cancelled';
 
     /**
      * Get the user that owns the order.
@@ -78,6 +86,14 @@ class Order extends Model
     }
 
     /**
+     * Get the status history for the order.
+     */
+    public function statusHistory(): HasMany
+    {
+        return $this->hasMany(OrderStatusHistory::class);
+    }
+
+    /**
      * Get formatted total amount
      */
     public function getFormattedTotalAmountAttribute()
@@ -86,53 +102,102 @@ class Order extends Model
     }
 
     /**
+     * Get status label
+     */
+    public function getStatusLabelAttribute()
+    {
+        return match($this->status) {
+            self::STATUS_PENDING => 'Pending',
+            self::STATUS_PAID => 'Paid',
+            self::STATUS_PROCESSING => 'Processing',
+            self::STATUS_SHIPPED => 'Shipped',
+            self::STATUS_CANCELLED => 'Cancelled',
+            default => ucfirst($this->status)
+        };
+    }
+
+    /**
+     * Check if order is paid
+     */
+    public function getIsPaidAttribute(): bool
+    {
+        return in_array($this->status, [self::STATUS_PAID, self::STATUS_PROCESSING, self::STATUS_SHIPPED]);
+    }
+
+    /**
+     * Check if order is shipped
+     */
+    public function getIsShippedAttribute(): bool
+    {
+        return $this->status === self::STATUS_SHIPPED && !is_null($this->shipped_at);
+    }
+
+    /**
+     * Check if order is cancelled
+     */
+    public function getIsCancelledAttribute(): bool
+    {
+        return $this->status === self::STATUS_CANCELLED && !is_null($this->cancelled_at);
+    }
+
+    /**
      * Calculate order totals
      */
     public function calculateTotals(): void
     {
-        $subtotal = $this->orderItems->sum('total');
+        $subtotal = $this->orderItems->sum(function($item) {
+            return $item->quantity * $item->price;
+        });
+        
         $this->total_amount = $subtotal + $this->shipping_cost + $this->tax_amount - $this->discount_amount;
         $this->save();
     }
 
     /**
-     * Get status label
+     * Update order status with history tracking
      */
-    public function getStatusLabelAttribute()
+    public function updateStatus(string $status, string $notes = null): void
     {
-        return ucfirst($this->status);
+        $oldStatus = $this->status;
+        $this->status = $status;
+
+        // Update timestamps based on status
+        switch ($status) {
+            case self::STATUS_SHIPPED:
+                $this->shipped_at = $this->shipped_at ?? now();
+                break;
+            case self::STATUS_CANCELLED:
+                $this->cancelled_at = $this->cancelled_at ?? now();
+                break;
+        }
+
+        $this->save();
+
+        // Record status history
+        if ($oldStatus !== $status) {
+            OrderStatusHistory::create([
+                'order_id' => $this->id,
+                'status' => $status,
+                'notes' => $notes ?? "Status changed from {$oldStatus} to {$status}"
+            ]);
+        }
     }
 
     /**
-     * Get payment status label
+     * Set tracking number
      */
-    public function getPaymentStatusLabelAttribute()
+    public function setTrackingNumber(string $trackingNumber): void
     {
-        return ucfirst($this->payment_status);
+        $this->tracking_number = $trackingNumber;
+        $this->save();
     }
 
     /**
-     * Scope processing orders
+     * Scope pending orders
      */
-    public function scopeProcessing($query)
+    public function scopePending($query)
     {
-        return $query->where('status', 'processing');
-    }
-
-    /**
-     * Scope shipped orders
-     */
-    public function scopeShipped($query)
-    {
-        return $query->where('status', 'shipped');
-    }
-
-    /**
-     * Scope cancelled orders
-     */
-    public function scopeCancelled($query)
-    {
-        return $query->where('status', 'cancelled');
+        return $query->where('status', self::STATUS_PENDING);
     }
 
     /**
@@ -140,7 +205,39 @@ class Order extends Model
      */
     public function scopePaid($query)
     {
-        return $query->where('payment_status', 'paid');
+        return $query->where('status', self::STATUS_PAID);
+    }
+
+    /**
+     * Scope processing orders
+     */
+    public function scopeProcessing($query)
+    {
+        return $query->where('status', self::STATUS_PROCESSING);
+    }
+
+    /**
+     * Scope shipped orders
+     */
+    public function scopeShipped($query)
+    {
+        return $query->where('status', self::STATUS_SHIPPED);
+    }
+
+    /**
+     * Scope cancelled orders
+     */
+    public function scopeCancelled($query)
+    {
+        return $query->where('status', self::STATUS_CANCELLED);
+    }
+
+    /**
+     * Scope orders with tracking
+     */
+    public function scopeWithTracking($query)
+    {
+        return $query->whereNotNull('tracking_number');
     }
 
     /**
@@ -171,6 +268,11 @@ class Order extends Model
         static::creating(function ($order) {
             if (empty($order->order_number)) {
                 $order->order_number = static::generateOrderNumber();
+            }
+            
+            // Set default status to pending if not set
+            if (empty($order->status)) {
+                $order->status = self::STATUS_PENDING;
             }
         });
     }
