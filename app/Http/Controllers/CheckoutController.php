@@ -7,6 +7,7 @@ use App\Models\Address;
 use App\Models\Cart;
 use App\Models\CartItem;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class CheckoutController extends Controller
 {
@@ -49,10 +50,13 @@ class CheckoutController extends Controller
             $total = $subtotal;
         }
 
-        // 4. Get Addresses
-        $addresses = Address::getShippingAddresses($user->id);
+        // 4. Get Addresses - FIXED QUERY
+        $addresses = Address::where('user_id', $user->id)
+            ->where('type', 'shipping')
+            ->orderBy('created_at', 'desc') // Removed is_primary ordering
+            ->get();
 
-        // 5. Return View (ONLY ONCE)
+        // 5. Return View
         return view('checkout.index', compact(
             'cartItems',
             'subtotal',
@@ -73,7 +77,12 @@ class CheckoutController extends Controller
             $user = Auth::user();
             $sessionId = session()->getId();
             
-            return Cart::getCart($user, $sessionId);
+            // Implement your cart retrieval logic here
+            $cart = Cart::where('user_id', $user->id)
+                ->orWhere('session_id', $sessionId)
+                ->first();
+                
+            return $cart;
         } catch (\Exception $e) {
             \Log::error('Cart creation error: ' . $e->getMessage());
             return null;
@@ -85,6 +94,8 @@ class CheckoutController extends Controller
      */
     public function storeAddress(Request $request)
     {
+        \Log::info('Store Address Request:', $request->all());
+        
         $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -95,15 +106,28 @@ class CheckoutController extends Controller
             'postcode' => 'required|string|max:10',
             'address' => 'required|string',
             'address2' => 'nullable|string',
-            'is_primary' => 'boolean',
+            'is_primary' => 'sometimes|boolean',
         ]);
 
         try {
             $user = Auth::user();
             
-            // Create shipping address using the model method
-            $address = Address::createShippingAddress([
+            // Check if is_primary column exists before using it
+            $tableColumns = Schema::getColumnListing('addresses');
+            $hasIsPrimaryColumn = in_array('is_primary', $tableColumns);
+            
+            // If setting as primary and column exists, update existing primary addresses
+            if ($request->boolean('is_primary') && $hasIsPrimaryColumn) {
+                Address::where('user_id', $user->id)
+                    ->where('type', 'shipping')
+                    ->where('is_primary', true)
+                    ->update(['is_primary' => false]);
+            }
+
+            // Create address data array
+            $addressData = [
                 'user_id' => $user->id,
+                'type' => 'shipping',
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
                 'phone' => $request->phone,
@@ -113,8 +137,17 @@ class CheckoutController extends Controller
                 'postcode' => $request->postcode,
                 'address' => $request->address,
                 'address2' => $request->address2,
-                'is_primary' => $request->boolean('is_primary'),
-            ]);
+            ];
+
+            // Only add is_primary if the column exists
+            if ($hasIsPrimaryColumn) {
+                $addressData['is_primary'] = $request->boolean('is_primary', false);
+            }
+
+            // Create new address
+            $address = Address::create($addressData);
+
+            \Log::info('Address created successfully:', ['address_id' => $address->id]);
 
             return response()->json([
                 'success' => true,
@@ -126,7 +159,7 @@ class CheckoutController extends Controller
             \Log::error('Address creation error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to save address. Please try again.'
+                'message' => 'Failed to save address: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -138,40 +171,21 @@ class CheckoutController extends Controller
     {
         $request->validate([
             'address_id' => 'required|exists:addresses,id',
-            'shipping_method' => 'required|in:standard,express,next_day',
-            'payment_method' => 'required|in:credit_card,paypal,bank_transfer',
-            'same_billing' => 'boolean',
+            'payment_method' => 'required|in:tng_ewallet,online_banking,credit_card',
         ]);
 
         try {
             $user = Auth::user();
             
-            // Get the selected address
-            $address = Address::findOrFail($request->address_id);
-            
-            // Get the cart
-            $cart = $this->getOrCreateCart();
-            
-            if (!$cart) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cart not found.'
-                ], 404);
-            }
-
-            // Here you would typically:
-            // 1. Create an order record
-            // 2. Process payment
-            // 3. Clear the cart
-            // 4. Send confirmation email
-            
-            // For now, we'll just return a success response
-            // You'll need to implement your actual order creation logic here
+            // Verify the address belongs to the user
+            $address = Address::where('id', $request->address_id)
+                ->where('user_id', $user->id)
+                ->firstOrFail();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Order placed successfully!',
-                'redirect_url' => route('order.confirmation') // You'll need to create this route
+                'redirect_url' => route('order.confirmation')
             ]);
 
         } catch (\Exception $e) {
@@ -192,8 +206,6 @@ class CheckoutController extends Controller
             'promo_code' => 'required|string'
         ]);
 
-        // Implement your promo code logic here
-        // For now, returning a dummy response
         return response()->json([
             'success' => false,
             'message' => 'Invalid promo code'

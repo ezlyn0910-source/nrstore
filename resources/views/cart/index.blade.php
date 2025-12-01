@@ -23,36 +23,66 @@
             <div class="header-total">TOTAL</div>
         </div>
 
-        <!-- Cart Items -->
-        @foreach($cartItems as $item)
-        <div class="cart-item" data-item-id="{{ $item->id }}">
-            <div class="product-info">
-                <div class="product-image">
-                    <img src="{{ $item->image_url }}" alt="{{ $item->product_name }}">
-                </div>
-                <div class="product-details">
-                    <a href="{{ route('products.show', $item->product->slug) }}" class="product-name">
-                        {{ $item->product_name }}
-                    </a>
-                    <span class="product-sku">SKU: {{ $item->product->sku ?? 'N/A' }}</span>
-                </div>
-            </div>
-
-            <div class="unit-price">
-                RM {{ number_format($item->price, 2) }}
-            </div>
-
-            <div class="quantity-controls">
-                <button class="qty-btn minus" data-action="decrease">-</button>
-                <input type="number" class="qty-input" value="{{ $item->quantity }}" min="1" max="99">
-                <button class="qty-btn plus" data-action="increase">+</button>
-            </div>
-
-            <div class="item-total">
-                RM {{ number_format($item->subtotal, 2) }}
-            </div>
+<!-- Cart Items -->
+@foreach($cartItems as $item)
+<div class="cart-item" data-item-id="{{ $item->id }}">
+    <div class="product-info">
+        <div class="product-image">
+            <img src="{{ $item->image_url }}" alt="{{ $item->product_name }}">
         </div>
-        @endforeach
+        <div class="product-details">
+            <!-- Debug: Check what data we have -->
+            <div style="display: none; color: red; font-size: 10px;">
+                Item ID: {{ $item->id }}<br>
+                Product ID: {{ $item->product_id }}<br>
+                Product exists: {{ isset($item->product) ? 'YES' : 'NO' }}<br>
+                Product name from relation: {{ $item->product->name ?? 'NOT FOUND' }}<br>
+                Item product_name: {{ $item->product_name ?? 'NOT SET' }}<br>
+                Item name: {{ $item->name ?? 'NOT SET' }}
+            </div>
+            
+            <a href="{{ route('products.show', $item->product->slug ?? '#') }}" class="product-name">
+                <!-- Try different ways to get product name -->
+                @if(isset($item->product) && $item->product)
+                    {{ $item->product->name }}
+                @elseif(isset($item->product_name))
+                    {{ $item->product_name }}
+                @else
+                    Product #{{ $item->product_id }}
+                @endif
+            </a>
+            
+            <!-- Specs on second row -->
+            @php
+                $specs = [];
+                if (isset($item->product) && $item->product) {
+                    if (!empty($item->product->processor)) $specs[] = $item->product->processor;
+                    if (!empty($item->product->ram)) $specs[] = $item->product->ram . ' RAM';
+                    if (!empty($item->product->storage)) $specs[] = $item->product->storage . ' SSD';
+                }
+            @endphp
+            
+            @if(!empty($specs))
+                <div class="product-specs">{{ implode(', ', $specs) }}</div>
+            @endif
+        </div>
+    </div>
+
+    <div class="unit-price">
+        RM {{ number_format($item->price, 2) }}
+    </div>
+
+    <div class="quantity-controls">
+        <button class="qty-btn minus" data-action="decrease">-</button>
+        <input type="number" class="qty-input" value="{{ $item->quantity }}" min="1" max="99">
+        <button class="qty-btn plus" data-action="increase">+</button>
+    </div>
+
+    <div class="item-total">
+        RM {{ number_format($item->subtotal, 2) }}
+    </div>
+</div>
+@endforeach
 
         <!-- Cart Footer -->
         <div class="cart-footer">
@@ -70,7 +100,6 @@
                     <span>Subtotal:</span>
                     <span class="subtotal-amount" id="subtotal">RM {{ number_format($subtotal, 2) }}</span>
                 </div>
-                <div class="divider"></div>
                 <!-- Updated ORDER NOW button that redirects to checkout -->
                 <a href="{{ route('checkout.index') }}" class="order-btn">
                     ORDER NOW
