@@ -202,11 +202,12 @@
 /* visible red border for invalid fields */
 .input-error {
     border-color: #dc2626 !important;
-    box-shadow: 0 0 0 3px rgba(220,38,38,0.06) !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.06) !important;
 }
 
 /* small red inline text already created by the script */
-.error-text { /* style is also set in JS, this is fallback */
+.error-text {
+    /* style is also set in JS, this is fallback */
     color: #dc2626;
     font-size: 0.875rem;
     margin-top: 0.375rem;
@@ -231,19 +232,28 @@
 }
 
 .address-item {
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    transition: all 0.2s ease;
-    background: white;
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    margin-bottom: 12px;
 }
 
 .address-item:hover {
     border-color: #1f2937;
 }
 
+/* SHOW the radio button */
 .address-radio {
-    display: none;
+    display: inline-block !important;
+    appearance: auto !important;
+    -webkit-appearance: radio !important;
+    -moz-appearance: radio !important;
+    width: 18px;
+    height: 18px;
+    accent-color: #1f2937; /* dark theme color */
+    margin-left: auto; /* push to the right */
 }
 
 .address-radio:checked + .address-label {
@@ -252,22 +262,26 @@
 }
 
 .address-label {
-    display: block;
-    padding: 1rem;
+    flex: 1;
     cursor: pointer;
-    transition: all 0.2s ease;
 }
 
 .address-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 4px;
 }
 
 .address-header strong {
     font-size: 1rem;
     color: #1f2937;
+}
+
+.default-badge {
+    font-size: 12px;
+    padding: 3px 8px;
+    margin-bottom: 4px;
 }
 
 .primary-badge {
@@ -286,6 +300,12 @@
 
 .address-details p {
     margin: 0.25rem 0;
+}
+
+.address-phone {
+    color: #6b7280;
+    font-weight: normal;
+    font-size: 14px;
 }
 
 /* No Address State */
@@ -312,6 +332,12 @@
 .no-address p {
     color: #6b7280;
     margin: 0;
+}
+
+.section-divider {
+    border: 0;
+    border-top: 2px solid #d1d5db;
+    margin: 35px 0;
 }
 
 /* ===== PAYMENT METHOD STYLES ===== */
@@ -358,7 +384,7 @@
 }
 
 .payment-method input:checked + .payment-label .radio-indicator::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 50%;
     left: 50%;
@@ -392,6 +418,122 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+}
+
+/* ============================
+   ONLINE BANKING – BANK LIST
+   ============================ */
+
+/* Wrapper panel under Online Banking */
+.online-banking-dropdown {
+    margin-top: 10px; /* already added inline, but safe to keep here */
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb; /* light grey border */
+    background-color: #f9fafb; /* very light background */
+    display: none; /* controlled by JS */
+}
+
+/* Each bank row */
+.bank-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    margin-bottom: 6px;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.bank-option:hover {
+    border-color: #d1d5db;
+    background-color: #f3f4f6;
+    cursor: pointer;
+}
+
+.bank-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bank-logo {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+    display: block;
+}
+
+.bank-name {
+    font-size: 14px;
+    color: #111827;
+}
+
+.bank-radio {
+    width: 16px;
+    height: 16px;
+    accent-color: #111827;
+    cursor: pointer;
+}
+
+/* Selected bank row */
+.bank-option.bank-selected {
+    border-color: #111827;
+    background-color: #e5e7eb;
+}
+
+/* Hidden banks */
+.bank-option.bank-hidden {
+    display: none;
+}
+
+/* Change bank button */
+.bank-list-toggle {
+    margin-top: 6px;
+    background: transparent;
+    border: none;
+    color: #111827;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.bank-list-toggle i {
+    font-size: 10px;
+}
+
+/* Card details panel under Credit/Debit Card */
+.card-details {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+    margin-top: 10px;
+}
+
+.card-details .form-group label {
+    font-size: 13px;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.card-details .form-group input {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+}
+
+.card-details .form-group input:focus {
+    outline: none;
+    border-color: #111827;
 }
 
 .method-name {
@@ -642,5 +784,19 @@
 
     .form-actions .btn {
         width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .bank-option {
+        padding: 6px;
+    }
+
+    .bank-name {
+        font-size: 13px;
+    }
+
+    .bank-logo {
+        height: 18px;
     }
 }

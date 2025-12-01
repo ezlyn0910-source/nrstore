@@ -121,12 +121,14 @@ Route::get('/terms-conditions', function () {
 
 // Authenticated User Routes
 Route::middleware(['auth'])->group(function () {
-    
-    // Checkout Routes (Authentication Required)
+
+    /**
+     * Checkout Routes (Authentication Required)
+     */
     Route::prefix('checkout')->name('checkout.')->group(function () {
         Route::get('/', [CheckoutController::class, 'index'])->name('index');
         Route::get('/review', [CheckoutController::class, 'review'])->name('review');
-        
+
         // Checkout actions
         Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('place-order');
         Route::post('/validate', [CheckoutController::class, 'validateCheckout'])->name('validate');
@@ -134,23 +136,25 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/apply-promo', [CheckoutController::class, 'applyPromo'])->name('apply-promo');
         Route::post('/remove-promo', [CheckoutController::class, 'removePromoCode'])->name('remove-promo');
 
-        // Address routes
-        Route::post('/address', [CheckoutController::class, 'storeAddress'])->name('address.store');
+        // Address routes (checkout-specific)
+        Route::post('/address/store', [CheckoutController::class, 'storeAddress'])->name('address.store');
         Route::get('/addresses', [CheckoutController::class, 'getAddresses'])->name('addresses.index');
         Route::put('/address/{address}', [CheckoutController::class, 'updateAddress'])->name('address.update');
         Route::delete('/address/{address}', [CheckoutController::class, 'deleteAddress'])->name('address.delete');
-        
+
         // Checkout data
         Route::get('/shipping-methods', [CheckoutController::class, 'getShippingMethods'])->name('shipping-methods');
         Route::get('/payment-methods', [CheckoutController::class, 'getPaymentMethods'])->name('payment-methods');
         Route::get('/verify-stock', [CheckoutController::class, 'verifyStock'])->name('verify-stock');
-        
+
         // Checkout results
         Route::get('/success/{order}', [CheckoutController::class, 'success'])->name('success');
         Route::get('/failed', [CheckoutController::class, 'failed'])->name('failed');
     });
 
-    // Payment Processing Routes
+    /**
+     * Payment Processing Routes
+     */
     Route::prefix('payment')->name('payment.')->controller(PaymentController::class)->group(function () {
         Route::post('/process', 'process')->name('process');
         Route::get('/success', 'success')->name('success');
@@ -158,35 +162,49 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/webhook/{gateway}', 'webhook')->name('webhook');
     });
 
-    // Order Routes
-    Route::controller(OrderController::class)->prefix('orders')->name('orders.')->group(function () {
+    /**
+     * Order Routes
+     */
+    Route::prefix('orders')->name('orders.')->controller(OrderController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/{order}', 'show')->name('show');
         Route::get('/{order}/details', 'details')->name('details');
         Route::post('/{order}/cancel', 'cancel')->name('cancel');
+
+        // If you really need this route, keep it. If not used, you can safely remove it.
         Route::post('/process-checkout', 'processCheckout')->name('process-checkout');
     });
 
-    // Profile Routes
+    /**
+     * Profile Routes
+     */
     Route::prefix('profile')->name('profile.')->controller(ProfileController::class)->group(function () {
         Route::get('/', 'edit')->name('edit');
         Route::put('/', 'update')->name('update');
         Route::put('/password', 'updatePassword')->name('password.update');
+
+        // Profile orders
         Route::get('/orders', 'orders')->name('orders');
+
+        // Profile addresses (separate from checkout)
         Route::get('/addresses', 'addresses')->name('addresses');
         Route::post('/addresses', 'storeAddress')->name('addresses.store');
         Route::put('/addresses/{address}', 'updateAddress')->name('addresses.update');
         Route::delete('/addresses/{address}', 'deleteAddress')->name('addresses.delete');
     });
 
-    // Favorite Routes
+    /**
+     * Favorite Routes
+     */
     Route::prefix('favorites')->name('favorites.')->controller(FavoriteController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/add', 'add')->name('add');
         Route::post('/remove', 'remove')->name('remove');
     });
 
-    // Wishlist Routes
+    /**
+     * Wishlist Routes
+     */
     Route::prefix('wishlist')->name('wishlist.')->controller(WishlistController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/add/{product}', 'add')->name('add');
@@ -194,7 +212,9 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/clear', 'clear')->name('clear');
     });
 
-    // Review Routes
+    /**
+     * Review Routes
+     */
     Route::prefix('reviews')->name('reviews.')->controller(ReviewController::class)->group(function () {
         Route::post('/', 'store')->name('store');
         Route::post('/{product}', 'storeProductReview')->name('store.product');

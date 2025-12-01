@@ -26,30 +26,50 @@
                     @endphp
                     
                     <!-- Address List -->
+                    @php
+                        // DEFAULT FIRST
+                        $sortedAddresses = $userAddresses->sortByDesc('is_default');
+                        $hasDefaultAddress = $sortedAddresses->contains('is_default', true);
+                    @endphp
+
                     <div id="addressList" class="address-list">
-                        @if($userAddresses->count() > 0)
-                            @foreach($userAddresses as $index => $address)
-                            <div class="address-item">
-                                <input type="radio" 
-                                    id="address_{{ $address->id }}" 
-                                    name="selected_address" 
-                                    value="{{ $address->id }}"
-                                    {{ $index === 0 ? 'checked' : '' }}
-                                    class="address-radio" required>
-                                <label for="address_{{ $address->id }}" class="address-label">
-                                    <div class="address-header">
-                                        <strong>{{ $address->full_name }}</strong>
-                                        @if($address->is_default)
-                                            <span class="primary-badge">Default</span>
+                        @if($sortedAddresses->count() > 0)
+                            @foreach($sortedAddresses as $index => $address)
+                                <div class="address-item">
+                                    <div class="address-label">
+                                        <div class="address-header">
+                                            @if($address->is_default)
+                                                <span class="primary-badge default-badge">Default</span>
+                                            @endif
+
+                                            <strong class="address-name">
+                                                {{ $address->full_name }}
+                                                <span class="address-phone">({{ $address->phone }})</span>
+                                            </strong>
+                                        </div>
+
+                                        <div class="address-details">
+                                            <p>
+                                                {{ $address->address_line_1 }}
+                                                {{ $address->address_line_2 ? ', ' . $address->address_line_2 : '' }}
+                                            </p>
+                                            <p>{{ $address->city }}, {{ $address->state }} {{ $address->postal_code }}</p>
+                                        </div>
+                                    </div>
+
+                                    <input 
+                                        type="radio"
+                                        name="selected_address"
+                                        value="{{ $address->id }}"
+                                        class="address-radio"
+                                        @if($hasDefaultAddress)
+                                            {{ $address->is_default ? 'checked' : '' }}
+                                        @else
+                                            {{ $loop->first ? 'checked' : '' }}
                                         @endif
-                                    </div>
-                                    <div class="address-details">
-                                        <p>{{ $address->phone }}</p>
-                                        <p>{{ $address->address_line_1 }}{{ $address->address_line_2 ? ', ' . $address->address_line_2 : '' }}</p>
-                                        <p>{{ $address->city }}, {{ $address->state }} {{ $address->postal_code }}</p>
-                                    </div>
-                                </label>
-                            </div>
+                                        required
+                                    >
+                                </div>
                             @endforeach
                         @else
                             <div class="no-address">
@@ -132,9 +152,14 @@
                                     </div>
                                 </div>
                                 
-                                <div class="form-check">
-                                    <input type="checkbox" id="is_default" name="is_default">
-                                    <label for="is_default">Set as default address</label>
+                                <div class="form-check default-check">
+                                    <input 
+                                        type="checkbox" 
+                                        id="is_default" 
+                                        name="is_default" 
+                                        class="form-check-input"
+                                    >
+                                    <label for="is_default" class="form-check-label">Set as default address</label>
                                 </div>
                                 
                                 <div class="form-actions">
@@ -148,12 +173,14 @@
                     </div>
                 </section>
 
+                <hr class="section-divider">
+
                 <!-- Payment Method -->
                 <section class="checkout-section">
                     <h2>Payment Method</h2>
                     <div class="payment-methods">
                         <div class="payment-method">
-                            <input type="radio" id="online_banking" name="payment_method" value="online_banking" checked required>
+                            <input type="radio" id="online_banking" name="payment_method" value="online_banking" required>
                             <label for="online_banking" class="payment-label">
                                 <div class="payment-method-info">
                                     <div class="payment-logo">
@@ -166,6 +193,109 @@
                                 </div>
                                 <div class="radio-indicator"></div>
                             </label>
+
+                            <div id="online_banking_banks" class="online-banking-dropdown" style="display:none; margin-top:10px;">
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="/images/banks/ambank.png" alt="AmBank" class="bank-logo">
+                                        <span class="bank-name">AmBank</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="ambank" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="/images/banks/bank-islam.png" alt="Bank Islam" class="bank-logo">
+                                        <span class="bank-name">Bank Islam</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="bank_islam" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="/images/banks/bank-rakyat.png" alt="Bank Rakyat" class="bank-logo">
+                                        <span class="bank-name">Bank Rakyat</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="bank_rakyat" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="/images/banks/cimb.png" alt="CIMB Bank" class="bank-logo">
+                                        <span class="bank-name">CIMB Bank</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="cimb" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="/images/banks/hong-leong.png" alt="Hong Leong Bank" class="bank-logo">
+                                        <span class="bank-name">Hong Leong Bank</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="hong_leong" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="/images/banks/hsbc.png" alt="HSBC" class="bank-logo">
+                                        <span class="bank-name">HSBC Bank Malaysia</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="hsbc" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="/images/banks/maybank.png" alt="Maybank" class="bank-logo">
+                                        <span class="bank-name">Maybank</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="maybank" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="/images/banks/ocbc.png" alt="OCBC" class="bank-logo">
+                                        <span class="bank-name">OCBC Bank</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="ocbc" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="/images/banks/public-bank.png" alt="Public Bank" class="bank-logo">
+                                        <span class="bank-name">Public Bank</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="public_bank" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="/images/banks/rhb.png" alt="RHB Bank" class="bank-logo">
+                                        <span class="bank-name">RHB Bank</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="rhb" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="/images/banks/standard-chartered.png" alt="Standard Chartered" class="bank-logo">
+                                        <span class="bank-name">Standard Chartered</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="standard_chartered" class="bank-radio">
+                                </div>
+
+                                <div class="bank-option">
+                                    <div class="bank-info">
+                                        <img src="/images/banks/uob.png" alt="UOB" class="bank-logo">
+                                        <span class="bank-name">UOB Bank</span>
+                                    </div>
+                                    <input type="radio" name="online_banking_bank" value="uob" class="bank-radio">
+                                </div>
+
+                                <button type="button" id="bankListToggle" class="bank-list-toggle" style="display:none;">
+                                    Change bank <i class="fas fa-chevron-down"></i>
+                                </button>
+
+                            </div>
                         </div>
 
                         <div class="payment-method">
@@ -182,8 +312,60 @@
                                 </div>
                                 <div class="radio-indicator"></div>
                             </label>
+
+                            <div id="card_details" class="card-details" style="display:none; margin-top:10px;">
+                                <div class="form-group">
+                                    <label for="card_name">Name on Card</label>
+                                    <input 
+                                        type="text" 
+                                        id="card_name" 
+                                        name="card_name" 
+                                        placeholder="JOHN DOE" 
+                                        data-card-required="1">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="card_number">Card Number</label>
+                                    <input 
+                                        type="text" 
+                                        id="card_number" 
+                                        name="card_number" 
+                                        inputmode="numeric" 
+                                        autocomplete="cc-number"
+                                        placeholder="XXXX XXXX XXXX XXXX"
+                                        maxlength="19"
+                                        data-card-required="1">
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="card_expiry">Expiry Date</label>
+                                        <input 
+                                            type="text" 
+                                            id="card_expiry" 
+                                            name="card_expiry" 
+                                            placeholder="MM/YY"
+                                            autocomplete="cc-exp"
+                                            maxlength="5"
+                                            data-card-required="1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="card_cvv">CVV</label>
+                                        <input 
+                                            type="password" 
+                                            id="card_cvv" 
+                                            name="card_cvv" 
+                                            inputmode="numeric"
+                                            autocomplete="cc-csc"
+                                            placeholder="123"
+                                            maxlength="4"
+                                            data-card-required="1">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
                 </section>
             </div>
 
@@ -267,13 +449,16 @@
     ];
 
     function createErrorEl(message) {
-        const el = document.createElement('div');
-        el.className = 'error-text';
-        el.setAttribute('role', 'alert');
-        el.style.color = '#dc2626'; // red
-        el.style.fontSize = '0.875rem';
-        el.style.marginTop = '0.375rem';
-        return el;
+        const div = document.createElement('div');
+        div.className = 'form-error-box';
+        div.style.background = '#ffdddd';
+        div.style.color = '#b30000';
+        div.style.padding = '10px';
+        div.style.border = '1px solid #b30000';
+        div.style.borderRadius = '5px';
+        div.style.marginBottom = '10px';
+        div.textContent = message;
+        return div;
     }
 
     function showFieldError(inputEl, message) {
@@ -426,110 +611,324 @@
             });
         }
 
-        // form handling
+        // ============================
+        // FORM HANDLING – ADD ADDRESS
+        // ============================
         const addressForm = document.getElementById('addressForm');
-        if (!addressForm) return;
 
-        attachLiveClear(addressForm);
+        if (addressForm) {
+            attachLiveClear(addressForm);
 
-        addressForm.addEventListener('submit', function (evt) {
-            evt.preventDefault();
+            addressForm.addEventListener('submit', function (evt) {
+                evt.preventDefault();
 
-            // remove any previous server-side error list
-            const globalErr = document.querySelector('.form-global-error');
-            if (globalErr) globalErr.remove();
+                // remove any previous server-side error list
+                const globalErr = document.querySelector('.form-global-error');
+                if (globalErr) globalErr.remove();
 
-            const saveBtn = this.querySelector('.save-btn');
-            const originalText = saveBtn ? saveBtn.textContent : 'Save';
+                const saveBtn = this.querySelector('.save-btn');
+                const originalText = saveBtn ? saveBtn.textContent : 'Save';
 
-            // Client-side validation
-            const validated = validateFormClient(this);
-            // Clear all prior field errors first
-            SELECTORS.forEach(name => {
-                const el = this.querySelector('[name="' + name + '"]');
-                if (el) clearFieldError(el);
-            });
+                // Client-side validation
+                const validated = validateFormClient(this);
 
-            if (!validated.valid) {
-                // show inline errors
-                Object.keys(validated.errors).forEach(key => {
-                    const el = this.querySelector('[name="' + key + '"]');
-                    if (el) {
-                        showFieldError(el, validated.errors[key]);
-                        // scroll first invalid into view
-                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
+                // Clear all prior field errors first
+                SELECTORS.forEach(name => {
+                    const el = this.querySelector('[name="' + name + '"]');
+                    if (el) clearFieldError(el);
                 });
-                return; // do not submit
-            }
 
-            // everything ok client-side, submit via AJAX
-            if (saveBtn) {
-                saveBtn.textContent = 'Saving...';
-                saveBtn.disabled = true;
-            }
-
-            const formData = new FormData(this);
-
-            fetch(this.action, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: formData
-            })
-            .then(async res => {
-                const contentType = res.headers.get('content-type') || '';
-                const isJson = contentType.includes('application/json');
-                const data = isJson ? await res.json() : null;
-
-                if (res.ok && data && data.success) {
-                    // success
-                    alert(data.message || 'Address saved successfully!');
-                    // close dropdown if present
-                    if (typeof updateToggleState === 'function') updateToggleState(false);
-                    this.reset();
-                    // reload to show saved address
-                    window.location.reload();
-                    return;
-                }
-
-                // handle validation 422
-                if (res.status === 422 && data && data.errors) {
-                    // data.errors is an object from Laravel validation
-                    Object.keys(data.errors).forEach(key => {
+                if (!validated.valid) {
+                    // show inline errors
+                    Object.keys(validated.errors).forEach(key => {
                         const el = this.querySelector('[name="' + key + '"]');
                         if (el) {
-                            showFieldError(el, data.errors[key][0] || data.errors[key]);
-                        } else {
-                            // if unknown field, show global
-                            const g = createErrorEl(data.errors[key][0] || data.errors[key]);
-                            g.classList.add('form-global-error');
-                            this.prepend(g);
+                            showFieldError(el, validated.errors[key]);
+                            // scroll first invalid into view
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
                     });
-                } else {
-                    // other errors: show message from response or generic message
-                    const msg = (data && data.message) ? data.message : 'Failed to save address. Please try again.';
-                    const g = createErrorEl(msg);
-                    g.classList.add('form-global-error');
-                    this.prepend(g);
+                    return; // do not submit
                 }
-            })
-            .catch(err => {
-                console.error('Address save error:', err);
-                const g = createErrorEl('Network error. Please try again.');
-                g.classList.add('form-global-error');
-                this.prepend(g);
-            })
-            .finally(() => {
+
+                // everything ok client-side, submit via AJAX
                 if (saveBtn) {
-                    saveBtn.textContent = originalText;
-                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Saving...';
+                    saveBtn.disabled = true;
                 }
+
+                const formData = new FormData(this);
+
+                fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: formData
+                })
+                .then(async res => {
+                    const contentType = res.headers.get('content-type') || '';
+                    const isJson = contentType.includes('application/json');
+                    const data = isJson ? await res.json() : null;
+
+                    /* -----------------------------
+                       SUCCESS RESPONSE
+                    ----------------------------- */
+                    if (res.ok && data && data.success) {
+                        alert(data.message || 'Address saved successfully!');
+                        if (typeof updateToggleState === 'function') updateToggleState(false);
+                        this.reset();
+                        window.location.reload();
+                        return;
+                    }
+
+                    /* -----------------------------
+                       VALIDATION ERRORS (422)
+                    ----------------------------- */
+                    if (res.status === 422 && data && data.errors) {
+                        Object.keys(data.errors).forEach(key => {
+                            // Special handling for default checkbox
+                            if (key === 'is_default') {
+                                const cb = document.getElementById('is_default');
+                                if (cb) {
+                                    // Show browser-style tooltip like "Please fill out this field"
+                                    cb.setCustomValidity('Already exist');
+                                    cb.reportValidity();
+
+                                    // Clear tooltip when user changes the checkbox
+                                    cb.addEventListener('input', function () {
+                                        cb.setCustomValidity('');
+                                    }, { once: true });
+                                }
+                                return; // don't do anything else for this key
+                            }
+
+                            // Normal field errors (no red global box)
+                            const field = this.querySelector('[name="' + key + '"]');
+                            if (field) {
+                                showFieldError(field, data.errors[key][0]);
+                            } else {
+                                // If some weird field name comes back, just log it
+                                console.warn('Validation error on unknown field:', key, data.errors[key]);
+                            }
+                        });
+
+                        return;
+                    }
+
+                    /* -----------------------------
+                       OTHER ERRORS (400, 500, etc.)
+                       No red box, simple alert only.
+                    ----------------------------- */
+                    console.error('Address save failed:', data);
+                    alert('Failed to save address. Please try again.');
+                    return;
+                })
+                .catch(err => {
+                    console.error('Address save error:', err);
+                    alert('Network error. Please try again.');
+                })
+                .finally(() => {
+                    if (saveBtn) {
+                        saveBtn.textContent = originalText;
+                        saveBtn.disabled = false;
+                    }
+                });
             });
-        });
+        }
+
+        // ============================
+        // PAYMENT METHODS – ONLINE BANKING BANK LIST
+        // ============================
+        const onlineRadio       = document.getElementById('online_banking');
+        const paymentRadios     = document.querySelectorAll('input[name="payment_method"]');
+        const bankDropdownBlock = document.getElementById('online_banking_banks');
+        const bankOptions       = document.querySelectorAll('#online_banking_banks .bank-option');
+        const bankRadios        = document.querySelectorAll('input[name="online_banking_bank"]');
+        const bankToggleBtn     = document.getElementById('bankListToggle');
+
+        // Track whether user has expanded the bank list to change selection
+        let bankListExpanded = false;
+
+        function applyBankSelectionUI() {
+            if (!bankOptions || !bankOptions.length) return;
+
+            let selectedRadio = null;
+            bankRadios.forEach(r => {
+                if (r.checked) selectedRadio = r;
+            });
+
+            const hasSelected = !!selectedRadio;
+
+            if (!hasSelected) {
+                // No bank selected: show all banks, hide toggle
+                bankOptions.forEach(option => {
+                    option.classList.remove('bank-selected', 'bank-hidden');
+                });
+                if (bankToggleBtn) {
+                    bankToggleBtn.style.display = 'none';
+                }
+                return;
+            }
+
+            if (bankListExpanded) {
+                // Expanded: show all banks, highlight the selected one
+                bankOptions.forEach(option => {
+                    const radio = option.querySelector('input[name="online_banking_bank"]');
+                    if (!radio) return;
+
+                    option.classList.remove('bank-hidden');
+
+                    if (radio === selectedRadio) {
+                        option.classList.add('bank-selected');
+                    } else {
+                        option.classList.remove('bank-selected');
+                    }
+                });
+
+                if (bankToggleBtn) {
+                    bankToggleBtn.style.display = 'inline-flex';
+                    bankToggleBtn.innerHTML = 'Hide banks <i class="fas fa-chevron-up"></i>';
+                }
+            } else {
+                // Collapsed: show only the selected bank row
+                bankOptions.forEach(option => {
+                    const radio = option.querySelector('input[name="online_banking_bank"]');
+                    if (!radio) return;
+
+                    if (radio === selectedRadio) {
+                        option.classList.add('bank-selected');
+                        option.classList.remove('bank-hidden');
+                    } else {
+                        option.classList.remove('bank-selected');
+                        option.classList.add('bank-hidden');
+                    }
+                });
+
+                if (bankToggleBtn) {
+                    bankToggleBtn.style.display = 'inline-flex';
+                    bankToggleBtn.innerHTML = 'Change bank <i class="fas fa-chevron-down"></i>';
+                }
+            }
+        }
+
+        function updateBankDropdown() {
+            if (!onlineRadio || !bankDropdownBlock) return;
+
+            if (onlineRadio.checked) {
+                bankDropdownBlock.style.display = 'block';
+
+                // Make bank selection required when using Online Banking
+                if (bankRadios.length) {
+                    bankRadios[0].setAttribute('required', 'required');
+                }
+
+                // Update UI based on whether a bank is already selected
+                applyBankSelectionUI();
+            } else {
+                // Hide dropdown and reset
+                bankDropdownBlock.style.display = 'none';
+                bankListExpanded = false;
+
+                bankRadios.forEach(radio => {
+                    radio.checked = false;
+                    radio.removeAttribute('required');
+                });
+
+                bankOptions.forEach(option => {
+                    option.classList.remove('bank-selected', 'bank-hidden');
+                });
+
+                if (bankToggleBtn) {
+                    bankToggleBtn.style.display = 'none';
+                }
+            }
+        }
+
+        // Make each bank row clickable
+        if (bankOptions && bankOptions.length) {
+            bankOptions.forEach(option => {
+                option.addEventListener('click', function (e) {
+                    const radio = this.querySelector('input[name="online_banking_bank"]');
+                    if (!radio) return;
+
+                    radio.checked = true;
+                    bankListExpanded = false; // collapse after choosing
+                    applyBankSelectionUI();
+                    e.stopPropagation();
+                });
+            });
+        }
+
+        // Just in case user clicks directly on the small radio
+        if (bankRadios && bankRadios.length) {
+            bankRadios.forEach(radio => {
+                radio.addEventListener('change', function () {
+                    bankListExpanded = false; // collapse after choosing
+                    applyBankSelectionUI();
+                });
+            });
+        }
+
+        // Toggle button: expand/collapse bank list
+        if (bankToggleBtn) {
+            bankToggleBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                bankListExpanded = !bankListExpanded;
+                applyBankSelectionUI();
+            });
+        }
+
+        // Payment method change: Online Banking vs Card
+        if (paymentRadios && paymentRadios.length) {
+            paymentRadios.forEach(radio => {
+                radio.addEventListener('change', updateBankDropdown);
+            });
+        }
+
+        // Initial state: no payment selected → keep dropdown hidden
+        if (bankDropdownBlock) {
+            bankDropdownBlock.style.display = 'none';
+        }
+
+        // ============================
+        // PAYMENT METHODS – CARD DETAILS TOGGLE
+        // ============================
+        const cardRadio     = document.getElementById('credit_card');
+        const cardDetails   = document.getElementById('card_details');
+        const cardRequiredInputs = cardDetails 
+            ? cardDetails.querySelectorAll('[data-card-required]')
+            : [];
+
+        function updateCardDetailsUI() {
+            if (!cardRadio || !cardDetails) return;
+
+            if (cardRadio.checked) {
+                // Show card form and make fields required
+                cardDetails.style.display = 'block';
+                cardRequiredInputs.forEach(input => {
+                    input.setAttribute('required', 'required');
+                });
+            } else {
+                // Hide card form and remove required
+                cardDetails.style.display = 'none';
+                cardRequiredInputs.forEach(input => {
+                    input.removeAttribute('required');
+                });
+            }
+        }
+
+        // Use existing paymentRadios (already defined in your bank block)
+        if (paymentRadios && paymentRadios.length) {
+            paymentRadios.forEach(radio => {
+                radio.addEventListener('change', updateCardDetailsUI);
+            });
+        }
+
+        // Initial state on load (no method selected → hide card details)
+        updateCardDetailsUI();
+
     }); // end load
 })(); // IIFE
 </script>

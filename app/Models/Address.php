@@ -14,15 +14,16 @@ class Address extends Model
         'user_id',
         'type',
         'full_name',
+        'phone',
         'address_line_1',
         'address_line_2',
         'city',
         'state',
         'postal_code',
         'country',
-        'phone',
         'is_default',
     ];
+
 
     protected $casts = [
         'is_default' => 'boolean',
