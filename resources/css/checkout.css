@@ -233,37 +233,55 @@
 
 .address-item {
     display: flex;
-    align-items: center;
-    padding: 12px;
+    justify-content: space-between; 
+    align-items: flex-start;
+    padding: 16px;
     border: 1px solid #d1d5db;
     border-radius: 8px;
     margin-bottom: 12px;
+    position: relative;
 }
 
 .address-item:hover {
     border-color: #1f2937;
 }
 
-/* SHOW the radio button */
-.address-radio {
-    display: inline-block !important;
-    appearance: auto !important;
-    -webkit-appearance: radio !important;
-    -moz-appearance: radio !important;
-    width: 18px;
-    height: 18px;
-    accent-color: #1f2937; /* dark theme color */
-    margin-left: auto; /* push to the right */
+/* LEFT SIDE column */
+.address-left {
+    flex: 1;
+    display: block;
+    padding-right: 10px;
 }
 
-.address-radio:checked + .address-label {
-    background: #f3f4f6;
-    border-color: #1f2937;
+/* RIGHT SIDE: Edit + Radio in same vertical column */
+.address-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-left: 20px;
+    margin-right: 5px;
+    min-width: 70px;
 }
 
 .address-label {
     flex: 1;
     cursor: pointer;
+    display: block;
+}
+
+/* SHOW the radio button */
+.address-radio {
+    width: 20px;
+    height: 20px;
+    accent-color: #1f2937;
+    cursor: pointer;
+    align-self: flex-end;
+    margin-top: 10px;
+}
+
+.address-radio:checked + .address-label {
+    border-color: #1f2937;
 }
 
 .address-header {
@@ -271,6 +289,140 @@
     flex-direction: column;
     align-items: flex-start;
     margin-bottom: 4px;
+}
+
+.address-name-line {
+    font-size: 1rem;
+    color: #1f2937;
+    font-weight: 600;
+}
+
+.address-header-main {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.address-edit-link {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: underline;
+    color: #1f2937;
+    cursor: pointer;
+    margin-bottom: 12px;
+}
+
+.address-edit-link:hover {
+    color: #111827;
+}
+
+/* ===== Edit Address Modal ===== */
+.address-edit-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+
+.address-edit-modal.show {
+    display: flex;
+}
+
+.address-edit-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.address-edit-dialog {
+    position: relative;
+    background: #ffffff;
+    border-radius: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
+    z-index: 1;
+}
+
+.address-edit-dialog form {
+    width: 100%;
+    text-align: left;
+}
+
+.address-edit-title {
+    margin: 0 0 1rem 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    color: #111827;
+}
+
+.address-edit-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: transparent;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.address-edit-dialog .form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.address-edit-dialog .form-group label::after {
+    content: " :";
+}
+
+.address-edit-dialog .form-group {
+    margin-bottom: 14px;
+}
+
+.address-edit-dialog .form-group input,
+.address-edit-dialog .form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background: white;
+}
+
+.address-edit-dialog .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 14px;
+}
+
+.required-star {
+    color: #dc2626;
+    font-weight: 700;
+    margin-left: 2px;
+}
+
+.edit-form-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+#editAddressSave {
+    border-radius: 20px !important;
 }
 
 .address-header strong {

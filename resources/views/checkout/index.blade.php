@@ -36,39 +36,55 @@
                         @if($sortedAddresses->count() > 0)
                             @foreach($sortedAddresses as $index => $address)
                                 <div class="address-item">
-                                    <div class="address-label">
+                                    <label class="address-left">
                                         <div class="address-header">
                                             @if($address->is_default)
                                                 <span class="primary-badge default-badge">Default</span>
                                             @endif
 
-                                            <strong class="address-name">
+                                            <span class="address-name-line">
                                                 {{ $address->full_name }}
                                                 <span class="address-phone">({{ $address->phone }})</span>
-                                            </strong>
+                                            </span>
                                         </div>
 
                                         <div class="address-details">
-                                            <p>
-                                                {{ $address->address_line_1 }}
-                                                {{ $address->address_line_2 ? ', ' . $address->address_line_2 : '' }}
-                                            </p>
+                                            <p>{{ $address->address_line_1 }}</p>
+                                            @if($address->address_line_2)
+                                                <p>{{ $address->address_line_2 }}</p>
+                                            @endif
                                             <p>{{ $address->city }}, {{ $address->state }} {{ $address->postal_code }}</p>
+                                            <p>{{ $address->country ?? 'Malaysia' }}</p>
                                         </div>
-                                    </div>
+                                    </label>
 
-                                    <input 
-                                        type="radio"
-                                        name="selected_address"
-                                        value="{{ $address->id }}"
-                                        class="address-radio"
-                                        @if($hasDefaultAddress)
+                                    <div class="address-right">
+                                        <button 
+                                            type="button"
+                                            class="address-edit-link"
+                                            data-id="{{ $address->id }}"
+                                            data-full-name="{{ e($address->full_name) }}"
+                                            data-phone="{{ e($address->phone) }}"
+                                            data-line1="{{ e($address->address_line_1) }}"
+                                            data-line2="{{ e($address->address_line_2) }}"
+                                            data-city="{{ e($address->city) }}"
+                                            data-state="{{ e($address->state) }}"
+                                            data-postal="{{ e($address->postal_code) }}"
+                                            data-country="{{ e($address->country ?? 'Malaysia') }}"
+                                            data-is-default="{{ $address->is_default ? '1' : '0' }}"
+                                            data-update-url="{{ route('checkout.address.update', $address->id) }}"
+                                        >
+                                            Edit
+                                        </button>
+
+                                        <input
+                                            type="radio"
+                                            name="selected_address"
+                                            class="address-radio"
+                                            value="{{ $address->id }}"
                                             {{ $address->is_default ? 'checked' : '' }}
-                                        @else
-                                            {{ $loop->first ? 'checked' : '' }}
-                                        @endif
-                                        required
-                                    >
+                                        >
+                                    </div>
                                 </div>
                             @endforeach
                         @else
@@ -155,11 +171,11 @@
                                 <div class="form-check default-check">
                                     <input 
                                         type="checkbox" 
-                                        id="is_default" 
-                                        name="is_default" 
+                                        id="edit_is_default" 
+                                        name="is_default"
                                         class="form-check-input"
                                     >
-                                    <label for="is_default" class="form-check-label">Set as default address</label>
+                                    <label for="edit_is_default" class="form-check-label">Set as default address</label>
                                 </div>
                                 
                                 <div class="form-actions">
@@ -172,6 +188,97 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- Edit Address Modal -->
+                <div id="editAddressModal" class="address-edit-modal">
+                    <div class="address-edit-backdrop"></div>
+
+                    <div class="address-edit-dialog">
+                        <button type="button" class="address-edit-close" id="editAddressClose">&times;</button>
+                        <h3 class="address-edit-title">Edit Address</h3>
+
+                        <form id="editAddressForm" method="POST">
+                            @csrf
+                            @method('PUT')
+
+                            <div class="form-group">
+                                <label for="edit_full_name">Full Name <span class="required-star">*</span></label>
+                                <input type="text" id="edit_full_name" name="full_name" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="edit_full_name">Phone Number <span class="required-star">*</span></label>
+                                <input type="tel" id="edit_phone" name="phone" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="edit_full_name">Address Line 1 <span class="required-star">*</span></label>
+                                <input type="text" id="edit_address_line_1" name="address_line_1" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="edit_address_line_2">Address Line 2 </label>
+                                <input type="text" id="edit_address_line_2" name="address_line_2">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="edit_full_name">City <span class="required-star">*</span></label>
+                                    <input type="text" id="edit_city" name="city" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_full_name">State <span class="required-star">*</span></label>
+                                    <select id="edit_state" name="state" required>
+                                        <option value="">Select State</option>
+                                        <option value="Johor">Johor</option>
+                                        <option value="Kedah">Kedah</option>
+                                        <option value="Kelantan">Kelantan</option>
+                                        <option value="Kuala Lumpur">Kuala Lumpur</option>
+                                        <option value="Labuan">Labuan</option>
+                                        <option value="Melaka">Melaka</option>
+                                        <option value="Negeri Sembilan">Negeri Sembilan</option>
+                                        <option value="Pahang">Pahang</option>
+                                        <option value="Penang">Penang</option>
+                                        <option value="Perak">Perak</option>
+                                        <option value="Perlis">Perlis</option>
+                                        <option value="Putrajaya">Putrajaya</option>
+                                        <option value="Sabah">Sabah</option>
+                                        <option value="Sarawak">Sarawak</option>
+                                        <option value="Selangor">Selangor</option>
+                                        <option value="Terengganu">Terengganu</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="edit_full_name">Postal Code <span class="required-star">*</span></label>
+                                    <input type="text" id="edit_postal_code" name="postal_code" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_full_name">Country <span class="required-star">*</span></label>
+                                    <input type="text" id="edit_country" name="country" value="Malaysia" readonly>
+                                </div>
+                            </div>
+
+                            <div class="form-check default-check">
+                                <input 
+                                    type="checkbox" 
+                                    id="edit_is_default" 
+                                    name="is_default" 
+                                    class="form-check-input"
+                                >
+                                <label for="edit_is_default" class="form-check-label">Set as default address</label>
+                            </div>
+
+                            <div class="form-actions edit-form-actions">
+                                <button type="submit" class="btn btn-primary save-btn" id="editAddressSave">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
 
                 <hr class="section-divider">
 
@@ -676,6 +783,210 @@
                 })
                 .catch(err => {
                     console.error('Address save error:', err);
+                    alert('Network error. Please try again.');
+                })
+                .finally(() => {
+                    if (saveBtn) {
+                        saveBtn.textContent = originalText;
+                        saveBtn.disabled = false;
+                    }
+                });
+            });
+        }
+
+        // ============================
+        // EDIT ADDRESS POPUP
+        // ============================
+        const editAddressModal  = document.getElementById('editAddressModal');
+        const editAddressForm   = document.getElementById('editAddressForm');
+        const editAddressCancel = document.getElementById('editAddressCancel');
+        const editAddressClose  = document.getElementById('editAddressClose');
+
+        function openEditAddressModal(trigger) {
+            if (!editAddressModal || !editAddressForm) return;
+
+            // SAFETY: if trigger is not the button, climb up to the closest button
+            if (!trigger.classList.contains('address-edit-link')) {
+                trigger = trigger.closest('.address-edit-link');
+            }
+            if (!trigger) return;
+
+            // 1) Set form action
+            const updateUrl = trigger.getAttribute('data-update-url') || '';
+            editAddressForm.action = updateUrl;
+
+            // 2) Fill text fields from data- attributes
+            const map = {
+                full_name:      'fullName',
+                phone:          'phone',
+                address_line_1: 'line1',
+                address_line_2: 'line2',
+                city:           'city',
+                state:          'state',
+                postal_code:    'postal',
+                country:        'country'
+            };
+
+            Object.keys(map).forEach(name => {
+                const input = editAddressForm.querySelector('[name="' + name + '"]');
+                if (!input) return;
+                const dataKey = map[name];
+                input.value = trigger.dataset[dataKey] || '';
+            });
+
+            // 3) Set "Set as default" checkbox based on data-is-default
+            const isDefaultCb  = editAddressForm.querySelector('#edit_is_default');
+            if (isDefaultCb) {
+                const isDefaultAttr = trigger.getAttribute('data-is-default');  // "1" or "0"
+                const isDefault     = (isDefaultAttr === '1' || isDefaultAttr === 'true');
+
+                isDefaultCb.checked = isDefault;    // ✅ tick only if default
+                isDefaultCb.setCustomValidity('');
+            }
+
+            // 4) Clear old field errors
+            SELECTORS.forEach(name => {
+                const el = editAddressForm.querySelector('[name="' + name + '"]');
+                if (el) clearFieldError(el);
+            });
+            const globalErr = editAddressForm.querySelector('.form-global-error');
+            if (globalErr) globalErr.remove();
+
+            // 5) Show modal
+            editAddressModal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeEditAddressModal() {
+            if (!editAddressModal) return;
+            editAddressModal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function bindEditButtons() {
+            const editButtons = document.querySelectorAll('.address-edit-link');
+            editButtons.forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    openEditAddressModal(this);   // <— use "this", not e.target
+                });
+            });
+        }
+
+        bindEditButtons();
+
+        if (editAddressCancel) {
+            editAddressCancel.addEventListener('click', function (e) {
+                e.preventDefault();
+                closeEditAddressModal();
+            });
+        }
+
+        if (editAddressClose) {
+            editAddressClose.addEventListener('click', function (e) {
+                e.preventDefault();
+                closeEditAddressModal();
+            });
+        }
+
+        if (editAddressModal) {
+            // Click backdrop to close
+            editAddressModal.addEventListener('click', function (e) {
+                if (e.target === editAddressModal) {
+                    closeEditAddressModal();
+                }
+            });
+        }
+
+        if (editAddressForm) {
+            attachLiveClear(editAddressForm);
+
+            editAddressForm.addEventListener('submit', function (evt) {
+                evt.preventDefault();
+
+                const saveBtn = this.querySelector('.save-btn');
+                const originalText = saveBtn ? saveBtn.textContent : 'Save';
+
+                // Client-side validation
+                const validated = validateFormClient(this);
+
+                // Clear field errors first
+                SELECTORS.forEach(name => {
+                    const el = this.querySelector('[name="' + name + '"]');
+                    if (el) clearFieldError(el);
+                });
+
+                if (!validated.valid) {
+                    Object.keys(validated.errors).forEach(key => {
+                        const el = this.querySelector('[name="' + key + '"]');
+                        if (el) {
+                            showFieldError(el, validated.errors[key]);
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    });
+                    return;
+                }
+
+                if (saveBtn) {
+                    saveBtn.textContent = 'Saving...';
+                    saveBtn.disabled = true;
+                }
+
+                const formData = new FormData(this);
+
+                fetch(this.action, {
+                    method: 'POST', // Laravel will read _method=PUT
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: formData
+                })
+                .then(async res => {
+                    const contentType = res.headers.get('content-type') || '';
+                    const isJson = contentType.includes('application/json');
+                    const data = isJson ? await res.json() : null;
+
+                    // SUCCESS
+                    if (res.ok && data && data.success) {
+                        alert(data.message || 'Address updated successfully!');
+                        closeEditAddressModal();
+                        window.location.reload();
+                        return;
+                    }
+
+                    // VALIDATION ERRORS (422)
+                    if (res.status === 422 && data && data.errors) {
+                        Object.keys(data.errors).forEach(key => {
+                            if (key === 'is_default') {
+                                const cb = document.getElementById('edit_is_default');
+                                if (cb) {
+                                    cb.setCustomValidity('Already exist');
+                                    cb.reportValidity();
+                                    cb.addEventListener('input', function () {
+                                        cb.setCustomValidity('');
+                                    }, { once: true });
+                                }
+                                return;
+                            }
+
+                            const field = this.querySelector('[name="' + key + '"]');
+                            if (field) {
+                                showFieldError(field, data.errors[key][0]);
+                            } else {
+                                console.warn('Validation error on unknown field (edit):', key, data.errors[key]);
+                            }
+                        });
+
+                        return;
+                    }
+
+                    // OTHER ERRORS
+                    console.error('Address update failed:', data);
+                    alert('Failed to update address. Please try again.');
+                })
+                .catch(err => {
+                    console.error('Address update error:', err);
                     alert('Network error. Please try again.');
                 })
                 .finally(() => {

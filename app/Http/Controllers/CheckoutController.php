@@ -159,12 +159,87 @@ class CheckoutController extends Controller
     }
     
     /**
-     * Update address
+     * Update shipping address
      */
     public function updateAddress(Request $request, $id)
     {
-        // Implementation
-        return response()->json(['success' => true]);
+        try {
+            $user = Auth::user();
+
+            // Make sure the address belongs to this user and is a shipping address
+            $address = Address::where('id', $id)
+                ->where('user_id', $user->id)
+                ->where('type', 'shipping')
+                ->firstOrFail();
+
+            // Same validation rules as storeAddress
+            $request->validate([
+                'full_name'       => 'required|string|max:255',
+                'phone'           => 'required|string|max:20',
+                'address_line_1'  => 'required|string|max:255',
+                'address_line_2'  => 'nullable|string|max:255',
+                'city'            => 'required|string|max:100',
+                'state'           => 'required|string|max:100',
+                'postal_code'     => 'required|string|max:10',
+                'country'         => 'required|string|max:100',
+                'is_default'      => 'nullable|boolean',
+            ]);
+
+            // Do we want to make THIS address the default?
+            $makeDefault = $request->boolean('is_default');
+
+            \DB::beginTransaction();
+
+            if ($makeDefault) {
+                // Clear default on all other shipping addresses for this user
+                Address::where('user_id', $user->id)
+                    ->where('type', 'shipping')
+                    ->where('id', '!=', $address->id)
+                    ->update(['is_default' => false]);
+            }
+
+            // Update basic fields
+            $address->full_name       = $request->full_name;
+            $address->phone           = $request->phone;
+            $address->address_line_1  = $request->address_line_1;
+            $address->address_line_2  = $request->address_line_2;
+            $address->city            = $request->city;
+            $address->state           = $request->state;
+            $address->postal_code     = $request->postal_code;
+            $address->country         = $request->country ?? 'Malaysia';
+
+            // Default logic:
+            // - If user ticked the box, make this the default
+            // - If they didn't tick it, keep whatever it was before (so you don't accidentally end up with no default)
+            if ($makeDefault) {
+                $address->is_default = true;
+            }
+
+            $address->save();
+
+            \DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Address updated successfully!',
+                'address' => $address,
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Let Laravel handle and return proper 422 JSON
+            throw $e;
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Address update error: ' . $e->getMessage(), [
+                'address_id' => $id,
+                'user_id'    => optional(Auth::user())->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update address.',
+            ], 500);
+        }
     }
     
     /**
