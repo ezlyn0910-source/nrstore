@@ -104,9 +104,6 @@
             </div>
         </div>
 
-
-        /* ===== LOGIN SCRIPT ===== */
-
         <script>
             function togglePassword(fieldId) {
                 const passwordField = document.getElementById(fieldId);
@@ -123,9 +120,6 @@
                 }
             }
         </script>
-
-
-        /* ===== LOGIN CSS ===== */
 
         <style>
             :root {

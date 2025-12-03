@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-/* ===== CHECKOUT BLADE ===== */
-
 @section('content')
 <div class="checkout-page">
     <!-- Banner -->
@@ -485,9 +483,6 @@
     </div>
 </div>
 @endsection
-
-
-/* ===== CHECKOUT SCRIPT ===== */
 
 @push('scripts')
 <script>
@@ -1252,9 +1247,6 @@
 })(); // IIFE
 </script>
 @endpush
-
-
-/* ===== CHECKOUT CSS ===== */
 
 @section('styles')
 <style>

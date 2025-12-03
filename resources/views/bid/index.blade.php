@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-/* ===== BID BLADE ===== */
-
 @section('content')
 <div class="bid-page">
     <!-- Hero Section - DARK -->
@@ -165,9 +163,6 @@
 </div>
 @endsection
 
-
-/* ===== BID SCRIPT ===== */
-
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -203,9 +198,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
-
-
-/* ===== BID LAYOUT ===== */
 
 @section('styles')
 <style>
