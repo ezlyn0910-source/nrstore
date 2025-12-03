@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-/* ===== CART BLADE ===== */
-
 @section('content')
 <div class="simple-cart-page">
     <!-- Banner -->
@@ -118,9 +116,6 @@
     </div>
 </div>
 @endsection
-
-
-/* ===== CART SCRIPT ===== */
 
 @push('scripts')
 <script>
@@ -366,9 +361,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
-
-
-/* ===== CART LAYOUT ===== */
 
 @section('styles')
 <style>

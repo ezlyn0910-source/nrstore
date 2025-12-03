@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-/* ===== HOMEPAGE BLADE ===== */
-
 @section('content')
 <div class="homepage">
     <!-- Hero Slider Section -->
@@ -35,9 +33,6 @@
                                 Explore category <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>
-                        <div class="category-image">
-                            <img src="/storage/images/hp.png" alt="HP Products" class="category-img">
-                        </div>
                     </div>
 
                     <div class="category-card">
@@ -47,9 +42,6 @@
                             <a href="#" class="explore-link">
                                 Explore category <i class="fas fa-arrow-right"></i>
                             </a>
-                        </div>
-                        <div class="category-image">
-                            <img src="/storage/images/dell.png" alt="Dell Products" class="category-img">
                         </div>
                     </div>
 
@@ -61,9 +53,6 @@
                                 Explore category <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>
-                        <div class="category-image">
-                            <img src="/storage/images/microsoft.png" alt="Microsoft Products" class="category-img">
-                        </div>
                     </div>
 
                     <div class="category-card">
@@ -73,9 +62,6 @@
                             <a href="#" class="explore-link">
                                 Explore category <i class="fas fa-arrow-right"></i>
                             </a>
-                        </div>
-                        <div class="category-image">
-                            <img src="/storage/images/lenovo.png" alt="Lenovo Products" class="category-img">
                         </div>
                     </div>
                 </div>
@@ -150,9 +136,6 @@
     </section>
 </div>
 @endsection
-
-
-/* ===== HOMEPAGE SCRIPT ===== */
 
 @section('scripts')
 <script>
@@ -253,9 +236,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
-
-
-/* ===== HOMEPAGE CSS ===== */
 
 @section('styles')
 <style>
@@ -409,6 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
         flex-direction: column;
         justify-content: space-between;
         overflow: hidden;
+        position: relative;
     }
 
     .category-card:hover {
@@ -421,6 +402,7 @@ document.addEventListener('DOMContentLoaded', function() {
         flex: 1;
         z-index: 2;
         position: relative;
+        text-align: center !important;
     }
 
     .category-name {
@@ -467,14 +449,6 @@ document.addEventListener('DOMContentLoaded', function() {
         z-index: 1;
     }
 
-    .category-img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        background: transparent;
-    }
-
-    /* FIXED: Products Section */
     .products-section {
         padding: 2rem 0;
         margin: 0 auto;
@@ -680,11 +654,13 @@ document.addEventListener('DOMContentLoaded', function() {
             padding: 0 1rem;
         }
 
+        .main-content-section,
         .categories-section,
         .products-section {
             margin: 0 auto;
             padding-left: 1rem;
             padding-right: 1rem;
+            text-align: center !important;
         }
 
         .section-title {

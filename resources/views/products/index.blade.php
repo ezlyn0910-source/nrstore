@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-/* ===== PRODUCT CSS ===== */
-
 @section('styles')
     <style>
         .product-page {
@@ -937,9 +935,6 @@
     </style>
 @endsection
 
-
-/* ===== PRODUCT BLADE ===== */
-
 @section('content')
 <div class="product-page">
     <section class="hero-section" style="position: relative; height: 350px; background-color: #1f2937; overflow: hidden; margin-bottom: 0;">
@@ -1330,9 +1325,6 @@
     </div>
 </div>
 @endsection
-
-
-/* ===== PRODUCT SCRIPT ===== */
 
 @push('scripts')
 <script>
