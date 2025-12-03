@@ -1,11 +1,544 @@
 @extends('admin.adminbase')
 @section('title', 'Edit Product')
 
-@section('styles')
-    @vite(['resources/sass/app.scss', 'resources/css/manage_product/edit.css', 'resources/js/app.js'])
-@endsection
-
 @section('content')
+
+<style> 
+:root {
+    --primary-dark: #1a2412;
+    --primary-green: #2d4a35;
+    --accent-gold: #DAA112;
+    --light-bone: #f8f9fa;
+    --dark-text: #1a2412;
+    --light-text: #6b7c72;
+    --white: #ffffff;
+    --border-light: #e9ecef;
+    --error-color: #dc3545;
+    --success-color: #28a745;
+}
+
+.product-form-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.product-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.product-form-header h2 {
+    color: var(--primary-dark);
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel {
+    background-color: var(--light-bone);
+    color: var(--light-text);
+    border: 1px solid var(--border-light);
+}
+
+.btn-cancel:hover {
+    background-color: #e9ecef;
+    color: var(--primary-dark);
+}
+
+.btn-save {
+    background-color: var(--primary-green);
+    color: var(--white);
+}
+
+.btn-save:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-remove {
+    background-color: transparent;
+    color: var(--error-color);
+    padding: 0.5rem;
+    border: 1px solid var(--error-color);
+}
+
+.btn-remove:hover {
+    background-color: var(--error-color);
+    color: var(--white);
+}
+
+.btn-add-variation {
+    background-color: var(--accent-gold);
+    color: var(--primary-dark);
+    font-weight: 600;
+}
+
+.btn-add-variation:hover {
+    background-color: #c2910f;
+    transform: translateY(-1px);
+}
+
+.alert-messages {
+    margin-bottom: 2rem;
+}
+
+.alert {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.alert-error {
+    background-color: #fee;
+    color: var(--error-color);
+    border: 1px solid #f5c6cb;
+}
+
+.alert-success {
+    background-color: #eff8ff;
+    color: var(--success-color);
+    border: 1px solid #b8daff;
+}
+
+.product-form {
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.form-section {
+    padding: 2rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.form-section:last-child {
+    border-bottom: none;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-header i {
+    color: var(--accent-gold);
+    font-size: 1.25rem;
+}
+
+.section-header h3 {
+    color: var(--primary-dark);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--primary-dark);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    background-color: var(--white);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 3px rgba(218, 161, 18, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-help {
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+    color: var(--light-text);
+}
+
+.form-error {
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+    color: var(--error-color);
+}
+
+.form-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.checkbox-container input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-light);
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkmark {
+    background-color: var(--accent-gold);
+    border-color: var(--accent-gold);
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--white);
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Image Upload Styles */
+.image-upload-section h4 {
+    margin-bottom: 1rem;
+    color: var(--primary-dark);
+    font-weight: 600;
+}
+
+.image-upload-section h5 {
+    margin: 1.5rem 0 1rem 0;
+    color: var(--primary-dark);
+    font-weight: 500;
+}
+
+.main-image-upload {
+    margin-bottom: 2rem;
+}
+
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.image-upload-box {
+    position: relative;
+    border: 2px dashed var(--border-light);
+    border-radius: 8px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.image-upload-box:hover {
+    border-color: var(--accent-gold);
+}
+
+.image-upload-box.main-image-box {
+    height: 200px;
+    max-width: 300px;
+}
+
+.image-preview {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.placeholder {
+    text-align: center;
+    color: var(--light-text);
+}
+
+.placeholder i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    color: var(--white);
+}
+
+.image-upload-box:hover .image-overlay {
+    opacity: 1;
+}
+
+.image-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.add-image-content {
+    text-align: center;
+    color: var(--light-text);
+}
+
+.add-image-content i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.current-image-info {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--light-text);
+}
+
+.image-actions {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 10;
+}
+
+/* Variation Styles */
+.variations-section {
+    background-color: #fafbf9;
+}
+
+.existing-variations,
+.new-variations {
+    margin-bottom: 2rem;
+}
+
+.existing-variations h4,
+.new-variations h4 {
+    color: var(--primary-dark);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.variation-item {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.variation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.variation-header h4 {
+    color: var(--primary-dark);
+    font-weight: 600;
+    margin: 0;
+}
+
+.variation-content .form-grid {
+    margin-bottom: 1rem;
+}
+
+.variation-image-upload {
+    margin-top: 1rem;
+}
+
+.variation-image-upload label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--primary-dark);
+}
+
+.variation-image-box {
+    max-width: 200px;
+    height: 120px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .product-form-container {
+        padding: 1rem;
+    }
+
+    .product-form-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .form-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .form-section {
+        padding: 1.5rem;
+    }
+
+    .image-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+
+    .image-upload-box.main-image-box {
+        max-width: 100%;
+    }
+
+    .form-checkboxes {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .variation-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .product-form-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .section-header h3 {
+        font-size: 1.25rem;
+    }
+
+    .btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.85rem;
+    }
+
+    .image-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Animation for new elements */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.variation-item,
+.image-upload-box {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Focus styles for accessibility */
+.btn:focus,
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: 2px solid var(--accent-gold);
+    outline-offset: 2px;
+}
+</style>
+
 <div class="product-form-container">
     <div class="product-form-header">
         <h2>Edit Product</h2>
