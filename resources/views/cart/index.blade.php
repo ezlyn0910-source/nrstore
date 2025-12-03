@@ -1,8 +1,6 @@
 @extends('layouts.app')
 
-@section('styles')
-    @vite(['resources/sass/app.scss', 'resources/css/cart/index.css'])
-@endsection
+/* ===== CART BLADE ===== */
 
 @section('content')
 <div class="simple-cart-page">
@@ -365,3 +363,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+
+/* ===== CART LAYOUT ===== */
+
+@section('styles')
+<style>
+    
+</style>
+@endsection

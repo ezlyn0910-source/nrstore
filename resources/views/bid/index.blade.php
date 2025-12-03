@@ -1,8 +1,6 @@
 @extends('layouts.app')
 
-@section('styles')
-    @vite(['resources/css/bid.css'])
-@endsection
+/* ===== BID BLADE ===== */
 
 @section('content')
 <div class="bid-page">
@@ -201,4 +199,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+@endsection
+
+/* ===== BID LAYOUT ===== */
+
+@section('styles')
+<style>
+    
+</style>
 @endsection

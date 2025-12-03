@@ -1,8 +1,6 @@
 @extends('layouts.app')
 
-@section('styles')
-    @vite(['resources/css/checkout.css'])
-@endsection
+/* ===== CHECKOUT BLADE ===== */
 
 @section('content')
 <div class="checkout-page">
@@ -1251,3 +1249,964 @@
 })(); // IIFE
 </script>
 @endpush
+
+
+/* ===== CHECKOUT CSS ===== */
+
+@section('styles')
+<style>
+.checkout-page {
+    min-height: 70vh;
+    background: white;
+    font-family: "Nunito", sans-serif;
+}
+
+/* Banner */
+.checkout-banner {
+    background: #2c3e50;
+    padding: 60px 3rem;
+    text-align: center;
+    margin-bottom: 0;
+}
+
+.banner-content h1 {
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 0;
+}
+
+/* Container */
+.checkout-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 3rem;
+}
+
+.checkout-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+/* Section Styles */
+.checkout-section {
+    margin-bottom: 2rem;
+}
+
+.checkout-section h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* ===== ADDRESS DROPDOWN STYLES ===== */
+.add-address-dropdown {
+    margin-top: 2rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: white;
+}
+
+.dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    border-bottom: 1px solid transparent;
+}
+
+.dropdown-header:hover {
+    background: #f1f5f9;
+}
+
+.dropdown-header.active {
+    border-bottom-color: #e5e7eb;
+    background: #f1f5f9;
+}
+
+.dropdown-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.dropdown-toggle {
+    background: none;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #6b7280;
+    font-size: 1.1rem;
+}
+
+.dropdown-toggle:hover {
+    background: #e5e7eb;
+    color: #1f2937;
+}
+
+/* Dropdown content */
+.dropdown-content {
+    display: none;
+    padding: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.dropdown-content.show {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Form styles inside dropdown */
+.dropdown-content .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.dropdown-content .form-group {
+    margin-bottom: 1rem;
+}
+
+.dropdown-content .form-group label {
+    display: block;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.dropdown-content .form-group input,
+.dropdown-content .form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.dropdown-content .form-group input:focus,
+.dropdown-content .form-group select:focus {
+    outline: none;
+    border-color: #1f2937;
+    box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.1);
+}
+
+.dropdown-content #country {
+    background: #f3f4f6;
+    cursor: not-allowed;
+}
+
+.dropdown-content .form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.5rem 0;
+}
+
+.dropdown-content .form-check input {
+    width: auto;
+    margin: 0;
+}
+
+.dropdown-content .form-check label {
+    font-size: 0.875rem;
+    color: #374151;
+    margin: 0;
+}
+
+.dropdown-content .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* visible red border for invalid fields */
+.input-error {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.06) !important;
+}
+
+/* small red inline text already created by the script */
+.error-text {
+    /* style is also set in JS, this is fallback */
+    color: #dc2626;
+    font-size: 0.875rem;
+    margin-top: 0.375rem;
+}
+
+/* optional: global form error on top */
+.form-global-error {
+    background: #fff0f0;
+    border: 1px solid #fccaca;
+    padding: 0.6rem 0.8rem;
+    margin-bottom: 0.75rem;
+    color: #7f1d1d;
+    border-radius: 0.375rem;
+}
+
+/* Address List */
+.address-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.address-item {
+    display: flex;
+    justify-content: space-between; 
+    align-items: flex-start;
+    padding: 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    position: relative;
+}
+
+.address-item:hover {
+    border-color: #1f2937;
+}
+
+/* LEFT SIDE column */
+.address-left {
+    flex: 1;
+    display: block;
+    padding-right: 10px;
+}
+
+/* RIGHT SIDE: Edit + Radio in same vertical column */
+.address-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-left: 20px;
+    margin-right: 5px;
+    min-width: 70px;
+}
+
+.address-label {
+    flex: 1;
+    cursor: pointer;
+    display: block;
+}
+
+/* SHOW the radio button */
+.address-radio {
+    width: 20px;
+    height: 20px;
+    accent-color: #1f2937;
+    cursor: pointer;
+    align-self: flex-end;
+    margin-top: 10px;
+}
+
+.address-radio:checked + .address-label {
+    border-color: #1f2937;
+}
+
+.address-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 4px;
+}
+
+.address-name-line {
+    font-size: 1rem;
+    color: #1f2937;
+    font-weight: 600;
+}
+
+.address-header-main {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.address-edit-link {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: underline;
+    color: #1f2937;
+    cursor: pointer;
+    margin-bottom: 12px;
+}
+
+.address-edit-link:hover {
+    color: #111827;
+}
+
+/* ===== Edit Address Modal ===== */
+.address-edit-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+
+.address-edit-modal.show {
+    display: flex;
+}
+
+.address-edit-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.address-edit-dialog {
+    position: relative;
+    background: #ffffff;
+    border-radius: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
+    z-index: 1;
+}
+
+.address-edit-dialog form {
+    width: 100%;
+    text-align: left;
+}
+
+.address-edit-title {
+    margin: 0 0 1rem 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    color: #111827;
+}
+
+.address-edit-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: transparent;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.address-edit-dialog .form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.address-edit-dialog .form-group label::after {
+    content: " :";
+}
+
+.address-edit-dialog .form-group {
+    margin-bottom: 14px;
+}
+
+.address-edit-dialog .form-group input,
+.address-edit-dialog .form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background: white;
+}
+
+.address-edit-dialog .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 14px;
+}
+
+.required-star {
+    color: #dc2626;
+    font-weight: 700;
+    margin-left: 2px;
+}
+
+.edit-form-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+#editAddressSave {
+    border-radius: 20px !important;
+}
+
+.address-header strong {
+    font-size: 1rem;
+    color: #1f2937;
+}
+
+.default-badge {
+    font-size: 12px;
+    padding: 3px 8px;
+    margin-bottom: 4px;
+}
+
+.primary-badge {
+    background: #10b981;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.address-details {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.address-details p {
+    margin: 0.25rem 0;
+}
+
+.address-phone {
+    color: #6b7280;
+    font-weight: normal;
+    font-size: 14px;
+}
+
+/* No Address State */
+.no-address {
+    text-align: center;
+    padding: 2rem;
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+.no-address-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.no-address h3 {
+    font-size: 1.25rem;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.no-address p {
+    color: #6b7280;
+    margin: 0;
+}
+
+.section-divider {
+    border: 0;
+    border-top: 2px solid #d1d5db;
+    margin: 35px 0;
+}
+
+/* ===== PAYMENT METHOD STYLES ===== */
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.payment-method {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.payment-method:hover {
+    border-color: #d1d5db;
+}
+
+.payment-method input {
+    display: none;
+}
+
+.payment-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.payment-method input:checked + .payment-label {
+    background: #f8fafc;
+    border-color: #1f2937;
+}
+
+.payment-method input:checked + .payment-label .radio-indicator {
+    background: #1f2937;
+    border-color: #1f2937;
+}
+
+.payment-method input:checked + .payment-label .radio-indicator::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    background: white;
+    border-radius: 50%;
+}
+
+.payment-method-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.payment-logo {
+    width: 40px;
+    height: 40px;
+    background: #f3f4f6;
+    border-radius: 0.375rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #2c3e50;
+}
+
+.payment-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+/* ============================
+   ONLINE BANKING – BANK LIST
+   ============================ */
+
+/* Wrapper panel under Online Banking */
+.online-banking-dropdown {
+    margin-top: 10px; /* already added inline, but safe to keep here */
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb; /* light grey border */
+    background-color: #f9fafb; /* very light background */
+    display: none; /* controlled by JS */
+}
+
+/* Each bank row */
+.bank-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    margin-bottom: 6px;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.bank-option:hover {
+    border-color: #d1d5db;
+    background-color: #f3f4f6;
+    cursor: pointer;
+}
+
+.bank-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bank-logo {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+    display: block;
+}
+
+.bank-name {
+    font-size: 14px;
+    color: #111827;
+}
+
+.bank-radio {
+    width: 16px;
+    height: 16px;
+    accent-color: #111827;
+    cursor: pointer;
+}
+
+/* Selected bank row */
+.bank-option.bank-selected {
+    border-color: #111827;
+    background-color: #e5e7eb;
+}
+
+/* Hidden banks */
+.bank-option.bank-hidden {
+    display: none;
+}
+
+/* Change bank button */
+.bank-list-toggle {
+    margin-top: 6px;
+    background: transparent;
+    border: none;
+    color: #111827;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.bank-list-toggle i {
+    font-size: 10px;
+}
+
+/* Card details panel under Credit/Debit Card */
+.card-details {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+    margin-top: 10px;
+}
+
+.card-details .form-group label {
+    font-size: 13px;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.card-details .form-group input {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+}
+
+.card-details .form-group input:focus {
+    outline: none;
+    border-color: #111827;
+}
+
+.method-name {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.95rem;
+}
+
+.method-desc {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.radio-indicator {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #d1d5db;
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+/* Order Summary */
+.order-summary {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+    position: sticky;
+    top: 2rem;
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
+
+.order-summary h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.order-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.order-item {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 0.5rem;
+}
+
+.item-image {
+    width: 60px;
+    height: 60px;
+    background: white;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1px solid #e5e7eb;
+}
+
+.item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.item-details {
+    flex: 1;
+}
+
+.item-details h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 0.25rem 0;
+    line-height: 1.2;
+}
+
+.item-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.item-quantity {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.item-price {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.summary-totals {
+    margin-bottom: 1.5rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.summary-row.total {
+    font-weight: 600;
+    font-size: 1.125rem;
+    color: #1f2937;
+}
+
+.summary-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 0.75rem 0;
+}
+
+.checkout-actions {
+    text-align: center;
+}
+
+.terms-agreement {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    text-align: left;
+    font-size: 0.875rem;
+}
+
+.terms-agreement input {
+    margin-top: 0.25rem;
+    flex-shrink: 0;
+}
+
+/* Button Styles */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    font-size: 0.875rem;
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+    width: 100%;
+}
+
+.btn-primary {
+    background: #1f2937;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #374151;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .checkout-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .checkout-banner {
+        padding: 40px 1rem;
+    }
+
+    .banner-content h1 {
+        font-size: 2rem;
+    }
+
+    .checkout-container {
+        padding: 0 1rem;
+    }
+
+    .order-summary {
+        position: static;
+        margin-top: 0;
+    }
+
+    .dropdown-content .form-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .payment-method-info {
+        gap: 0.75rem;
+    }
+
+    .payment-logo {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+
+    .method-name {
+        font-size: 0.9rem;
+    }
+
+    .method-desc {
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .banner-content h1 {
+        font-size: 1.75rem;
+    }
+
+    .payment-label {
+        padding: 0.75rem;
+    }
+
+    .payment-details {
+        gap: 0.125rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .bank-option {
+        padding: 6px;
+    }
+
+    .bank-name {
+        font-size: 13px;
+    }
+
+    .bank-logo {
+        height: 18px;
+    }
+}
+</style>
+@endsection
