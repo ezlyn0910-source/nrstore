@@ -35,7 +35,7 @@
                     @foreach($favorites as $product)
                     <div class="favorite-product-card" data-product-id="{{ $product->id }}">
                         <div class="product-image-container">
-                            <img src="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}" 
+                            <img src="{{ asset('storage/' . $product->image) }}"
                                 alt="{{ $product->name }}" 
                                 class="product-image">
                             

@@ -8,11 +8,6 @@
     <!-- Bootstrap CSS (optional) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    @vite(['resources/sass/app.scss', 'resources/css/adminbase.css', 'resources/js/app.js'])
-    @vite(['resources/sass/app.scss', 'resources/css/admindashboard.css', 'resources/js/app.js'])
-
-    @yield('styles')
-
 </head>
 
 <body>
@@ -51,5 +46,106 @@
             @yield('content')
         </div>
     </div>
+
+    <style>
+        /* Minimalist Color Theme */
+        :root {
+            --primary-dark: #1a2412;
+            --primary-green: #2d4a35;
+            --accent-gold: #DAA112;
+            --light-bone: #f8f9fa;
+            --dark-text: #1a2412;
+            --light-text: #6b7c72;
+            --white: #ffffff;
+            --border-light: #e9ecef;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-bone);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: var(--primary-dark);
+            color: var(--white);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .sidebar h2 {
+            font-size: 1.5rem;
+            text-align: center;
+            padding: 1.5rem 0;
+            background-color: var(--primary-green);
+            margin: 0;
+            color: var(--accent-gold);
+            font-weight: 600;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0;
+            margin-top: 1rem;
+        }
+
+        .nav-links li {
+            margin: 0.5rem 0;
+        }
+
+        .nav-links a {
+            color: var(--white);
+            text-decoration: none;
+            display: block;
+            padding: 0.8rem 1.5rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            background-color: var(--primary-green);
+            color: var(--accent-gold);
+        }
+
+        /* Header */
+        header {
+            background-color: var(--white);
+            border-bottom: 1px solid var(--border-light);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            color: var(--dark-text);
+            font-size: 1.25rem;
+            margin: 0;
+        }
+
+        header .user-info {
+            color: var(--light-text);
+            font-size: 0.9rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-wrapper {
+            padding: 2rem;
+            flex: 1;
+            overflow-y: auto;
+        }
+    </style>
 </body>
 </html>

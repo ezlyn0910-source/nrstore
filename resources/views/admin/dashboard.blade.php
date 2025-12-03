@@ -80,4 +80,62 @@
         </table>
     </div>
 </div>
+
+<style>
+
+    /* Dashboard */
+    .dashboard-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .dashboard-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .dashboard-cards .card {
+        background-color: var(--white);
+        border: 1px solid var(--border-light);
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        text-align: center;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .dashboard-cards .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .dashboard-cards h3 {
+        color: var(--primary-green);
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .dashboard-cards p {
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: var(--accent-gold);
+        margin: 0;
+    }
+
+    .dashboard-section h2 {
+        font-size: 1.2rem;
+        color: var(--primary-green);
+        margin-bottom: 1rem;
+    }
+
+    .table {
+        background-color: var(--white);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+</style>
+
 @endsection
