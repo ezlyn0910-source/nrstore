@@ -486,6 +486,9 @@
 </div>
 @endsection
 
+
+/* ===== CHECKOUT SCRIPT ===== */
+
 @push('scripts')
 <script>
 (function () {
