@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('styles')
-    @vite('css/homepage.css')
+    @vite('resources/css/homepage.css')
 @endsection
 
 @section('content')
