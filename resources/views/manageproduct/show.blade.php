@@ -1,11 +1,645 @@
 @extends('admin.adminbase')
 @section('title', 'Product Details')
 
-@section('styles')
-    @vite(['resources/sass/app.scss', 'resources/css/manage_product/show.css', 'resources/js/app.js'])
-@endsection
-
 @section('content')
+
+<style> 
+/* Minimalist Color Theme */
+:root {
+    --primary-dark: #1a2412;
+    --primary-green: #2d4a35;
+    --accent-gold: #DAA112;
+    --light-bone: #f8f9fa;
+    --dark-text: #1a2412;
+    --light-text: #6b7c72;
+    --white: #ffffff;
+    --border-light: #e9ecef;
+    --success: #28a745;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --info: #17a2b8;
+}
+
+
+/* Base Styles */
+.product-detail-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 20px rgba(26, 36, 18, 0.08);
+    overflow: hidden;
+    width: 63.5rem;
+}
+
+.roweor {
+    margin: 0;
+
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-green));
+    color: var(--white);
+    border-bottom: none;
+    padding: 1.5rem 2rem;
+}
+
+.card-title {
+    font-weight: 600;
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btn {
+    border: none;
+    border-radius: 8px;
+    padding: 0.625rem 1.25rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+}
+
+.btn-edit {
+    background: var(--accent-gold);
+    color: var(--primary-dark);
+}
+
+.btn-edit:hover {
+    background: #c2910f;
+    transform: translateY(-1px);
+    color: var(--primary-dark);
+}
+
+.btn-back {
+    background: var(--light-bone);
+    color: var(--dark-text);
+    border: 1px solid var(--border-light);
+}
+
+.btn-back:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+    color: var(--dark-text);
+}
+
+.btn-delete {
+    background: var(--danger);
+    color: var(--white);
+}
+
+.btn-delete:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+    color: var(--white);
+}
+
+.card-body {
+    padding: 25px;
+}
+
+/* Section Headers */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: between;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.section-header h5 {
+    color: var(--primary-dark);
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-header h5 i {
+    color: var(--accent-gold);
+}
+
+.variation-count,
+.image-count {
+    background: var(--primary-green);
+    color: var(--white);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-left: auto;
+}
+
+/* Info Tables */
+.info-table {
+    background: var(--white);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-light);
+    transition: background-color 0.2s ease;
+}
+
+.info-row:hover {
+    background-color: var(--light-bone);
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    flex: 0 0 40%;
+    font-weight: 600;
+    color: var(--primary-dark);
+    font-size: 0.9rem;
+}
+
+.info-value {
+    flex: 1;
+    color: var(--light-text);
+    font-size: 0.9rem;
+}
+
+/* Badges */
+.category-badge {
+    background: var(--primary-green);
+    color: var(--white);
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.no-category {
+    color: var(--light-text);
+    font-style: italic;
+}
+
+.stock-badge,
+.status-badge,
+.featured-badge,
+.not-featured-badge,
+.variations-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stock-badge.in-stock {
+    background: #d4edda;
+    color: #155724;
+}
+
+.stock-badge.out-of-stock {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-badge.active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.inactive {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.status-badge.in_stock {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.low_stock {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.out_of_stock {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.featured-badge {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.not-featured-badge {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.variations-badge.has-variations {
+    background: #cce7ff;
+    color: #004085;
+}
+
+.variations-badge.no-variations {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+/* Price Styling */
+.price {
+    color: var(--primary-green);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Description Section */
+.description-card {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.description-content {
+    padding: 1.5rem;
+    line-height: 1.6;
+    color: var(--light-text);
+}
+
+/* Specifications Grid */
+.specs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.spec-item {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.spec-label {
+    font-weight: 600;
+    color: var(--primary-dark);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.spec-value {
+    color: var(--light-text);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Variations Table */
+.variations-table-container {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.variations-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.variations-table th {
+    background: var(--light-bone);
+    color: var(--primary-dark);
+    font-weight: 600;
+    padding: 1rem;
+    text-align: left;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.variations-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--light-text);
+}
+
+.variation-row:hover {
+    background-color: var(--light-bone);
+}
+
+.variation-row.inactive-variation {
+    background-color: #f8f9fa;
+    opacity: 0.7;
+}
+
+.variation-row.inactive-variation td {
+    color: #6c757d;
+}
+
+.sku-cell {
+    font-family: 'Courier New', monospace;
+}
+
+.price-cell .variation-price {
+    color: var(--primary-green);
+    font-weight: 600;
+}
+
+.stock-indicator {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.stock-indicator.in-stock {
+    background: #d4edda;
+    color: #155724;
+}
+
+.stock-indicator.out-of-stock {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Images Grid */
+.images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.image-card {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.image-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(26, 36, 18, 0.15);
+}
+
+.image-container {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+}
+
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.image-card:hover .product-image {
+    transform: scale(1.05);
+}
+
+.primary-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--accent-gold);
+    color: var(--primary-dark);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.image-meta {
+    padding: 0.75rem;
+    text-align: center;
+    background: var(--light-bone);
+}
+
+.sort-order {
+    color: var(--light-text);
+    font-size: 0.75rem;
+}
+
+/* Action Section */
+.action-section {
+    padding: 1.5rem;
+    background: var(--light-bone);
+    border-radius: 8px;
+    text-align: center;
+}
+
+.delete-form {
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 0.5rem;
+    }
+    
+    .card-header {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .action-buttons {
+        justify-content: center;
+    }
+    
+    .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .info-label {
+        flex: none;
+    }
+    
+    .variations-table-container {
+        overflow-x: auto;
+    }
+    
+    .variations-table {
+        min-width: 800px;
+    }
+    
+    .images-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+    
+    .specs-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Loading States */
+.product-image {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Additional CSS for new elements */
+
+/* Price Range Styling */
+.price-range {
+    color: var(--primary-green);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Variation Summary */
+.variation-summary {
+    display: flex;
+    gap: 2rem;
+    background: var(--light-bone);
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.summary-label {
+    font-size: 0.8rem;
+    color: var(--light-text);
+    margin-bottom: 0.25rem;
+}
+
+.summary-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-dark);
+}
+
+/* Stock Info Card */
+.stock-info-card {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.stock-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.stock-info-item {
+    text-align: center;
+}
+
+.stock-info-label {
+    font-size: 0.9rem;
+    color: var(--light-text);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.stock-info-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.stock-info-value.in-stock {
+    color: var(--success);
+}
+
+.stock-info-value.out-of-stock {
+    color: var(--danger);
+}
+
+/* Text Colors for Percentage Changes */
+.text-danger { color: var(--danger); }
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-muted { color: var(--light-text); }
+
+/* Primary Image Indicator */
+.primary-indicator {
+    background: var(--accent-gold);
+    color: var(--primary-dark);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+/* Custom badge for variation differences */
+.variation-row .text-warning {
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+/* Responsive adjustments for variation summary */
+@media (max-width: 768px) {
+    .variation-summary {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .summary-item {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .stock-info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Utility Classes */
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-danger { color: var(--danger); }
+.text-info { color: var(--info); }
+
+.bg-success { background-color: var(--success); }
+.bg-warning { background-color: var(--warning); }
+.bg-danger { background-color: var(--danger); }
+.bg-info { background-color: var(--info); }
+</style>
+
 <div class="container">
     <div class="row">
         <div class="roweor col-md-10 x-auto">
