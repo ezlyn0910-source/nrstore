@@ -45,7 +45,7 @@
     margin-top: -60px;
     position: relative;
     z-index: 10;
-    max-width: 1200px;
+    max-width: 1500px !important;
     margin-left: auto;
     margin-right: auto;
 }
@@ -54,9 +54,9 @@
     background: var(--white);
     border-radius: 1.5rem;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    padding: 3rem 2rem 2rem;
+    padding: 3rem 2.5rem 2rem !important;
     border: 1px solid var(--border-light);
-    margin: 0 2rem;
+    margin: 0 1rem !important;
 }
 
 /* Header Row */
@@ -179,8 +179,8 @@
 
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.5rem !important;
 }
 
 /* Product Card */
@@ -201,7 +201,7 @@
 
 .product-image-container {
     width: 100%;
-    height: 150px;
+    height: 220px !important;
     background-color: var(--light-bone);
     overflow: hidden;
     margin: 0;
@@ -232,7 +232,7 @@
     font-weight: 600;
     color: var(--dark-text);
     margin-bottom: 0.25rem;
-    font-size: 0.875rem;
+    font-size: 1rem !important;
     line-height: 1.25;
 }
 
@@ -261,7 +261,7 @@
 .product-price {
     font-weight: bold;
     color: var(--accent-gold);
-    font-size: 1rem;
+    font-size: 1.25rem !important;
     margin: 0;
 }
 
@@ -402,7 +402,7 @@
 /* Recommendation Card */
 .recommendation-card {
     flex: 0 0 auto;
-    width: 300px;
+    width: 350px !important;
     background: var(--white);
     border: 1px solid var(--border-light);
     border-radius: 0.5rem;
@@ -419,7 +419,7 @@
 
 .recommendation-image-container {
     width: 100%;
-    height: 200px;
+    height: 240px !important;
     background-color: var(--light-bone);
     overflow: hidden;
     margin: 0;
@@ -448,14 +448,14 @@
     font-weight: 600;
     color: var(--dark-text);
     margin-bottom: 0.25rem;
-    font-size: 1rem;
+    font-size: 1.1rem !important;
 }
 
 .recommendation-price {
     font-weight: bold;
     color: var(--accent-gold);
     margin-bottom: 0.5rem;
-    font-size: 1rem;
+    font-size: 1.15rem !important;
 }
 
 .recommendation-buttons {
@@ -691,7 +691,8 @@
     }
 
     .filters-sidebar {
-        width: 100%;
+        width: 25% !important;
+        min-width: 250px;
         order: 2;
     }
 
@@ -775,4 +776,57 @@
     .content-overlap-section {
         margin-top: -30px;
     }
+}
+
+/* === UI EXPANSION UPDATES === */
+
+/* Expand main white container */
+.content-overlap-section {
+    max-width: 1500px !important;
+}
+
+.main-content-box {
+    margin: 0 1rem !important;
+    padding: 3rem 2.5rem 2rem !important;
+}
+
+/* Keep Filters Sidebar fixed */
+.filters-sidebar {
+    width: 25% !important;
+    min-width: 250px;
+}
+
+/* Bigger Product Grid */
+.products-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.5rem !important;
+}
+
+.product-image-container {
+    height: 220px !important;
+}
+
+.product-name {
+    font-size: 1rem !important;
+}
+
+.product-price {
+    font-size: 1.25rem !important;
+}
+
+/* Bigger Recommendations */
+.recommendation-card {
+    width: 350px !important;
+}
+
+.recommendation-image-container {
+    height: 240px !important;
+}
+
+.recommendation-name {
+    font-size: 1.1rem !important;
+}
+
+.recommendation-price {
+    font-size: 1.15rem !important;
 }
