@@ -6,9 +6,9 @@
     <section class="hero-slider-section">
         <div class="hero-slider">
             <div class="slider-container">
-                <div class="slide active" style="background-image: url('/storage/images/banner1.png')"></div>
-                <div class="slide" style="background-image: url('/storage/images/banner2.jpg')"></div>
-                <div class="slide" style="background-image: url('/storage/images/banner3.jpg')"></div>
+                <div class="slide active" style="background-image: url('/images/banner1.png')"></div>
+                <div class="slide" style="background-image: url('/images/banner2.jpg')"></div>
+                <div class="slide" style="background-image: url('/images/banner3.jpg')"></div>
             </div>
             <div class="slider-indicators">
                 <span class="indicator active" data-slide="0"></span>
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-</script>
+</script> 
 @endsection
 
 @section('styles')
