@@ -48,7 +48,7 @@
             margin-top: -60px;
             position: relative;
             z-index: 10;
-            max-width: 1200px;
+            max-width: 1500px !important;
             margin-left: auto;
             margin-right: auto;
         }
@@ -57,9 +57,9 @@
             background: var(--white);
             border-radius: 1.5rem;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 3rem 2rem 2rem;
+            padding: 3rem 2.5rem 2rem !important;
             border: 1px solid var(--border-light);
-            margin: 0 2rem;
+            margin: 0 1rem !important;
         }
 
         /* Header Row */
@@ -86,7 +86,8 @@
 
         /* Filters Sidebar */
         .filters-sidebar {
-            width: 25%;
+            width: 20% !important;
+            min-width: 250px;
         }
 
         .filter-form {
@@ -182,8 +183,8 @@
 
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 1.5rem;
         }
 
         /* Product Card */
@@ -204,7 +205,7 @@
 
         .product-image-container {
             width: 100%;
-            height: 150px;
+            height: 220px !important;
             background-color: var(--light-bone);
             overflow: hidden;
             margin: 0;
@@ -235,7 +236,7 @@
             font-weight: 600;
             color: var(--dark-text);
             margin-bottom: 0.25rem;
-            font-size: 0.875rem;
+            font-size: 1rem !important;
             line-height: 1.25;
         }
 
@@ -264,7 +265,7 @@
         .product-price {
             font-weight: bold;
             color: var(--accent-gold);
-            font-size: 1rem;
+            font-size: 1.25rem !important;
             margin: 0;
         }
 
@@ -405,7 +406,7 @@
         /* Recommendation Card */
         .recommendation-card {
             flex: 0 0 auto;
-            width: 300px;
+            width: 350px;
             background: var(--white);
             border: 1px solid var(--border-light);
             border-radius: 0.5rem;
@@ -422,7 +423,7 @@
 
         .recommendation-image-container {
             width: 100%;
-            height: 200px;
+            height: 240px;
             background-color: var(--light-bone);
             overflow: hidden;
             margin: 0;
@@ -451,14 +452,14 @@
             font-weight: 600;
             color: var(--dark-text);
             margin-bottom: 0.25rem;
-            font-size: 1rem;
+            font-size: 1.1rem;
         }
 
         .recommendation-price {
             font-weight: bold;
             color: var(--accent-gold);
             margin-bottom: 0.5rem;
-            font-size: 1rem;
+            font-size: 1.15rem;
         }
 
         .recommendation-buttons {
@@ -949,8 +950,8 @@
 
     <!-- White Box Container -->
     <section class="white-box-container" style="padding: 0; margin-top: -120px; position: relative; z-index: 10; margin-bottom: 2rem;">
-        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 3rem;">
-            <div style="background: white; border-radius: 1.5rem; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); padding: 3rem 2rem 2rem; border: 1px solid #e5e7eb;">
+        <div class="container" style="max-width: 1450px; margin: 0 auto; padding: 0 2rem;">
+            <div style="background: white; border-radius: 1.5rem; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); padding: 3rem 2.5rem 2rem; border: 1px solid #e5e7eb;">
                 
                 <!-- Header Row -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e5e7eb;">
@@ -980,7 +981,7 @@
                 <!-- Two Column Layout -->
                 <div style="display: flex; gap: 2rem;">
                     <!-- Filters Sidebar -->
-                    <div style="width: 25%;">
+                    <div style="width: 20%;">
                         <form method="GET" action="{{ url('/products') }}">
                             <!-- Brand Filter -->
                             <div style="margin-bottom: 1.5rem;">
@@ -1086,17 +1087,17 @@
                     </div>
 
                     <!-- Products Main -->
-                    <div style="width: 75%;">
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                    <div style="width: 80%;">
+                        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem;">
                             @foreach($products as $product)                       
                             <div style="background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; transition: all 0.3s ease; padding: 0; margin: 0; position: relative;" class="product-card" data-product-id="{{ $product->id }}">
-                                <div style="width: 100%; height: 150px; background-color: #f3f4f6; overflow: hidden; margin: 0; padding: 0; border-radius: 0.5rem 0.5rem 0 0; position: relative;">
+                                <div style="width: 100%; height: 200px; background-color: #f3f4f6; overflow: hidden; margin: 0; padding: 0; border-radius: 0.5rem 0.5rem 0 0; position: relative;">
                                     <img src="{{ asset('storage/' . $product->image) }}"   
                                         alt="{{ $product->name }}" 
                                         style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; margin: 0; padding: 0; display: block; border-radius: 0.5rem 0.5rem 0 0;">
                                 </div>
                                 <div style="padding: 0.75rem;">
-                                    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; font-size: 0.875rem; line-height: 1.25;">{{ $product->name }}</h3>
+                                    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; font-size: 1rem; line-height: 1.25;">{{ $product->name }}</h3>
                                     
                                     <!-- Product Specs with Price -->
                                     <div style="margin-bottom: 0.75rem;">
@@ -1105,7 +1106,7 @@
                                         @endif
                                         @if($product->ram && $product->storage)
                                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                                            <p style="color: #6b7280; font-size: 0.75rem; margin: 0;">{{ $product->ram }} • {{ $product->storage }}</p>
+                                            <p style="color: #6b7280; font-size: 1.25rem; margin: 0;">{{ $product->ram }} • {{ $product->storage }}</p>
                                             <p style="font-weight: bold; color: #1f2937; font-size: 1rem; margin: 0;">
                                                 @if($product->has_variations && $product->variations->count() > 0)
                                                     RM{{ number_format($product->min_price, 2) }} - RM{{ number_format($product->max_price, 2) }}
@@ -1351,90 +1352,61 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Simple and reliable slider functionality
     function initializeSlider() {
-        const slider = document.querySelector('.recommendation-slider');
+        const slider  = document.querySelector('.recommendation-slider');
         const prevBtn = document.querySelector('.recommendation-prev-btn');
         const nextBtn = document.querySelector('.recommendation-next-btn');
-        
-        console.log('Looking for slider elements:', {
-            slider: slider,
-            prevBtn: prevBtn,
-            nextBtn: nextBtn
+
+        if (!slider || !prevBtn || !nextBtn) {
+            console.log('Recommendation slider elements missing', { slider, prevBtn, nextBtn });
+            return;
+        }
+
+        // Calculate scroll amount based on actual card width + gap
+        function getScrollAmount() {
+            const firstCard = slider.querySelector('.recommendation-card');
+            if (!firstCard) return 320; // fallback
+
+            const styles = window.getComputedStyle(slider);
+            const gap    = parseInt(styles.columnGap || styles.gap || '16', 10);
+
+            return firstCard.offsetWidth + gap;
+        }
+
+        function scrollLeft() {
+            slider.scrollBy({
+                left: -getScrollAmount(),
+                behavior: 'smooth'
+            });
+        }
+
+        function scrollRight() {
+            slider.scrollBy({
+                left: getScrollAmount(),
+                behavior: 'smooth'
+            });
+        }
+
+        // Clear any old listeners by cloning (optional – but safe)
+        const cleanPrev = prevBtn.cloneNode(true);
+        const cleanNext = nextBtn.cloneNode(true);
+
+        prevBtn.parentNode.replaceChild(cleanPrev, prevBtn);
+        nextBtn.parentNode.replaceChild(cleanNext, nextBtn);
+
+        // Attach fresh listeners
+        cleanPrev.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            scrollLeft();
         });
 
-        if (slider && prevBtn && nextBtn) {
-            console.log('✅ Slider elements found - initializing');
-            
-            const scrollAmount = 320;
-            
-            // Remove any existing event listeners
-            prevBtn.replaceWith(prevBtn.cloneNode(true));
-            nextBtn.replaceWith(nextBtn.cloneNode(true));
-            
-            // Get fresh references after cloning
-            const newPrevBtn = document.querySelector('.recommendation-prev-btn');
-            const newNextBtn = document.querySelector('.recommendation-next-btn');
-            
-            newPrevBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('⬅️ Previous button clicked');
-                slider.scrollBy({
-                    left: -scrollAmount,
-                    behavior: 'smooth'
-                });
-            });
-            
-            newNextBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('➡️ Next button clicked');
-                slider.scrollBy({
-                    left: scrollAmount,
-                    behavior: 'smooth'
-                });
-            });
-            
-            // Add hover effects
-            [newPrevBtn, newNextBtn].forEach(btn => {
-                btn.addEventListener('mouseenter', function() {
-                    this.style.background = '#f8fafc';
-                    this.style.borderColor = '#1f2937';
-                    this.style.transform = 'scale(1.05)';
-                });
-                
-                btn.addEventListener('mouseleave', function() {
-                    this.style.background = 'white';
-                    this.style.borderColor = '#d1d5db';
-                    this.style.transform = 'scale(1)';
-                });
-                
-                btn.addEventListener('mousedown', function() {
-                    this.style.transform = 'scale(0.95)';
-                });
-                
-                btn.addEventListener('mouseup', function() {
-                    this.style.transform = 'scale(1.05)';
-                });
-            });
-            
-            console.log('✅ Slider initialized successfully');
-            
-        } else {
-            console.log('❌ Slider elements not found');
-            // Try alternative selectors
-            const alternativeSlider = document.querySelector('[style*="overflow-x: auto"]');
-            const alternativeButtons = document.querySelectorAll('.recommendation-controls button');
-            
-            if (alternativeSlider && alternativeButtons.length === 2) {
-                console.log('🔄 Found alternative elements, initializing...');
-                alternativeButtons[0].addEventListener('click', () => {
-                    alternativeSlider.scrollBy({ left: -320, behavior: 'smooth' });
-                });
-                alternativeButtons[1].addEventListener('click', () => {
-                    alternativeSlider.scrollBy({ left: 320, behavior: 'smooth' });
-                });
-            }
-        }
+        cleanNext.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            scrollRight();
+        });
+
+        console.log('✅ Recommendation slider initialized');
     }
 
     // Initialize slider first

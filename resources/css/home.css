@@ -146,7 +146,7 @@ p {
     width: 1.5px;
     height: 20px;
     background: rgba(255, 255, 255, 0.3);
-    margin: 0 0 !important;
+    margin: 10px 10px !important;
 }
 
 .user-menu {

@@ -11,29 +11,30 @@ class HomeController extends Controller
     /**
      * Create a new controller instance.
      *
-     * @return void
+     * Allow guests to access the homepage (index),
+     * but keep auth middleware for all other methods.
      */
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware('auth')->except(['index']);
     }
 
     /**
-     * Show the application dashboard.
+     * Show the application dashboard / homepage.
      */
     public function index()
     {
-        $user = Auth::user();
+        $user = Auth::user(); // Will be null for guests
 
-        // Check if user is admin and redirect to admin dashboard
-        if ($user->role === 'admin') {
+        // If user is logged in and is admin, redirect to admin dashboard
+        if ($user && $user->role === 'admin') {
             return redirect()->route('admin.dashboard');
         }
 
-        // Get hot selling products (you can define your own logic for "hot selling")
+        // Get hot selling products (using "featured" scope as hot selling)
         $hotProducts = Product::with(['images', 'variations'])
             ->active()
-            ->featured() // Using featured as hot selling for now
+            ->featured()
             ->orderBy('created_at', 'desc')
             ->limit(3)
             ->get();
@@ -44,8 +45,8 @@ class HomeController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(4)
             ->get();
-        
-        // For customers and other roles, show the normal home page
+
+        // For guests, customers, and other roles, show the normal home page
         return view('homepage', compact('hotProducts', 'newArrivals'));
     }
 }

@@ -73,9 +73,6 @@
                 <div class="products-grid">
                     @forelse($hotProducts as $product)
                     <div class="product-card" data-product-id="{{ $product->id }}">
-                        <button class="like-btn">
-                            <i class="far fa-heart"></i>
-                        </button>
                         <div class="product-image">
                             @if($product->main_image_url)
                                 <img src="{{ $product->main_image_url }}" alt="{{ $product->name }}">
@@ -101,14 +98,12 @@
             </div>
 
             <!-- New Arrivals Section -->
-            <div class="products-section new-arrivals">
-                <h2 class="section-title">New Arrivals</h2>
+            <div class="products-section new-arrivals" style="background: transparent; box-shadow: none; padding: 0; border-radius: 0;">
+                <h2 class="section-title" style="margin-bottom: 1.5rem;">New Arrivals</h2>
+
                 <div class="products-grid four-column">
                     @forelse($newArrivals as $product)
                     <div class="product-card" data-product-id="{{ $product->id }}">
-                        <button class="like-btn">
-                            <i class="far fa-heart"></i>
-                        </button>
                         <div class="product-image">
                             @if($product->main_image_url)
                                 <img src="{{ $product->main_image_url }}" alt="{{ $product->name }}">
@@ -120,6 +115,7 @@
                             <h3 class="product-name">{{ $product->name }}</h3>
                             <p class="product-brand">{{ $product->brand }}</p>
                             <p class="product-price">{{ $product->formatted_price }}</p>
+
                             @if($product->has_variations)
                                 <small class="price-from">From {{ $product->formatted_price }}</small>
                             @endif
@@ -135,9 +131,7 @@
         </div>
     </section>
 </div>
-@endsection
 
-@section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const slides = document.querySelectorAll('.slide');
@@ -195,24 +189,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Product card interactions
     const productCards = document.querySelectorAll('.product-card');
-    const likeButtons = document.querySelectorAll('.like-btn');
-
-    // Like button functionality
-    likeButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const icon = this.querySelector('i');
-            if (icon.classList.contains('far')) {
-                icon.classList.remove('far');
-                icon.classList.add('fas');
-                this.classList.add('liked');
-            } else {
-                icon.classList.remove('fas');
-                icon.classList.add('far');
-                this.classList.remove('liked');
-            }
-        });
-    });
 
     // Add click events to product cards for navigation
     productCards.forEach(card => {
@@ -359,6 +335,7 @@ document.addEventListener('DOMContentLoaded', function() {
         padding: 2rem 0;
         margin: 0 auto;
         max-width: 1200px;
+        margin-top: 3rem;
     }
 
     .section-title {
@@ -456,8 +433,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     .products-section.new-arrivals {
-        background: var(--white);
-        border-radius: 1rem;
+        background: transparent !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin-bottom: 3rem;
+        margin-top: 2rem;
     }
 
     .products-grid {
@@ -487,36 +468,6 @@ document.addEventListener('DOMContentLoaded', function() {
         transform: translateY(-5px);
         box-shadow: var(--shadow-hover);
         border-color: var(--primary-green);
-    }
-
-    .like-btn {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        background: var(--white);
-        border: 1px solid var(--border-light);
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        z-index: 2;
-    }
-
-    .like-btn:hover {
-        background: #fff5f5;
-        border-color: #ff6b6b;
-        color: #ff6b6b;
-        transform: scale(1.1);
-    }
-
-    .like-btn.liked {
-        background: #ff6b6b;
-        border-color: #ff6b6b;
-        color: var(--white);
     }
 
     .product-image {
@@ -705,8 +656,5 @@ document.addEventListener('DOMContentLoaded', function() {
     .product-card,
     .category-card,
     .explore-link,
-    .like-btn {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
 </style>
 @endsection
