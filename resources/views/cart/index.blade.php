@@ -2,12 +2,42 @@
 
 @section('content')
 <div class="simple-cart-page">
-    <!-- Banner -->
-    <div class="cart-banner">
-        <div class="banner-content">
-            <h1>SHOPPING CART</h1>
-        </div>
+    {{-- Remove from Cart alert --}}
+    <div id="removeFromCartAlert"
+        style="
+            display:none;
+            position: fixed;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #fca5a5;
+            background: #fee2e2;
+            color: #991b1b;
+            font-size: 0.95rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            transition: top 0.3s ease; /* Smooth transition */
+        ">
+        The item has been removed
     </div>
+
+    {{-- Only show banner when there are items in the cart --}}
+    @if($cartItems->count() > 0)
+        <!-- Banner -->
+        <div class="cart-banner">
+            <div class="banner-content">
+                <h1 class="cart-title">Shopping Cart</h1>
+
+                <p class="cart-subtitle">
+                    Review your items & proceed to secure checkout
+                </p>
+
+                <div class="cart-arrow">⌄</div>
+            </div>
+        </div>
+    @endif
 
     <div class="cart-container">
         @if($cartItems->count() > 0)
@@ -17,6 +47,7 @@
             <div class="header-price">UNIT PRICE</div>
             <div class="header-quantity">QUANTITY</div>
             <div class="header-total">TOTAL</div>
+            <div></div> <!-- X icon column -->
         </div>
 
 <!-- Cart Items -->
@@ -77,6 +108,9 @@
     <div class="item-total">
         RM {{ number_format($item->subtotal, 2) }}
     </div>
+
+    <!-- REMOVE ICON -->
+    <div class="remove-item" data-id="{{ $item->id }}">×</div>
 </div>
 @endforeach
 
@@ -119,6 +153,35 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Remove alert element
+    const removeAlert = document.getElementById('removeFromCartAlert');
+
+    function showRemoveAlert() {
+        if (!removeAlert) return;
+        
+        // Ensure it's positioned correctly even when scrolling
+        removeAlert.style.top = '20px';
+        removeAlert.style.left = '50%';
+        removeAlert.style.transform = 'translateX(-50%)';
+        removeAlert.style.display = 'block';
+        
+        // Ensure it stays on top of other content
+        removeAlert.style.zIndex = '9999';
+        
+        setTimeout(() => {
+            removeAlert.style.display = 'none';
+        }, 2000); // show for 2 seconds
+    }
+
+    window.addEventListener('scroll', function() {
+        if (removeAlert && removeAlert.style.display === 'block') {
+            // Force the alert to stay at fixed top position
+            removeAlert.style.top = '20px';
+            removeAlert.style.left = '50%';
+            removeAlert.style.transform = 'translateX(-50%)';
+        }
+    });
+
     // Quantity buttons
     document.querySelectorAll('.qty-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -141,6 +204,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const item = this.closest('.cart-item');
             const itemId = item.dataset.itemId;
             updateCartItem(itemId, parseInt(this.value), item);
+        });
+    });
+
+    // Remove item via X icon
+    document.querySelectorAll('.remove-item').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const itemId = this.dataset.id;
+
+            // Force backend update with quantity 0
+            updateCartItem(itemId, 0, document.querySelector(`.cart-item[data-item-id="${itemId}"]`));
         });
     });
 
@@ -299,9 +372,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function decreaseQuantity(itemId, itemElement) {
         const input = itemElement.querySelector('.qty-input');
         const currentValue = parseInt(input.value);
+
         if (currentValue > 1) {
+            // Normal decrease
             input.value = currentValue - 1;
             updateCartItem(itemId, currentValue - 1, itemElement);
+        } else if (currentValue === 1) {
+            // At 1 → send 0 to backend to remove item
+            updateCartItem(itemId, 0, itemElement);
         }
     }
 
@@ -321,13 +399,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // 1) Update item total
-            const itemTotalEl = itemElement.querySelector('.item-total');
-            if (itemTotalEl) {
-                if (data.item_total_html) {
-                    itemTotalEl.textContent = data.item_total_html;   // e.g. "RM 999.00"
-                } else if (typeof data.item_total_raw !== 'undefined') {
-                    itemTotalEl.textContent = 'RM ' + Number(data.item_total_raw).toFixed(2);
+            // If the item was removed (qty went to 0), remove the row
+            if (data.removed) {
+                itemElement.remove();
+                showRemoveAlert();
+            } else {
+                // 1) Update item total
+                const itemTotalEl = itemElement.querySelector('.item-total');
+                if (itemTotalEl) {
+                    if (data.item_total_html) {
+                        itemTotalEl.textContent = data.item_total_html;   // e.g. "RM 999.00"
+                    } else if (typeof data.item_total_raw !== 'undefined') {
+                        itemTotalEl.textContent = 'RM ' + Number(data.item_total_raw).toFixed(2);
+                    }
                 }
             }
 
@@ -380,23 +464,23 @@ document.addEventListener('DOMContentLoaded', function() {
 @section('styles')
 <style>
     .simple-cart-page {
-        min-height: 70vh;
+        min-height: 50vh;
         background: white;
         font-family: "Nunito", sans-serif;
     }
 
     /* Banner */
     .cart-banner {
-        background: #2d4a35;
-        padding: 30px 3rem;
+        background: white;
+        padding: 50px 3rem;
         text-align: center;
         margin-bottom: 0;
     }
 
     .banner-content h1 {
-        color: white;
+        color: #2d4a35;
         font-size: 2.5rem;
-        font-weight: 700;
+        font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 2px;
         margin: 0;
@@ -405,24 +489,80 @@ document.addEventListener('DOMContentLoaded', function() {
     /* Container */
     .cart-container {
         max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 3rem;
+        margin: 50px auto;
+        padding: 0 48px;
+        box-sizing: border-box;
+    }
+
+    .cart-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2d4a35;
+        letter-spacing: 2px;
+        margin-bottom: 5px;
+    }
+
+    .cart-subtitle {
+        font-size: 1rem;
+        color: #6b7280;
+        margin-top: 0;
+        opacity: 0.9;
+    }
+
+    .cart-arrow {
+        margin-top: -20px;
+        margin-bottom: -50px;
+        font-size: 3rem;
+        color: 	#AFE1AF;
+        animation: arrowPulse 1.5s infinite ease-in-out;
+    }
+
+    @keyframes arrowPulse {
+        0% { transform: translateY(0); opacity: 0.7; }
+        50% { transform: translateY(4px); opacity: 1; }
+        100% { transform: translateY(0); opacity: 0.7; }
+    }
+
+    .cart-header,
+    .cart-item {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 40px !important;
+        column-gap: 20px;
+        width: 100%;
+        align-items: center;
+    }
+
+    /* X icon style */
+    .remove-item {
+        text-align: center;
+        cursor: pointer;
+        font-size: 1.3rem;
+        color: 000000;
+        font-weight: bold;
+        transition: 0.2s;
+    }
+
+    .remove-item:hover {
+        color: #ff0000;
+        transform: scale(1.2);
     }
 
     /* Cart Header */
     .cart-header {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr;
-        gap: 20px;
-        padding: 20px;
-        background: white;
+        padding: 20px 0;
+        background: #2d4a35;
         font-weight: 600;
         text-transform: uppercase;
         font-size: 0.9rem;
-        color: #2c3e50;
+        color: white;
         border-bottom: 2px solid #e9ecef;
-        margin-bottom: 0;
-        margin-top: 50px;
+        margin: 50px 0 0;
+    }
+
+    .cart-header > div:nth-child(1) {
+        text-align: center;
+    }
+    .cart-header > div:nth-child(n+2) {
         text-align: center;
     }
 
@@ -430,18 +570,13 @@ document.addEventListener('DOMContentLoaded', function() {
         text-align: center;
     }
 
-
     /* Cart Items */
     .cart-items {
         background: white;
     }
 
     .cart-item {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr;
-        gap: 20px;
-        align-items: center;
-        padding: 25px 20px;
+        padding: 25px 0;
         border-bottom: 1px solid #e9ecef;
     }
 
@@ -449,11 +584,24 @@ document.addEventListener('DOMContentLoaded', function() {
         border-bottom: none;
     }
 
+    .cart-item > div:nth-child(1) {
+        text-align: left;
+    }
+    .cart-item > div:nth-child(n+2) {
+        text-align: center;
+    }
+
+    .product-info,
+    .product-details {
+        min-width: 0 !important;
+    }
+
     /* Product Info */
     .product-info {
         display: flex;
         align-items: center;
         gap: 15px;
+        min-width: 0 !important;
     }
 
     .product-image {
@@ -473,7 +621,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     .product-details {
         flex: 1;
-        line-height: 1.2;
+        min-width: 0 !important;
+    }
+
+    .product-name,
+    .product-specs {
+        white-space: normal !important;
+        overflow: hidden;
+        word-break: break-word;
     }
 
     .product-name {
@@ -484,6 +639,9 @@ document.addEventListener('DOMContentLoaded', function() {
         text-decoration: none;
         display: block;
         line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .product-name:hover {
@@ -495,6 +653,9 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 0.85em;
         margin-top: 3px;
         line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .product-sku {
@@ -504,12 +665,18 @@ document.addEventListener('DOMContentLoaded', function() {
         margin-top: 2px;
     }
 
+    .unit-price,
+    .quantity-controls,
+    .item-total {
+        min-width: 0 !important;
+        text-align: center;
+    }
+
     /* Unit Price */
     .unit-price {
-        text-align: center;
         font-weight: 600;
         color: #2c3e50;
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
 
     /* Quantity Controls */
@@ -565,12 +732,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     /* Item Total */
     .item-total {
-        text-align: center;
         font-weight: 700;
         color: #2c3e50;
         font-size: 1rem;
         white-space: nowrap;
-        padding-right: 10px; 
     }
 
     /* Cart Footer */
@@ -592,7 +757,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     .continue-btn {
         padding: 12px 20px;
-        background: #2c3e50;
+        background: #2d4a35;
         color: white;
         text-decoration: none;
         border-radius: 6px;
@@ -673,7 +838,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .order-btn {
         display: inline-block;
         padding: 12px 30px;
-        background-color: #2c3e50;
+        background-color: #2d4a35;
         color: #fff;
         text-decoration: none;
         border: none;
@@ -698,24 +863,44 @@ document.addEventListener('DOMContentLoaded', function() {
     /* Empty Cart */
     .empty-cart {
         text-align: center;
-        padding: 60px 20px;
+        padding: 80px 30px;
         background: white;
-        border-radius: 8px;
+        border-radius: 12px;
         max-width: 500px;
-        margin: 10px auto 0 auto;
+        margin: 100px auto 0 auto;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f0f0f0;
     }
 
     .empty-cart h2 {
-        font-size: 1.5rem;
+        font-size: 1.75rem;
         color: #2d4a35;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
         text-transform: uppercase;
+        font-weight: 700;
     }
 
     .empty-cart p {
         color: #6c757d;
-        margin-bottom: 25px;
-        font-size: 1rem;
+        margin-bottom: 30px;
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    .simple-cart-page:has(.empty-cart) {
+        background: white !important;
+        padding-top: 50px !important;
+        padding-bottom: 50px !important;
+    }
+
+    .simple-cart-page:has(.empty-cart) .cart-banner {
+        display: none !important;
+    }
+
+    .simple-cart-page:has(.empty-cart) .cart-container {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        background: white !important;
     }
 
     .start-shopping-btn {
@@ -732,7 +917,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     .start-shopping-btn:hover {
-        background: #4caf50;
+        background: #AFE1AF;
         color: white;
     }
 
@@ -819,13 +1004,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         .empty-cart {
-            padding: 40px 20px;
+            padding: 50px 20px;
+            margin: 60px auto 0 auto;
         }
 
         .product-image {
             width: 60px;
             height: 60px;
         }
+
+        .empty-cart h2 {
+            font-size: 1.5rem;
+        }
+        
+        .empty-cart p {
+            font-size: 1rem;
+        }
     }
+
+    @media (max-width: 768px) {
+        .simple-cart-page:has(.empty-cart) .cart-container {
+            margin: 60px auto; /* Smaller increase for mobile */
+        }
+    }
+
 </style>
 @endsection

@@ -175,6 +175,37 @@ class CartController extends Controller
     public function update(Request $request, $id)
     {
         try {
+
+            // If quantity is 0, remove item instead of validating
+            if ((int) $request->quantity === 0) {
+                $cart = $this->getCart();
+                if (!$cart) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cart not found'
+                    ], 404);
+                }
+
+                $item = $cart->items()->where('id', $id)->first();
+
+                if ($item) {
+                    $item->delete();
+                }
+
+                // Recalculate totals after removal
+                $cart->calculateTotals();
+                $cart->refresh();
+
+                return response()->json([
+                    'success'        => true,
+                    'removed'        => true,
+                    'cart_total_raw' => (float) $cart->total_amount,
+                    'cart_total_html'=> 'RM ' . number_format($cart->total_amount, 2),
+                    'cart_count'     => (int) $cart->item_count,
+                ]);
+            }
+
+            // Normal validation for qty 1–99
             $request->validate([
                 'quantity' => 'required|integer|min:1|max:99'
             ]);
@@ -190,7 +221,6 @@ class CartController extends Controller
 
             $item = $cart->items()->with('product')->where('id', $id)->firstOrFail();
 
-            // Use your real stock column here (stock_quantity / stock, etc.)
             $availableStock = $item->product->stock_quantity ?? $item->product->stock ?? 0;
 
             if ($request->quantity > $availableStock) {
@@ -208,11 +238,12 @@ class CartController extends Controller
             $cart->calculateTotals();
             $cart->refresh();
 
-            // Compute item total (fallback if no accessor)
+            // Item total
             $itemTotal = $item->subtotal ?? ($item->price * $item->quantity);
 
             return response()->json([
                 'success'          => true,
+                'removed'          => false,
                 'item_total_raw'   => (float) $itemTotal,
                 'cart_total_raw'   => (float) $cart->total_amount,
                 'item_total_html'  => 'RM ' . number_format($itemTotal, 2),

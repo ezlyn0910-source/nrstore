@@ -2,6 +2,26 @@
 
 @section('content')
 <div class="page-container" style="max-width: 1280px; margin: 0 auto; padding: 5rem 3rem;">
+        {{-- Add to Cart alert --}}
+        <div id="addToCartAlert"
+            style="
+                display:none;
+                position: fixed;
+                top: 150px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 9999;
+                padding: 0.75rem 1rem;
+                border-radius: 0.5rem;
+                border: 1px solid #34d399;
+                background: #d1fae5;
+                color: #065f46;
+                font-size: 0.95rem;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            ">
+            The item has successfully added to cart
+        </div>
+
     <div class="product-detail">
         <div style="display: grid; grid-template-columns: 1.2fr 1.8fr; gap: 2rem; align-items: stretch;">
     
@@ -391,11 +411,46 @@ document.addEventListener('DOMContentLoaded', function () {
     const buyNowForm      = document.getElementById('buyNowForm');
     const cartQtyInput    = document.getElementById('cartQtyInput');
     const buyNowQtyInput  = document.getElementById('buyNowQtyInput');
+    const cartAlert       = document.getElementById('addToCartAlert');
+    const csrfToken       = document.querySelector('meta[name="csrf-token"]')
+                                ? document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                : '';
 
     function getQuantity() {
         let q = parseInt(qtyInput ? qtyInput.value : '1', 10);
         if (isNaN(q) || q < 1) q = 1;
         return q;
+    }
+
+    function showCartAlert(message, isError = false) {
+        if (!cartAlert) return;
+
+        cartAlert.textContent = message;
+        cartAlert.style.display = 'block';
+
+        if (isError) {
+            cartAlert.style.backgroundColor = '#fee2e2';
+            cartAlert.style.borderColor = '#f87171';
+            cartAlert.style.color = '#b91c1c';
+        } else {
+            cartAlert.style.backgroundColor = '#d1fae5';
+            cartAlert.style.borderColor = '#34d399';
+            cartAlert.style.color = '#065f46';
+        }
+
+        setTimeout(() => {
+            cartAlert.style.display = 'none';
+        }, 3000);
+    }
+
+    function updateCartBadge(count) {
+        if (typeof count === 'undefined' || count === null) return;
+
+        // Try a few common selectors; adjust if your header uses a specific one
+        const elements = document.querySelectorAll('[data-cart-count], .cart-count, #cart-count');
+        elements.forEach(el => {
+            el.textContent = count;
+        });
     }
 
     if (btnAddToCart) {
@@ -407,8 +462,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (!addToCartForm || !cartQtyInput) return;
 
+            // Set quantity before sending
             cartQtyInput.value = getQuantity();
-            addToCartForm.submit();
+
+            const formData = new FormData(addToCartForm);
+
+            fetch(addToCartForm.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    showCartAlert('The item has successfully added to cart', false);
+
+                    // Update cart count badge if available
+                    updateCartBadge(data.cart_count);
+                } else {
+                    showCartAlert(data.message || 'Error adding item to cart.', true);
+                }
+            })
+            .catch(() => {
+                showCartAlert('Error adding item to cart. Please try again.', true);
+            });
         });
     }
 
@@ -422,8 +504,31 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!buyNowForm || !buyNowQtyInput) return;
 
             buyNowQtyInput.value = getQuantity();
-            buyNowForm.submit();
-        });
+
+            const formData = new FormData(buyNowForm);
+
+            fetch(buyNowForm.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.redirect_url) {
+                    // Buy now: go straight to checkout
+                    window.location.href = data.redirect_url;
+                } else {
+                    showCartAlert(data.message || 'Error processing buy now.', true);
+                }
+            })
+            .catch(() => {
+                showCartAlert('Error processing buy now. Please try again.', true);
+            });
+    });
     }
 });
 </script>
