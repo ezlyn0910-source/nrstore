@@ -271,7 +271,7 @@ class ManageProductController extends Controller
 
             DB::commit();
 
-            return redirect()->route('manageproduct.index')
+            return redirect()->route('admin.manageproduct.index')
                 ->with('success', 'Product created successfully!');
 
         } catch (\Exception $e) {
@@ -400,9 +400,11 @@ class ManageProductController extends Controller
 
             DB::commit();
 
-            return redirect()->route('manageproduct.index')
-                ->with('success', 'Product updated successfully!');
-
+            return redirect()->route('admin.manageproduct.index')
+                            ->with([
+                                'success' => 'Product has been updated.',
+                                'status'  => 'Product has been updated.',
+                            ]);
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Product update error: ' . $e->getMessage());
@@ -456,7 +458,7 @@ class ManageProductController extends Controller
 
             DB::commit();
 
-            return redirect()->route('manageproduct.index')
+            return redirect()->route('admin.manageproduct.index')
                 ->with('success', 'Product deleted successfully!');
 
         } catch (\Exception $e) {

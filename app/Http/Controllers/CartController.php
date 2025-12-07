@@ -175,6 +175,37 @@ class CartController extends Controller
     public function update(Request $request, $id)
     {
         try {
+
+            // If quantity is 0, remove item instead of validating
+            if ((int) $request->quantity === 0) {
+                $cart = $this->getCart();
+                if (!$cart) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cart not found'
+                    ], 404);
+                }
+
+                $item = $cart->items()->where('id', $id)->first();
+
+                if ($item) {
+                    $item->delete();
+                }
+
+                // Recalculate totals after removal
+                $cart->calculateTotals();
+                $cart->refresh();
+
+                return response()->json([
+                    'success'        => true,
+                    'removed'        => true,
+                    'cart_total_raw' => (float) $cart->total_amount,
+                    'cart_total_html'=> 'RM ' . number_format($cart->total_amount, 2),
+                    'cart_count'     => (int) $cart->item_count,
+                ]);
+            }
+
+            // Normal validation for qty 1–99
             $request->validate([
                 'quantity' => 'required|integer|min:1|max:99'
             ]);
@@ -189,25 +220,35 @@ class CartController extends Controller
             }
 
             $item = $cart->items()->with('product')->where('id', $id)->firstOrFail();
-            
-            // Check stock before updating
-            if ($request->quantity > $item->product->stock) {
+
+            $availableStock = $item->product->stock_quantity ?? $item->product->stock ?? 0;
+
+            if ($request->quantity > $availableStock) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Only ' . $item->product->stock . ' items available in stock.'
+                    'message' => 'Only ' . $availableStock . ' items available in stock.'
                 ], 422);
             }
 
+            // Update quantity
             $item->update(['quantity' => $request->quantity]);
+            $item->refresh();
+
+            // Recalculate cart totals
             $cart->calculateTotals();
             $cart->refresh();
 
+            // Item total
+            $itemTotal = $item->subtotal ?? ($item->price * $item->quantity);
+
             return response()->json([
-                'success' => true,
-                'message' => 'Cart updated successfully',
-                'item_total' => 'RM ' . number_format($item->subtotal, 2),
-                'cart_total' => 'RM ' . number_format($cart->total_amount, 2),
-                'cart_count' => $cart->item_count
+                'success'          => true,
+                'removed'          => false,
+                'item_total_raw'   => (float) $itemTotal,
+                'cart_total_raw'   => (float) $cart->total_amount,
+                'item_total_html'  => 'RM ' . number_format($itemTotal, 2),
+                'cart_total_html'  => 'RM ' . number_format($cart->total_amount, 2),
+                'cart_count'       => (int) $cart->item_count,
             ]);
 
         } catch (ValidationException $e) {
@@ -215,9 +256,9 @@ class CartController extends Controller
                 'success' => false,
                 'message' => 'Invalid quantity: ' . $e->getMessage()
             ], 422);
-            
+
         } catch (\Exception $e) {
-            Log::error('Cart Update Error: ' . $e->getMessage());
+            \Log::error('Cart Update Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating cart item. Please try again.'
@@ -302,7 +343,8 @@ class CartController extends Controller
     {
         try {
             $cart = $this->getCart();
-            $count = $cart ? $cart->item_count : 0;
+            // Count total quantity in cart, not just distinct lines
+            $count = $cart ? $cart->items()->sum('quantity') : 0;
 
             return response()->json(['count' => $count]);
             
@@ -328,21 +370,26 @@ class CartController extends Controller
             }
 
             $item = $cart->items()->with('product')->where('id', $id)->firstOrFail();
-            
-            // Check stock before increasing
-            if ($item->quantity >= $item->product->stock) {
+
+            $availableStock = $item->product->stock_quantity 
+                ?? $item->product->stock 
+                ?? null;
+
+            if (!is_null($availableStock) && $item->quantity >= $availableStock) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cannot add more than available stock. Maximum ' . $item->product->stock . ' items available.'
+                    'message' => 'Cannot add more than available stock. Maximum ' . $availableStock . ' items available.'
                 ], 422);
             }
 
             $item->increaseQuantity(1);
+
+            $cart->calculateTotals();
             $cart->refresh();
 
             return response()->json([
-                'success' => true,
-                'quantity' => $item->quantity,
+                'success'    => true,
+                'quantity'   => $item->quantity,
                 'item_total' => 'RM ' . number_format($item->subtotal, 2),
                 'cart_total' => 'RM ' . number_format($cart->total_amount, 2),
                 'cart_count' => $cart->item_count
@@ -374,16 +421,18 @@ class CartController extends Controller
 
             $item = $cart->items()->where('id', $id)->firstOrFail();
             $item->decreaseQuantity(1);
+
+            $cart->calculateTotals();
             $cart->refresh();
 
             $response = [
-                'success' => true,
+                'success'    => true,
                 'cart_total' => 'RM ' . number_format($cart->total_amount, 2),
                 'cart_count' => $cart->item_count
             ];
 
             if ($item->exists) {
-                $response['quantity'] = $item->quantity;
+                $response['quantity']   = $item->quantity;
                 $response['item_total'] = 'RM ' . number_format($item->subtotal, 2);
             }
 
@@ -580,10 +629,10 @@ class CartController extends Controller
             return response()->json([
                 'success' => true,
                 'cart' => [
-                    'item_count' => $cart->item_count,
-                    'total_amount' => $cart->total_amount,
+                    'item_count'      => $cart->item_count,
+                    'total_amount'    => $cart->total_amount,
                     'formatted_total' => 'RM ' . number_format($cart->total_amount, 2),
-                    'items' => $cartItems
+                    'items'           => $cartItems
                 ]
             ]);
 

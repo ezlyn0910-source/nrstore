@@ -73,7 +73,9 @@
                 <div class="products-grid">
                     <!-- Update both Featured Products and New Arrivals sections -->
                     @forelse($hotProducts as $product)
-                    <div class="product-card" data-product-id="{{ $product->id }}">
+                    <div class="product-card"
+                         data-product-id="{{ $product->id }}"
+                         data-product-url="{{ route('products.show', $product->slug) }}">
                         <div class="product-image">
                             @php
                                 // Get the main/primary image
@@ -125,7 +127,9 @@
 
                 <div class="products-grid four-column">
                     @forelse($newArrivals as $product)
-                    <div class="product-card" data-product-id="{{ $product->id }}">
+                    <div class="product-card"
+                         data-product-id="{{ $product->id }}"
+                         data-product-url="{{ route('products.show', $product->slug) }}">
                         <div class="product-image">
                             @if($product->main_image_url)
                                 <img src="{{ $product->main_image_url }}" alt="{{ $product->name }}">
@@ -212,12 +216,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Product card interactions
     const productCards = document.querySelectorAll('.product-card');
 
-    // Add click events to product cards for navigation
+    // Add click events to product cards for navigation using the correct URL
     productCards.forEach(card => {
         card.addEventListener('click', function() {
-            const productId = this.getAttribute('data-product-id');
-            if (productId) {
-                window.location.href = `/products/${productId}`;
+            const productUrl = this.getAttribute('data-product-url');
+            if (productUrl) {
+                window.location.href = productUrl;
             }
         });
     });
@@ -476,14 +480,46 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     .product-card {
+        display: flex;
+        flex-direction: column;
         background: var(--white);
         border-radius: 1rem;
-        padding: 1.5rem;
+        overflow: hidden;
+        padding: 0;
         position: relative;
         transition: all 0.3s ease;
         box-shadow: var(--shadow);
         border: 1px solid var(--border-light);
         cursor: pointer;
+    }
+
+    /* Square image container */
+    .product-card .product-image {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        position: relative;
+        overflow: hidden;
+        border-radius: 0;
+        background: #f4f4f4;
+    }
+
+    /* Image fills entire square */
+    .product-card .product-image img {
+        position: absolute;
+        inset: 0; 
+        width: 100%;
+        height: 100%;
+        object-fit: cover; 
+        border-radius: 0;
+        transform: none !important;
+        transition: none !important;
+    }
+
+    /* Product info area rounded only on bottom */
+    .product-card .product-info {
+        padding: 1rem;
+        border-bottom-left-radius: 1rem;
+        border-bottom-right-radius: 1rem;
     }
 
     .product-card:hover {
@@ -492,36 +528,13 @@ document.addEventListener('DOMContentLoaded', function() {
         border-color: var(--primary-green);
     }
 
-    .product-image {
-        width: 100%;
-        height: 180px;
-        background: var(--light-bone);
-        border-radius: 0.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 1rem;
-        overflow: hidden;
-    }
-
-    .product-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.3s ease;
-    }
-
-    .product-card:hover .product-image img {
-        transform: scale(1.05);
+    .product-info {
+        text-align: center;
     }
 
     .product-image .image-placeholder {
         color: var(--light-text);
         font-size: 1rem;
-    }
-
-    .product-info {
-        text-align: center;
     }
 
     .product-name {
@@ -540,7 +553,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .product-price {
         font-size: 1.25rem;
         font-weight: 700;
-        color: var(--accent-gold);
+        color: #5FBF87;
         margin: 0;
     }
 
