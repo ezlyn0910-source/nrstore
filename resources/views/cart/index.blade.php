@@ -105,7 +105,6 @@
         @else
         <!-- Empty Cart -->
         <div class="empty-cart">
-            <div class="empty-icon">🛒</div>
             <h2>YOUR CART IS EMPTY</h2>
             <p>Looks like you haven't added any items to your cart yet.</p>
             <a href="{{ route('products.index') }}" class="start-shopping-btn">
@@ -313,29 +312,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-            body: JSON.stringify({
-                quantity: quantity
-            })
+            body: JSON.stringify({ quantity: quantity })
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                const itemTotal = itemElement.querySelector('.item-total');
-                itemTotal.textContent = `RM ${data.item_subtotal.toFixed(2)}`;
-                
-                const subtotalElement = document.getElementById('subtotal');
-                if (subtotalElement) {
-                    subtotalElement.textContent = `RM ${data.cart_subtotal.toFixed(2)}`;
+            if (!data || !data.success) {
+                console.warn('Cart update failed:', data && data.message ? data.message : data);
+                return;
+            }
+
+            // 1) Update item total
+            const itemTotalEl = itemElement.querySelector('.item-total');
+            if (itemTotalEl) {
+                if (data.item_total_html) {
+                    itemTotalEl.textContent = data.item_total_html;   // e.g. "RM 999.00"
+                } else if (typeof data.item_total_raw !== 'undefined') {
+                    itemTotalEl.textContent = 'RM ' + Number(data.item_total_raw).toFixed(2);
                 }
-            } else {
-                alert('Failed to update cart: ' + data.message);
-                location.reload();
+            }
+
+            // 2) Update subtotal (bottom right)
+            const subtotalEl = document.getElementById('subtotal');
+            if (subtotalEl) {
+                if (data.cart_total_html) {
+                    subtotalEl.textContent = data.cart_total_html;
+                } else if (typeof data.cart_total_raw !== 'undefined') {
+                    subtotalEl.textContent = 'RM ' + Number(data.cart_total_raw).toFixed(2);
+                }
+            }
+
+            // 3) Update cart icon count (if exist in header)
+            if (typeof data.cart_count !== 'undefined') {
+                const cartBadge = document.querySelector('.cart-count, .cart-count-badge, .cart-items-count');
+                if (cartBadge) {
+                    cartBadge.textContent = data.cart_count;
+                }
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Error updating cart');
-            location.reload();
+            console.error('Error updating cart request:', error);
         });
     }
 
@@ -372,8 +387,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     /* Banner */
     .cart-banner {
-        background: #2c3e50;
-        padding: 60px 3rem;
+        background: #2d4a35;
+        padding: 30px 3rem;
         text-align: center;
         margin-bottom: 0;
     }
@@ -687,17 +702,12 @@ document.addEventListener('DOMContentLoaded', function() {
         background: white;
         border-radius: 8px;
         max-width: 500px;
-        margin: 0 auto;
-    }
-
-    .empty-icon {
-        font-size: 4rem;
-        margin-bottom: 20px;
+        margin: 10px auto 0 auto;
     }
 
     .empty-cart h2 {
         font-size: 1.5rem;
-        color: #2c3e50;
+        color: #2d4a35;
         margin-bottom: 10px;
         text-transform: uppercase;
     }
@@ -710,7 +720,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     .start-shopping-btn {
         padding: 12px 30px;
-        background: #2c3e50;
+        background: #2d4a35;
         color: white;
         text-decoration: none;
         border-radius: 6px;
@@ -722,7 +732,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     .start-shopping-btn:hover {
-        background: #34495e;
+        background: #4caf50;
         color: white;
     }
 
