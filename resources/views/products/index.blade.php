@@ -1049,7 +1049,7 @@
 @section('content')
 <div class="product-page">
     <section class="hero-section" style="position: relative; height: 350px; background-color: #1f2937; overflow: hidden; margin-bottom: 0;">
-        <img src="{{ asset('storage/images/productbanner.png') }}" alt="Products Banner" 
+        <img src="{{ asset('/images/productbanner.png') }}" alt="Products Banner" 
             style="width: 100%; height: 100%; object-fit: cover; opacity: 1;">
         <div style="position: absolute; bottom: 5px; left: 0; right: 0; text-align: center;">
             <h1 style="font-size: 14rem; font-weight: bold; color: white; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7); margin: 0;">
@@ -1133,7 +1133,7 @@
                                     data-product-id="{{ $product->id }}">
                                     
                                     <div style="width: 100%; height: 230px; background-color: #f3f4f6; overflow: hidden; margin: 0; padding: 0; border-radius: 0.5rem 0.5rem 0 0; position: relative;">
-                                        <img src="{{ asset('storage/' . $product->image) }}"   
+                                        <img src="{{ asset($product->image ?? 'images/default-product.png') }}"      
                                             alt="{{ $product->name }}" 
                                             style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; margin: 0; padding: 0; display: block; border-radius: 0.5rem 0.5rem 0 0;">
                                     </div>
@@ -1269,7 +1269,7 @@
                             @foreach($recommendedProducts as $product)
                                 <div style="flex: 0 0 auto; width: 300px; background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden; transition: all 0.3s ease; position: relative;" class="product-card" data-product-id="{{ $product->id }}">
                                     <div style="width: 100%; height: 200px; background-color: #f3f4f6; overflow: hidden; margin: 0; padding: 0; position: relative;">
-                                        <img src="{{ asset('storage/' . $product->image) }}"    
+                                        <<img src="{{ asset($product->image ?? 'images/default-product.png') }}"        
                                             alt="{{ $product->name }}" 
                                             style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; margin: 0; padding: 0; display: block;">
                                     </div>
