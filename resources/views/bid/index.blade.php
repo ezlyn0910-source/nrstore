@@ -96,8 +96,8 @@
                 </div>
             </div>
             @else
-            <div class="text-center py-5">
-                <p class="text-white">No live auctions at the moment. Check back soon!</p>
+            <div class="no-auction-wrapper">
+                <p class="no-auction-text text-white">No live auctions at the moment. Check back soon!</p>
             </div>
             @endif
         </div>
@@ -154,8 +154,8 @@
                 </div>
             </div>
             @else
-            <div class="text-center py-5">
-                <p>No upcoming auctions scheduled. Check back later for new auctions!</p>
+            <div class="no-auction-wrapper">
+                <p class="no-auction-text">No upcoming auctions scheduled. Check back later for new auctions!</p>
             </div>
             @endif
         </div>
@@ -263,6 +263,20 @@ document.addEventListener('DOMContentLoaded', function() {
         text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     }
 
+    .no-auction-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 4rem 0;
+        text-align: center;
+    }
+
+    .no-auction-text {
+        font-size: 1.2rem;
+        margin: 0;
+    }
+
     /* Section Base Styles */
     .bid-section {
         padding: 5rem 0;
@@ -310,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     .title-part-green {
-        color: var(--accent-green);
+        color: #AFE1AF;
     }
 
     .title-underline {

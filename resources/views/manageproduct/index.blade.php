@@ -794,6 +794,40 @@ input:checked + .toggle-slider:before {
 </style>
 
 <div class="manage-products-container">
+
+    {{-- Flash Messages --}}
+    @if (session('success'))
+        <div 
+            class="alert alert-success flash-alert" 
+            style="
+                margin-bottom: 1rem;
+                border-radius: 0.5rem;
+                padding: 0.75rem 1rem;
+                background:#d4edda;
+                color:#155724;
+                border:1px solid #c3e6cb;
+            "
+        >
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div 
+            class="alert alert-danger flash-alert" 
+            style="
+                margin-bottom: 1rem;
+                border-radius: 0.5rem;
+                padding: 0.75rem 1rem;
+                background:#f8d7da;
+                color:#721c24;
+                border:1px solid #f5c6cb;
+            "
+        >
+            {{ session('error') }}
+        </div>
+    @endif
+
     <!-- Header Section -->
     <div class="dashboard-header">
         <div class="header-content">
@@ -1075,6 +1109,21 @@ input:checked + .toggle-slider:before {
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Auto-hide flash alerts after 3 seconds
+    const flashAlerts = document.querySelectorAll('.flash-alert');
+    flashAlerts.forEach(alert => {
+        // Optional: smooth fade-out
+        alert.style.transition = 'opacity 0.3s ease';
+
+        setTimeout(() => {
+            alert.style.opacity = '0';
+            // Remove from DOM after fade
+            setTimeout(() => {
+                alert.remove();
+            }, 300); // match transition duration
+        }, 3000); // 3000ms = 3 seconds
+    });
+
     // Select All functionality
     const selectAll = document.getElementById('selectAll');
     const tableSelectAll = document.getElementById('tableSelectAll');
