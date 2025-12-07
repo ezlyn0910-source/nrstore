@@ -185,6 +185,11 @@ class Product extends Model
     public function getMainImageUrlAttribute()
     {
         if ($this->image) {
+            // Check if image exists in public directory
+            if (file_exists(public_path('images/products/' . basename($this->image)))) {
+                return asset('images/products/' . basename($this->image));
+            }
+            // Check in storage as fallback
             return asset('storage/' . $this->image);
         }
         

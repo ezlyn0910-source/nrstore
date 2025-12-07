@@ -25,8 +25,6 @@ class ProductImage extends Model
 
     protected $appends = [
         'image_url',
-        'main_image_url',
-        
     ];
 
     /**
@@ -43,8 +41,10 @@ class ProductImage extends Model
     public function getImageUrlAttribute()
     {
         if ($this->image_path) {
-            return asset('storage/' . $this->image_path);
+            // Images are stored in public directory, use asset() to generate URL
+            return asset($this->image_path);
         }
+        
         return asset('images/default-product.png');
     }
 
@@ -53,7 +53,11 @@ class ProductImage extends Model
      */
     public function getFullImagePathAttribute()
     {
-        return storage_path('app/public/' . $this->image_path);
+        // Check both public and storage paths
+        if (file_exists(public_path('images/products/' . basename($this->image_path)))) {
+            return public_path('images/products/' . basename($this->image_path));
+        }
+        return public_path($this->image_path);
     }
 
     /**
@@ -61,7 +65,7 @@ class ProductImage extends Model
      */
     public function getImageExistsAttribute()
     {
-        return Storage::disk('public')->exists($this->image_path);
+        return $this->image_path && file_exists(public_path($this->image_path));
     }
 
     /**
@@ -105,6 +109,15 @@ class ProductImage extends Model
 
         static::deleting(function ($productImage) {
             // Delete the physical file when the record is deleted
+            $filename = basename($productImage->image_path);
+            $publicPath = public_path('images/products/' . $filename);
+            
+            // Delete from public directory if exists
+            if (file_exists($publicPath)) {
+                unlink($publicPath);
+            }
+            
+            // Also delete from storage if exists
             if (Storage::disk('public')->exists($productImage->image_path)) {
                 Storage::disk('public')->delete($productImage->image_path);
             }
