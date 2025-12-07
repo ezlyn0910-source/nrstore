@@ -71,11 +71,33 @@
             <div class="products-section">
                 <h2 class="section-title">Featured Products</h2>
                 <div class="products-grid">
+                    <!-- Update both Featured Products and New Arrivals sections -->
                     @forelse($hotProducts as $product)
                     <div class="product-card" data-product-id="{{ $product->id }}">
                         <div class="product-image">
-                            @if($product->main_image_url)
-                                <img src="{{ $product->main_image_url }}" alt="{{ $product->name }}">
+                            @php
+                                // Get the main/primary image
+                                $mainImage = null;
+                                
+                                // Try to get from product's main image field
+                                if ($product->image && file_exists(public_path($product->image))) {
+                                    $mainImage = $product->image;
+                                } 
+                                // Try to get from product images relationship
+                                else if ($product->images && $product->images->count() > 0) {
+                                    $primaryImage = $product->images->where('is_primary', true)->first();
+                                    $firstImage = $product->images->first();
+                                    
+                                    if ($primaryImage && $primaryImage->image_path && file_exists(public_path($primaryImage->image_path))) {
+                                        $mainImage = $primaryImage->image_path;
+                                    } else if ($firstImage && $firstImage->image_path && file_exists(public_path($firstImage->image_path))) {
+                                        $mainImage = $firstImage->image_path;
+                                    }
+                                }
+                            @endphp
+                            
+                            @if($mainImage)
+                                <img src="{{ asset($mainImage) }}" alt="{{ $product->name }}">
                             @else
                                 <div class="image-placeholder">No Image</div>
                             @endif

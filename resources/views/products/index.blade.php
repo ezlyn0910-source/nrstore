@@ -1163,7 +1163,7 @@
                                                 data-product-id="{{ $product->id }}"
                                                 data-product-name="{{ $product->name }}"
                                                 data-product-price="{{ $product->price }}"
-                                                data-product-image="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"
+                                                data-product-image="{{ asset($product->image ?? 'images/default-product.png') }}"
                                                 data-has-variations="{{ $product->has_variations ? '1' : '0' }}"
                                                 style="flex: 1; border: 1px solid #1f2937; background: white; color: #1f2937; padding: 0.4rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem; transition: all 0.2s ease; cursor: pointer;">
                                             <span class="cart-btn-text">Add to Cart</span>
@@ -1172,7 +1172,7 @@
                                             data-product-id="{{ $product->id }}"
                                             data-product-name="{{ $product->name }}"
                                             data-product-price="{{ $product->price }}"
-                                            data-product-image="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"
+                                            data-product-image="{{ asset($product->image ?? 'images/default-product.png') }}"
                                             data-has-variations="{{ $product->has_variations ? '1' : '0' }}"
                                             style="flex: 1; background: #1f2937; color: white; padding: 0.4rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; border: none; transition: all 0.2s ease; cursor: pointer;">
                                         Buy Now
@@ -1270,7 +1270,7 @@
                                                 data-product-id="{{ $product->id }}"
                                                 data-product-name="{{ $product->name }}"
                                                 data-product-price="{{ $product->price }}"
-                                                data-product-image="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"
+                                                data-product-image="{{ asset($product->image ?? 'images/default-product.png') }}"
                                                 data-has-variations="{{ $product->has_variations ? '1' : '0' }}"
                                                 style="flex: 1; border: 1px solid #1f2937; background: white; color: #1f2937; padding: 0.25rem 0.5rem; border-radius: 2rem; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.125rem; transition: all 0.2s ease; cursor: pointer;">
                                             <svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1282,7 +1282,7 @@
                                             data-product-id="{{ $product->id }}"
                                             data-product-name="{{ $product->name }}"
                                             data-product-price="{{ $product->price }}"
-                                            data-product-image="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"
+                                            data-product-image="{{ asset($product->image ?? 'images/default-product.png') }}"
                                             data-has-variations="{{ $product->has_variations ? '1' : '0' }}"
                                             style="flex: 1; background: #1f2937; color: white; padding: 0.25rem 0.5rem; border-radius: 2rem; font-size: 0.8rem; border: none; transition: all 0.2s ease; cursor: pointer;">
                                         Buy Now

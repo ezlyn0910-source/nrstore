@@ -120,9 +120,9 @@ class ManageProductController extends Controller
                 'stock_quantity' => 'required|integer|min:0',
                 'is_featured' => 'boolean',
                 'is_recommended' => 'boolean',
-                'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:20480',
                 'product_images' => 'nullable|array|max:5',
-                'product_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                'product_images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:20480',
                 'has_variations' => 'boolean',
                 'variations' => 'nullable|array',
                 'variations.*.sku' => 'required_if:has_variations,1|string|max:100|distinct',
@@ -173,35 +173,43 @@ class ManageProductController extends Controller
                 'slug' => $this->generateSlug($validated['name']),
             ]);
 
-            // Handle main image upload - WITH NULL CHECK
+            // Create necessary directories
+            $this->createImageDirectories();
+
+            // Handle main image upload
             if ($request->hasFile('main_image') && $request->file('main_image')->isValid()) {
                 $mainImage = $request->file('main_image');
                 $imageName = 'product_' . $product->id . '_main_' . time() . '.' . $mainImage->getClientOriginalExtension();
-                $imagePath = $mainImage->storeAs('products', $imageName, 'public');
+                $imagePath = 'images/products/' . $imageName;  // Relative path from public directory
                 
-                // Update product with main image
+                // Move to public directory
+                $mainImage->move(public_path('images/products'), $imageName);
+                
+                // Update product with main image - store the relative path
                 $product->update(['image' => $imagePath]);
                 
                 // Create primary product image record
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'image_path' => $imagePath,
+                    'image_path' => $imagePath,  // Store relative path
                     'is_primary' => true,
                     'sort_order' => 0
                 ]);
             }
 
-            // Handle additional product images - WITH NULL CHECK
+            // Additional images section:
             if ($request->hasFile('product_images')) {
                 foreach ($request->file('product_images') as $index => $image) {
-                    // Check if file is valid and not null
                     if ($image && $image->isValid() && $index < 5) {
                         $imageName = 'product_' . $product->id . '_gallery_' . ($index + 1) . '_' . time() . '.' . $image->getClientOriginalExtension();
-                        $imagePath = $image->storeAs('products/gallery', $imageName, 'public');
+                        $imagePath = 'images/products/gallery/' . $imageName;  // Relative path
+                        
+                        // Move to public gallery directory
+                        $image->move(public_path('images/products/gallery'), $imageName);
                         
                         ProductImage::create([
                             'product_id' => $product->id,
-                            'image_path' => $imagePath,
+                            'image_path' => $imagePath,  // Store relative path
                             'is_primary' => false,
                             'sort_order' => $index + 1
                         ]);
@@ -209,7 +217,7 @@ class ManageProductController extends Controller
                 }
             }
 
-            // Handle product variations - WITH NULL CHECK
+            // Handle product variations
             $hasVariations = $request->has('has_variations') && $request->has_variations;
             
             if ($hasVariations && $request->has('variations') && is_array($request->variations)) {
@@ -237,14 +245,17 @@ class ManageProductController extends Controller
                         'is_active' => true,
                     ]);
 
-                    // Handle variation image upload if provided - WITH NULL CHECK
+                    // Handle variation image upload if provided
                     if (isset($variationData['image_file']) && 
                         $variationData['image_file'] instanceof \Illuminate\Http\UploadedFile &&
                         $variationData['image_file']->isValid()) {
                         
                         $variationImage = $variationData['image_file'];
                         $imageName = 'variation_' . $variation->id . '_' . time() . '.' . $variationImage->getClientOriginalExtension();
-                        $imagePath = $variationImage->storeAs('products/variations', $imageName, 'public');
+                        $imagePath = 'images/products/variations/' . $imageName;
+                        
+                        // Move to public variations directory
+                        $variationImage->move(public_path('images/products/variations'), $imageName);
                         
                         $variation->update(['image' => $imagePath]);
                     }
@@ -315,9 +326,10 @@ class ManageProductController extends Controller
                 'stock_quantity' => 'required|integer|min:0',
                 'is_featured' => 'boolean',
                 'is_recommended' => 'boolean',
-                'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:20480',
                 'product_images' => 'nullable|array',
-                'product_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                'product_images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:20480',
+                'is_active' => 'boolean',
             ]);
 
             // Update slug if name changed
@@ -327,14 +339,26 @@ class ManageProductController extends Controller
 
             $product->update($validated);
 
-            // Handle main image update - WITH NULL CHECK
+            // Create necessary directories
+            $this->createImageDirectories();
+
+            // Handle main image update
             if ($request->hasFile('main_image') && $request->file('main_image')->isValid()) {
-                // Delete old image
-                if ($product->image) {
-                    Storage::disk('public')->delete($product->image);
+                // Delete old image from public directory
+                if ($product->image && $product->image !== 'images/default-product.png') {
+                    $oldImagePath = public_path($product->image);
+                    if (file_exists($oldImagePath)) {
+                        unlink($oldImagePath);
+                    }
                 }
                 
-                $imagePath = $request->file('main_image')->store('products', 'public');
+                $imageName = 'product_' . $product->id . '_main_' . time() . '.' . $request->file('main_image')->getClientOriginalExtension();
+                $imagePath = 'images/products/' . $imageName;
+                
+                // Move to public directory
+                $request->file('main_image')->move(public_path('images/products'), $imageName);
+                
+                // Update product image
                 $product->update(['image' => $imagePath]);
                 
                 // Update primary product image
@@ -351,14 +375,19 @@ class ManageProductController extends Controller
                 }
             }
 
-            // Handle additional images - WITH NULL CHECK
+            // Handle additional images
             if ($request->hasFile('product_images')) {
                 $currentMaxOrder = $product->images()->max('sort_order') ?? 0;
                 
                 foreach ($request->file('product_images') as $index => $image) {
                     // Check if file is valid and not null
                     if ($image && $image->isValid()) {
-                        $imagePath = $image->store('products/gallery', 'public');
+                        $imageName = 'product_' . $product->id . '_gallery_' . time() . '_' . ($index + 1) . '.' . $image->getClientOriginalExtension();
+                        $imagePath = 'images/products/gallery/' . $imageName;
+                        
+                        // Move to public gallery directory
+                        $image->move(public_path('images/products/gallery'), $imageName);
+                        
                         ProductImage::create([
                             'product_id' => $product->id,
                             'image_path' => $imagePath,
@@ -395,18 +424,31 @@ class ManageProductController extends Controller
         try {
             $product->load(['images', 'variations']);
 
-            // Delete images from storage
-            foreach ($product->images as $image) {
-                if (Storage::disk('public')->exists($image->image_path)) {
-                    Storage::disk('public')->delete($image->image_path);
+            // Delete main product image from public directory
+            if ($product->image && $product->image !== 'images/default-product.png') {
+                $mainImagePath = public_path($product->image);
+                if (file_exists($mainImagePath)) {
+                    unlink($mainImagePath);
                 }
             }
 
-            // Delete variation images
-            foreach ($product->variations as $variation) {
-                if ($variation->image && Storage::disk('public')->exists($variation->image)) {
-                    Storage::disk('public')->delete($variation->image);
+            // Delete additional images from public directory
+            foreach ($product->images as $image) {
+                $filePath = public_path($image->image_path);
+                if ($image->image_path !== 'images/default-product.png' && file_exists($filePath)) {
+                    unlink($filePath);
                 }
+                // Delete the database record
+                $image->delete();
+            }
+
+            // Delete variation images from public directory
+            foreach ($product->variations as $variation) {
+                if ($variation->image && file_exists(public_path($variation->image))) {
+                    unlink(public_path($variation->image));
+                }
+                // Delete variation record
+                $variation->delete();
             }
 
             // Delete the product
@@ -419,6 +461,9 @@ class ManageProductController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Product deletion error: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
             return redirect()->back()
                 ->with('error', 'Failed to delete product: ' . $e->getMessage());
         }
@@ -438,6 +483,33 @@ class ManageProductController extends Controller
         try {
             switch ($request->action) {
                 case 'delete':
+                    // Load products with relations for proper deletion
+                    $products = Product::with(['images', 'variations'])->whereIn('id', $request->product_ids)->get();
+                    
+                    foreach ($products as $product) {
+                        // Delete images from public directory
+                        if ($product->image && $product->image !== 'images/default-product.png') {
+                            $mainImagePath = public_path($product->image);
+                            if (file_exists($mainImagePath)) {
+                                unlink($mainImagePath);
+                            }
+                        }
+
+                        foreach ($product->images as $image) {
+                            $filePath = public_path($image->image_path);
+                            if ($image->image_path !== 'images/default-product.png' && file_exists($filePath)) {
+                                unlink($filePath);
+                            }
+                        }
+
+                        foreach ($product->variations as $variation) {
+                            if ($variation->image && file_exists(public_path($variation->image))) {
+                                unlink(public_path($variation->image));
+                            }
+                        }
+                    }
+                    
+                    // Delete products
                     Product::whereIn('id', $request->product_ids)->delete();
                     $message = 'Selected products deleted successfully!';
                     break;
@@ -479,6 +551,7 @@ class ManageProductController extends Controller
             return redirect()->back()->with('success', $message);
 
         } catch (\Exception $e) {
+            \Log::error('Bulk action error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to perform bulk action: ' . $e->getMessage());
         }
     }
@@ -488,10 +561,17 @@ class ManageProductController extends Controller
      */
     public function toggleFeatured(Product $product)
     {
-        $product->update(['is_featured' => !$product->is_featured]);
-
-        return redirect()->back()
-            ->with('success', 'Product featured status updated successfully!');
+        try {
+            $product->update(['is_featured' => !$product->is_featured]);
+            
+            $status = $product->is_featured ? 'featured' : 'unfeatured';
+            return redirect()->back()
+                ->with('success', "Product {$status} status updated successfully!");
+                
+        } catch (\Exception $e) {
+            \Log::error('Toggle featured error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update featured status.');
+        }
     }
 
     /**
@@ -499,10 +579,17 @@ class ManageProductController extends Controller
      */
     public function toggleActive(Product $product)
     {
-        $product->update(['is_active' => !$product->is_active]);
-
-        return redirect()->back()
-            ->with('success', 'Product active status updated successfully!');
+        try {
+            $product->update(['is_active' => !$product->is_active]);
+            
+            $status = $product->is_active ? 'activated' : 'deactivated';
+            return redirect()->back()
+                ->with('success', "Product {$status} successfully!");
+                
+        } catch (\Exception $e) {
+            \Log::error('Toggle active error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update active status.');
+        }
     }
 
     /**
@@ -511,9 +598,12 @@ class ManageProductController extends Controller
     public function deleteImage(ProductImage $image)
     {
         try {
-            // Delete the physical file
-            if (Storage::disk('public')->exists($image->image_path)) {
-                Storage::disk('public')->delete($image->image_path);
+            // Delete the physical file from public directory
+            if ($image->image_path && $image->image_path !== 'images/default-product.png') {
+                $filePath = public_path($image->image_path);
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
             }
 
             // Delete the database record
@@ -522,6 +612,7 @@ class ManageProductController extends Controller
             return redirect()->back()->with('success', 'Image deleted successfully!');
 
         } catch (\Exception $e) {
+            \Log::error('Delete image error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to delete image: ' . $e->getMessage());
         }
     }
@@ -546,6 +637,26 @@ class ManageProductController extends Controller
     }
 
     /**
+     * Create necessary image directories
+     */
+    private function createImageDirectories()
+    {
+        $directories = [
+            'images',
+            'images/products',
+            'images/products/gallery',
+            'images/products/variations'
+        ];
+
+        foreach ($directories as $directory) {
+            $path = public_path($directory);
+            if (!file_exists($path)) {
+                mkdir($path, 0755, true);
+            }
+        }
+    }
+
+    /**
      * Debug method to check file upload issues
      */
     public function debugUpload(Request $request)
@@ -555,8 +666,12 @@ class ManageProductController extends Controller
                 'has_main_image' => $request->hasFile('main_image'),
                 'main_image_valid' => $request->hasFile('main_image') ? $request->file('main_image')->isValid() : false,
                 'main_image_error' => $request->hasFile('main_image') ? $request->file('main_image')->getError() : 'No file',
+                'main_image_size' => $request->hasFile('main_image') ? $request->file('main_image')->getSize() : 0,
+                'main_image_mime' => $request->hasFile('main_image') ? $request->file('main_image')->getMimeType() : 'N/A',
                 'product_images_count' => $request->hasFile('product_images') ? count($request->file('product_images')) : 0,
-                'all_files' => $request->allFiles(),
+                'all_files' => array_keys($request->allFiles()),
+                'public_dir_exists' => file_exists(public_path('images/products')),
+                'public_dir_writable' => is_writable(public_path('images/products')),
             ];
 
             return response()->json($debugInfo);
