@@ -1128,7 +1128,8 @@
                         <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem;">
                             @forelse($products as $product)
                                 <div style="background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; transition: all 0.3s ease; padding: 0; margin: 0; position: relative;" 
-                                    class="product-card" 
+                                    class="product-card"
+                                    onclick="window.location.href='{{ url('/products/' . $product->slug) }}'"
                                     data-product-id="{{ $product->id }}">
                                     
                                     <div style="width: 100%; height: 230px; background-color: #f3f4f6; overflow: hidden; margin: 0; padding: 0; border-radius: 0.5rem 0.5rem 0 0; position: relative;">
