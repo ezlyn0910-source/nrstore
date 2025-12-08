@@ -23,7 +23,7 @@ return [
     ],
 
     'ses' => [
-        'key' => env('AWS_ACCESS_KEY_ID'),
+        'key'    => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
@@ -31,8 +31,55 @@ return [
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
-            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
+            'channel'              => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Stripe
+    |--------------------------------------------------------------------------
+    |
+    | Card payments using Stripe. Keys are defined in .env:
+    | STRIPE_KEY, STRIPE_SECRET
+    |
+    */
+
+    'stripe' => [
+        'key'    => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Toyyibpay
+    |--------------------------------------------------------------------------
+    |
+    | FPX online banking via Toyyibpay. Configured from .env:
+    | TOYYIBPAY_SECRET_KEY, TOYYIBPAY_CATEGORY_CODE, TOYYIBPAY_SANDBOX
+    |
+    */
+
+    'toyyibpay' => [
+        'secret_key'    => env('TOYYIBPAY_SECRET_KEY'),
+        'category_code' => env('TOYYIBPAY_CATEGORY_CODE'),
+        'sandbox'       => env('TOYYIBPAY_SANDBOX', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Billplz
+    |--------------------------------------------------------------------------
+    |
+    | FPX online banking via Billplz. Configured from .env:
+    | BILLPLZ_API_KEY, BILLPLZ_COLLECTION_ID, BILLPLZ_SANDBOX
+    |
+    */
+
+    'billplz' => [
+        'api_key'       => env('BILLPLZ_API_KEY'),
+        'collection_id' => env('BILLPLZ_COLLECTION_ID'),
+        'sandbox'       => env('BILLPLZ_SANDBOX', true),
     ],
 
 ];
