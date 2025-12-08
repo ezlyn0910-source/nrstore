@@ -71,6 +71,7 @@
             <div class="products-section">
                 <h2 class="section-title">Featured Products</h2>
                 <div class="products-grid">
+                    <!-- Update both Featured Products and New Arrivals sections -->
                     @forelse($hotProducts as $product)
                     <div class="product-card"
                          data-product-id="{{ $product->id }}"

@@ -67,6 +67,15 @@ class Variation extends Model
     public function getImageUrlAttribute()
     {
         if ($this->image) {
+            // Check in public directory first
+            $filename = basename($this->image);
+            $publicPath = 'images/products/variations/' . $filename;
+            
+            if (file_exists(public_path($publicPath))) {
+                return asset($publicPath);
+            }
+            
+            // Fallback to storage
             return asset('storage/' . $this->image);
         }
         return $this->product->main_image_url ?? asset('images/default-product.png');

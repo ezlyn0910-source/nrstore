@@ -772,7 +772,7 @@
                     <div class="image-upload-box main-image-box" id="main-image-container">
                         <div class="image-preview">
                             @if($product->image)
-                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                                <img src="{{ $product->main_image_url }}" alt="{{ $product->name }}">
                                 <div class="image-overlay">
                                     <i class="fas fa-camera"></i>
                                 </div>
@@ -893,7 +893,7 @@
                             <div class="image-upload-box variation-image-box">
                                 <div class="image-preview">
                                     @if($variation->image)
-                                        <img src="{{ asset('storage/' . $variation->image) }}" alt="Variation image">
+                                        <img src="{{ $variation->image_url }}" alt="Variation image">
                                         <div class="image-overlay">
                                             <i class="fas fa-camera"></i>
                                         </div>
