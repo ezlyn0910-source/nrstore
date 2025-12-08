@@ -19,7 +19,6 @@ use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\ManageProductController;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -43,44 +42,50 @@ Route::controller(ProductController::class)->group(function () {
 });
 
 // Public Cart Routes
-Route::controller(CartController::class)->prefix('cart')->name('cart.')->group(function () {
-    Route::get('/', 'index')->name('index');
-    Route::post('/add', 'add')->name('add');
-    Route::post('/update/{id}', 'update')->name('update');
-    Route::post('/increase/{id}', 'increase')->name('increase');
-    Route::post('/decrease/{id}', 'decrease')->name('decrease');
-    Route::delete('/remove/{id}', 'remove')->name('remove');
-    Route::post('/clear', 'clear')->name('clear');
-    Route::get('/count', 'getCount')->name('count');
-    
-    // Cart validation routes - PUBLIC (no auth required)
-    Route::get('/validate-stock', 'validateStock')->name('validate.stock');
-    Route::get('/validate-quantities', 'validateQuantities')->name('validate.quantities');
-});
+Route::controller(CartController::class)
+    ->prefix('cart')
+    ->name('cart.')
+    ->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/add', 'add')->name('add');
+        Route::post('/update/{id}', 'update')->name('update');
+        Route::post('/increase/{id}', 'increase')->name('increase');
+        Route::post('/decrease/{id}', 'decrease')->name('decrease');
+        Route::delete('/remove/{id}', 'remove')->name('remove');
+        Route::post('/clear', 'clear')->name('clear');
+        Route::get('/count', 'getCount')->name('count');
 
-// API Routes for AJAX calls - PUBLIC (moved outside auth group)
+        // Cart validation routes - PUBLIC (no auth required)
+        Route::get('/validate-stock', 'validateStock')->name('validate.stock');
+        Route::get('/validate-quantities', 'validateQuantities')->name('validate.quantities');
+    });
+
+// API Routes for AJAX calls - PUBLIC
 Route::prefix('api')->name('api.')->group(function () {
     Route::get('/check-auth', function () {
         return response()->json([
             'authenticated' => auth()->check(),
             'user' => auth()->check() ? [
-                'id' => auth()->user()->id,
-                'name' => auth()->user()->name,
-                'email' => auth()->user()->email
-            ] : null
+                'id'    => auth()->user()->id,
+                'name'  => auth()->user()->name,
+                'email' => auth()->user()->email,
+            ] : null,
         ]);
     })->name('check.auth');
-    
+
     Route::get('/states/{country}', [CheckoutController::class, 'getStates'])->name('states');
     Route::get('/cities/{state}', [CheckoutController::class, 'getCities'])->name('cities');
 });
 
 // Bid Routes (Public viewing, authenticated for placing bids)
-Route::controller(BidController::class)->prefix('bid')->name('bid.')->group(function () {
-    Route::get('/', 'index')->name('index');
-    Route::get('/{id}', 'show')->name('show');
-    Route::middleware(['auth'])->post('/{id}/place', 'placeBid')->name('place');
-});
+Route::controller(BidController::class)
+    ->prefix('bid')
+    ->name('bid.')
+    ->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{id}', 'show')->name('show');
+        Route::middleware(['auth'])->post('/{id}/place', 'placeBid')->name('place');
+    });
 
 // Brand auction pages
 Route::get('/brand/{brand}/auctions', [BrandController::class, 'show'])->name('brand.auctions');
@@ -95,29 +100,16 @@ Route::get('/contact', function () {
 })->name('contact');
 
 Route::post('/contact', function () {
-    // Simple success response without actual email sending
-    return redirect()->back()->with('success', 'Thank you for your message. We will get back to you soon!');
+    return redirect()
+        ->back()
+        ->with('success', 'Thank you for your message. We will get back to you soon!');
 })->name('contact.store');
 
-Route::get('/faq', function () {
-    return view('pages.faq');
-})->name('faq');
-
-Route::get('/shipping-info', function () {
-    return view('pages.shipping');
-})->name('shipping.info');
-
-Route::get('/return-policy', function () {
-    return view('pages.returns');
-})->name('return.policy');
-
-Route::get('/privacy-policy', function () {
-    return view('pages.privacy');
-})->name('privacy.policy');
-
-Route::get('/terms-conditions', function () {
-    return view('pages.terms');
-})->name('terms.conditions');
+Route::get('/faq', fn () => view('pages.faq'))->name('faq');
+Route::get('/shipping-info', fn () => view('pages.shipping'))->name('shipping.info');
+Route::get('/return-policy', fn () => view('pages.returns'))->name('return.policy');
+Route::get('/privacy-policy', fn () => view('pages.privacy'))->name('privacy.policy');
+Route::get('/terms-conditions', fn () => view('pages.terms'))->name('terms.conditions');
 
 // Authenticated User Routes
 Route::middleware(['auth'])->group(function () {
@@ -154,26 +146,48 @@ Route::middleware(['auth'])->group(function () {
 
     /**
      * Payment Processing Routes
+     *
+     * These handle:
+     * - Stripe card payments
+     * - Toyyibpay FPX
+     * - Billplz FPX
      */
-    Route::prefix('payment')->name('payment.')->controller(PaymentController::class)->group(function () {
-        // Called from your "Place Order" button
-        Route::post('/process', 'process')->name('process');
+    Route::prefix('payment')
+        ->name('payment.')
+        ->controller(PaymentController::class)
+        ->group(function () {
+            // Called from the "Place Order" button on checkout page
+            Route::post('/process', 'process')->name('process');
 
-        // iPay88: browser redirect + callbacks
-        Route::post('/ipay88/redirect', 'ipay88Redirect')->name('ipay88.redirect');   // (optional helper – can be unused if you redirect via view)
-        Route::post('/ipay88/response', 'ipay88Response')->name('ipay88.response');   // ResponseURL (user browser)
-        Route::post('/ipay88/backend',  'ipay88Backend')->name('ipay88.backend');     // BackendURL (server-to-server)
+            /**
+             * STRIPE (Card)
+             * - After PaymentController@process creates Stripe Checkout Session,
+             *   you redirect user to Stripe's hosted page.
+             * - Stripe redirects back to these URLs after payment.
+             */
+            Route::get('/stripe/success', 'stripeSuccess')->name('stripe.success');
+            Route::get('/stripe/cancel', 'stripeCancel')->name('stripe.cancel');
+            Route::post('/stripe/webhook', 'stripeWebhook')->name('stripe.webhook');
 
-        // (Optional) generic success/cancel pages if you still use them
-        Route::get('/success', 'success')->name('success');
-        Route::get('/cancel', 'cancel')->name('cancel');
+            /**
+             * TOYYIBPAY (FPX)
+             * - Callback: server-to-server notification from Toyyibpay
+             * - Return: user browser redirect after payment
+             */
+            Route::post('/toyyibpay/callback', 'toyyibpayCallback')->name('toyyibpay.callback');
+            Route::get('/toyyibpay/return', 'toyyibpayReturn')->name('toyyibpay.return');
 
-        // Any webhooks (if you add other gateways later)
-        Route::post('/webhook/{gateway}', 'webhook')->name('webhook');
-    });
+            /**
+             * BILLPLZ (FPX)
+             * - Callback: server-to-server notification from Billplz
+             * - Return: user browser redirect after payment
+             */
+            Route::post('/billplz/callback', 'billplzCallback')->name('billplz.callback');
+            Route::get('/billplz/return', 'billplzReturn')->name('billplz.return');
+        });
 
     /**
-     * Order Routes
+     * Order Routes (Customer side)
      */
     Route::prefix('orders')->name('orders.')->controller(OrderController::class)->group(function () {
         Route::get('/', 'index')->name('index');
@@ -181,7 +195,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{order}/details', 'details')->name('details');
         Route::post('/{order}/cancel', 'cancel')->name('cancel');
 
-        // If you really need this route, keep it. If not used, you can safely remove it.
+        // If not used anywhere, you can remove this later
         Route::post('/process-checkout', 'processCheckout')->name('process-checkout');
     });
 
@@ -196,7 +210,7 @@ Route::middleware(['auth'])->group(function () {
         // Profile orders
         Route::get('/orders', 'orders')->name('orders');
 
-        // Profile addresses (separate from checkout)
+        // Profile addresses
         Route::get('/addresses', 'addresses')->name('addresses');
         Route::post('/addresses', 'storeAddress')->name('addresses.store');
         Route::put('/addresses/{address}', 'updateAddress')->name('addresses.update');
@@ -236,89 +250,106 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Admin Routes
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    // Admin Dashboard
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-    
-    // Admin Product Management Routes
-    Route::prefix('products')->name('manageproduct.')->controller(ManageProductController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/create', 'create')->name('create');
-        Route::post('/', 'store')->name('store');
-        Route::get('/{product}', 'show')->name('show');
-        Route::get('/{product}/edit', 'edit')->name('edit');
-        Route::put('/{product}', 'update')->name('update');
-        Route::delete('/{product}', 'destroy')->name('destroy');
-        
-        // Additional product actions
-        Route::post('/{product}/toggle-featured', 'toggleFeatured')->name('toggle-featured');
-        Route::post('/{product}/toggle-active', 'toggleActive')->name('toggle-active');
-        Route::get('/search', 'search')->name('search');
-        
-        // Bulk actions
-        Route::post('/bulkAction', 'bulkAction')->name('bulkAction');
-        Route::put('/{product}/status', 'updateStatus')->name('update-status');
-        Route::delete('/product-images/{image}', 'deleteImage')->name('delete-image');
-    });
+Route::middleware(['auth'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        // Admin Dashboard
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-    // Product Variations Management
-    Route::prefix('products/{product}/variations')->name('variations.')->controller(ManageProductVariationController::class)->group(function () {
-        Route::get('/create', 'create')->name('create');
-        Route::post('/', 'store')->name('store');
-        Route::get('/{variation}/edit', 'edit')->name('edit');
-        Route::put('/{variation}', 'update')->name('update');
-        Route::delete('/{variation}', 'destroy')->name('destroy');
-        Route::post('/{variation}/toggle-active', 'toggleActive')->name('toggle-active');
-    });
+        // Admin Product Management Routes
+        Route::prefix('products')
+            ->name('manageproduct.')
+            ->controller(ManageProductController::class)
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/create', 'create')->name('create');
+                Route::post('/', 'store')->name('store');
+                Route::get('/{product}', 'show')->name('show');
+                Route::get('/{product}/edit', 'edit')->name('edit');
+                Route::put('/{product}', 'update')->name('update');
+                Route::delete('/{product}', 'destroy')->name('destroy');
 
-    // Bid Management Routes 
-    Route::prefix('bids')->name('managebid.')->controller(ManageBidController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/create', 'create')->name('create');
-        Route::post('/bulk-action', 'bulkAction')->name('bulk_action');
-        Route::post('/', 'store')->name('store');
-        Route::get('/{bid}', 'show')->name('show');
-        Route::get('/{bid}/edit', 'edit')->name('edit');
-        Route::put('/{bid}', 'update')->name('update');
-        Route::delete('/{bid}', 'destroy')->name('destroy');
-        Route::post('/{bid}/start', 'startBid')->name('start');
-        Route::post('/{bid}/pause', 'pauseBid')->name('pause');
-        Route::post('/{bid}/complete', 'completeBid')->name('complete');
-        
-        // Additional bid management routes
-        Route::post('/{bid}/assign-winner', 'assignWinner')->name('assign-winner');
-        Route::get('/{bid}/participants', 'participants')->name('participants');
-        Route::get('/users/{user}/bid-history', 'userBidHistory')->name('user-history');
-    });
+                // Additional product actions
+                Route::post('/{product}/toggle-featured', 'toggleFeatured')->name('toggle-featured');
+                Route::post('/{product}/toggle-active', 'toggleActive')->name('toggle-active');
+                Route::get('/search', 'search')->name('search');
 
-    // User Management Routes
-    Route::prefix('users')->name('manageuser.')->controller(ManageUserController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/create', 'create')->name('create');
-        Route::post('/', 'store')->name('store');
-        Route::get('/{user}', 'show')->name('show');
-        Route::get('/{user}/edit', 'edit')->name('edit');
-        Route::put('/{user}', 'update')->name('update');
-        Route::delete('/{user}', 'destroy')->name('destroy');
-        
-        // Additional user actions
-        Route::post('/{user}/suspend', 'suspend')->name('suspend');
-        Route::post('/{user}/activate', 'activate')->name('activate');
-        Route::post('/bulk-action', 'bulkAction')->name('bulk-action');
-    });
+                // Bulk actions
+                Route::post('/bulkAction', 'bulkAction')->name('bulkAction');
+                Route::put('/{product}/status', 'updateStatus')->name('update-status');
+                Route::delete('/product-images/{image}', 'deleteImage')->name('delete-image');
+            });
 
-    // Order Management Routes (Admin)
-    Route::prefix('orders')->name('manageorder.')->controller(ManageOrderController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/{order}', 'show')->name('show');
-        Route::get('/{order}/edit', 'edit')->name('edit');
-        Route::put('/{order}/status', 'updateStatus')->name('update-status');
-        Route::put('/{order}/update', 'update')->name('update');
-        Route::delete('/{order}', 'destroy')->name('destroy');
-        Route::post('/bulk-action', 'bulkAction')->name('bulk-action');
-    });
+        // Product Variations Management
+        Route::prefix('products/{product}/variations')
+            ->name('variations.')
+            ->controller(ManageProductVariationController::class)
+            ->group(function () {
+                Route::get('/create', 'create')->name('create');
+                Route::post('/', 'store')->name('store');
+                Route::get('/{variation}/edit', 'edit')->name('edit');
+                Route::put('/{variation}', 'update')->name('update');
+                Route::delete('/{variation}', 'destroy')->name('destroy');
+                Route::post('/{variation}/toggle-active', 'toggleActive')->name('toggle-active');
+            });
 
-});
+        // Bid Management Routes
+        Route::prefix('bids')
+            ->name('managebid.')
+            ->controller(ManageBidController::class)
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/create', 'create')->name('create');
+                Route::post('/bulk-action', 'bulkAction')->name('bulk_action');
+                Route::post('/', 'store')->name('store');
+                Route::get('/{bid}', 'show')->name('show');
+                Route::get('/{bid}/edit', 'edit')->name('edit');
+                Route::put('/{bid}', 'update')->name('update');
+                Route::delete('/{bid}', 'destroy')->name('destroy');
+                Route::post('/{bid}/start', 'startBid')->name('start');
+                Route::post('/{bid}/pause', 'pauseBid')->name('pause');
+                Route::post('/{bid}/complete', 'completeBid')->name('complete');
+
+                // Additional bid management routes
+                Route::post('/{bid}/assign-winner', 'assignWinner')->name('assign-winner');
+                Route::get('/{bid}/participants', 'participants')->name('participants');
+                Route::get('/users/{user}/bid-history', 'userBidHistory')->name('user-history');
+            });
+
+        // User Management Routes
+        Route::prefix('users')
+            ->name('manageuser.')
+            ->controller(ManageUserController::class)
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/create', 'create')->name('create');
+                Route::post('/', 'store')->name('store');
+                Route::get('/{user}', 'show')->name('show');
+                Route::get('/{user}/edit', 'edit')->name('edit');
+                Route::put('/{user}', 'update')->name('update');
+                Route::delete('/{user}', 'destroy')->name('destroy');
+
+                // Additional user actions
+                Route::post('/{user}/suspend', 'suspend')->name('suspend');
+                Route::post('/{user}/activate', 'activate')->name('activate');
+                Route::post('/bulk-action', 'bulkAction')->name('bulk-action');
+            });
+
+        // Order Management Routes (Admin)
+        Route::prefix('orders')
+            ->name('manageorder.')
+            ->controller(ManageOrderController::class)
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/{order}', 'show')->name('show');
+                Route::get('/{order}/edit', 'edit')->name('edit');
+                Route::put('/{order}/status', 'updateStatus')->name('update-status');
+                Route::put('/{order}/update', 'update')->name('update');
+                Route::delete('/{order}', 'destroy')->name('destroy');
+                Route::post('/bulk-action', 'bulkAction')->name('bulk-action');
+            });
+    });
 
 // Fallback Route (404 Page)
 Route::fallback(function () {

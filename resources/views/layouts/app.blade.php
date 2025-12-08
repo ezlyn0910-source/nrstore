@@ -37,19 +37,24 @@
                         <div class="header-top-right">
                             <div class="auth-links">
                                 @auth
+                                    @php
+                                        $fullName  = trim(Auth::user()->name ?? '');
+                                        // If there is a space, take only the first word, else keep full name
+                                        $firstName = $fullName !== '' ? strtok($fullName, ' ') : '';
+                                    @endphp
+
                                     <!-- Show user menu when logged in -->
                                     <div class="user-menu">
                                         <a href="#" class="header-link">
                                             <i class="fas fa-user-circle"></i>
-                                            <span>{{ Auth::user()->name }}</span>
+                                            <span>{{ $firstName }}</span>
                                         </a>
                                         <div class="auth-divider"></div>
-                                        <form method="POST" action="{{ route('logout') }}" style="display: inline;">
+                                        <form method="POST" action="{{ route('logout') }}" style="display:inline;">
                                             @csrf
-                                            <a href="{{ route('logout') }}" 
+                                            <a href="{{ route('logout') }}"
                                             class="header-link"
                                             onclick="event.preventDefault(); this.closest('form').submit();">
-                                                <i class="fas fa-sign-out-alt"></i>
                                                 <span>Logout</span>
                                             </a>
                                         </form>
@@ -82,11 +87,24 @@
                         <!-- Center Column - Navigation -->
                         <div class="nav-section-wrapper">
                             <nav class="main-nav">
-                                <a href="/" class="nav-link">Home</a>
-                                <a href="/products" class="nav-link">Products</a>
-                                <a href="/orders" class="nav-link">Order</a>
-                                <a href="/bid" class="nav-link bid-link">
-                                    <span>Bid Now</span>
+                                <a href="/"
+                                class="nav-link nav-link-indicator {{ request()->is('/') ? 'nav-link-active' : '' }}">
+                                    Home
+                                </a>
+
+                                <a href="/products"
+                                class="nav-link nav-link-indicator {{ request()->is('products*') ? 'nav-link-active' : '' }}">
+                                    Products
+                                </a>
+
+                                <a href="/orders"
+                                class="nav-link nav-link-indicator {{ request()->is('orders*') ? 'nav-link-active' : '' }}">
+                                    Order
+                                </a>
+
+                                <a href="/bid"
+                                class="nav-link nav-link-indicator {{ request()->is('bid*') ? 'nav-link-active' : '' }}">
+                                    Bid Now
                                 </a>
                             </nav>
                         </div>
@@ -95,8 +113,15 @@
                         <div class="actions-section">
                             <div class="search-actions-container">
                                 <div class="search-container">
-                                    <form class="search-form">
-                                        <input type="text" class="search-input" placeholder="Search products...">
+                                    <form class="search-form" method="GET" action="{{ url('/products') }}">
+                                        {{-- use the SAME query name that your product page uses (change "search" if needed) --}}
+                                        <input
+                                            type="text"
+                                            name="search"
+                                            class="search-input"
+                                            placeholder="Search products..."
+                                            value="{{ request('search') }}"
+                                        >
                                         <button type="submit" class="search-btn">
                                             <i class="fas fa-search"></i>
                                         </button>
@@ -405,14 +430,14 @@
         .header-link {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.35rem;
             color: var(--white);
             text-decoration: none;
             transition: color 0.3s ease;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            font-weight: 600;
             height: 24px;
-            font-weight: 500;
-            padding: 2rem 2rem !important;
+            padding: 0.25rem 0.25rem !important;
             margin: 0 !important;
             white-space: nowrap;
         }
@@ -497,6 +522,48 @@
 
         .nav-link:hover {
             color: var(--light-green);
+        }
+
+        /* Base wrapper so we can draw fancy indicator without breaking layout */
+        .nav-link-indicator {
+            position: relative;
+            overflow: visible;
+        }
+
+        /* ACTIVE STATE – soft pill + diamond + glow */
+        .nav-link-active {
+            color: #AFE1AF !important;
+        }
+
+        /* glowing pill behind text */
+        .nav-link-active::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 130%;
+            height: 2.1rem;
+            background: radial-gradient(circle at 0% 0%, rgba(175,225,175,0.55), transparent 55%),
+                        radial-gradient(circle at 100% 100%, rgba(175,225,175,0.45), transparent 55%);
+            border-radius: 999px;
+            opacity: 1;
+            filter: blur(0.3px);
+            z-index: -1;
+        }
+
+        /* small floating diamond under the text */
+        .nav-link-active::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -0.4rem;
+            transform: translateX(-50%) rotate(45deg);
+            width: 7px;
+            height: 7px;
+            background: #AFE1AF;
+            box-shadow: 0 0 8px rgba(175, 225, 175, 0.8);
+            border-radius: 2px;
         }
 
         .bid-link {
