@@ -132,12 +132,8 @@ class ManageProductController extends Controller
                 'variations.*.processor' => 'nullable|string|max:255',
                 'variations.*.ram' => 'nullable|string|max:100',
                 'variations.*.storage' => 'nullable|string|max:100',
-                'variations.*.storage_type' => 'nullable|string|max:50',
-                'variations.*.graphics_card' => 'nullable|string|max:255',
-                'variations.*.screen_size' => 'nullable|string|max:50',
-                'variations.*.os' => 'nullable|string|max:255',
-                'variations.*.warranty' => 'nullable|string|max:100',
-                'variations.*.voltage' => 'nullable|string|max:50',
+                'variations.*.image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:20480',
+                'variations.*.is_active' => 'boolean',
             ], [
                 'variations.*.sku.required_if' => 'SKU is required for all variations when variations are enabled.',
                 'variations.*.sku.distinct' => 'Duplicate SKU found. Each variation must have a unique SKU.',
@@ -217,7 +213,7 @@ class ManageProductController extends Controller
                 }
             }
 
-            // Handle product variations
+            // Handle product variations - FIXED VERSION
             $hasVariations = $request->has('has_variations') && $request->has_variations;
             
             if ($hasVariations && $request->has('variations') && is_array($request->variations)) {
@@ -227,22 +223,21 @@ class ManageProductController extends Controller
                         continue;
                     }
 
+                    // Debug: Log variation data
+                    \Log::info('Creating variation:', $variationData);
+
                     $variation = Variation::create([
                         'product_id' => $product->id,
                         'sku' => $variationData['sku'],
-                        'price' => $variationData['price'] ?? $product->price,
+                        'price' => isset($variationData['price']) && $variationData['price'] !== '' 
+                            ? $variationData['price'] 
+                            : $product->price,
                         'stock' => $variationData['stock'],
                         'model' => $variationData['model'] ?? null,
                         'processor' => $variationData['processor'] ?? null,
                         'ram' => $variationData['ram'] ?? null,
                         'storage' => $variationData['storage'] ?? null,
-                        'storage_type' => $variationData['storage_type'] ?? null,
-                        'graphics_card' => $variationData['graphics_card'] ?? null,
-                        'screen_size' => $variationData['screen_size'] ?? null,
-                        'os' => $variationData['os'] ?? null,
-                        'warranty' => $variationData['warranty'] ?? null,
-                        'voltage' => $variationData['voltage'] ?? null,
-                        'is_active' => true,
+                        'is_active' => isset($variationData['is_active']) ? true : true, // Default to true
                     ]);
 
                     // Handle variation image upload if provided
@@ -254,8 +249,14 @@ class ManageProductController extends Controller
                         $imageName = 'variation_' . $variation->id . '_' . time() . '.' . $variationImage->getClientOriginalExtension();
                         $imagePath = 'images/products/variations/' . $imageName;
                         
+                        // Create directory if it doesn't exist
+                        $directory = public_path('images/products/variations');
+                        if (!file_exists($directory)) {
+                            mkdir($directory, 0755, true);
+                        }
+                        
                         // Move to public variations directory
-                        $variationImage->move(public_path('images/products/variations'), $imageName);
+                        $variationImage->move($directory, $imageName);
                         
                         $variation->update(['image' => $imagePath]);
                     }
@@ -314,7 +315,7 @@ class ManageProductController extends Controller
         DB::beginTransaction();
         
         try {
-            $validated = $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'price' => 'required|numeric|min:0',
@@ -330,14 +331,62 @@ class ManageProductController extends Controller
                 'product_images' => 'nullable|array',
                 'product_images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:20480',
                 'is_active' => 'boolean',
+                'has_variations' => 'boolean',
+                'variations' => 'nullable|array',
+                'variations.*.sku' => 'required_if:has_variations,1|string|max:100',
+                'variations.*.price' => 'nullable|numeric|min:0',
+                'variations.*.stock' => 'required_if:has_variations,1|integer|min:0',
+                'variations.*.model' => 'nullable|string|max:255',
+                'variations.*.processor' => 'nullable|string|max:255',
+                'variations.*.ram' => 'nullable|string|max:100',
+                'variations.*.storage' => 'nullable|string|max:100',
+                'variations.*.image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:20480',
+                'variations.*.is_active' => 'boolean',
+                'existing_variations' => 'nullable|array',
+                'existing_variations.*.sku' => 'required|string|max:100',
+                'existing_variations.*.price' => 'nullable|numeric|min:0',
+                'existing_variations.*.stock' => 'required|integer|min:0',
+                'existing_variations.*.model' => 'nullable|string|max:255',
+                'existing_variations.*.processor' => 'nullable|string|max:255',
+                'existing_variations.*.ram' => 'nullable|string|max:100',
+                'existing_variations.*.storage' => 'nullable|string|max:100',
+                'existing_variations.*.image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:20480',
+                'existing_variations.*.is_active' => 'boolean',
+                'delete_variations' => 'nullable|array',
+                'delete_variations.*' => 'exists:variations,id',
             ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()
+                    ->withErrors($validator)
+                    ->withInput()
+                    ->with('error', 'Please fix the validation errors below.');
+            }
+
+            $validated = $validator->validated();
 
             // Update slug if name changed
             if ($product->name !== $validated['name']) {
                 $validated['slug'] = $this->generateSlug($validated['name'], $product->id);
             }
 
-            $product->update($validated);
+            // Update product basic info
+            $product->update([
+                'name' => $validated['name'],
+                'description' => $validated['description'] ?? null,
+                'price' => $validated['price'],
+                'category_id' => $validated['category_id'],
+                'brand' => $validated['brand'] ?? null,
+                'ram' => $validated['ram'] ?? null,
+                'storage' => $validated['storage'] ?? null,
+                'processor' => $validated['processor'] ?? null,
+                'stock_quantity' => $validated['stock_quantity'],
+                'is_featured' => $validated['is_featured'] ?? false,
+                'is_recommended' => $validated['is_recommended'] ?? false,
+                'is_active' => $validated['is_active'] ?? true,
+                'has_variations' => $validated['has_variations'] ?? false,
+                'slug' => $validated['slug'] ?? $product->slug,
+            ]);
 
             // Create necessary directories
             $this->createImageDirectories();
@@ -377,7 +426,7 @@ class ManageProductController extends Controller
 
             // Handle additional images
             if ($request->hasFile('product_images')) {
-                $currentMaxOrder = $product->images()->max('sort_order') ?? 0;
+                $currentMaxOrder = $product->images()->where('is_primary', false)->max('sort_order') ?? 0;
                 
                 foreach ($request->file('product_images') as $index => $image) {
                     // Check if file is valid and not null
@@ -396,6 +445,144 @@ class ManageProductController extends Controller
                         ]);
                     }
                 }
+            }
+
+            // Handle deletion of existing images
+            if ($request->has('delete_images') && is_array($request->delete_images)) {
+                foreach ($request->delete_images as $imageId) {
+                    $image = ProductImage::find($imageId);
+                    if ($image && $image->product_id == $product->id) {
+                        // Delete the physical file
+                        if ($image->image_path && $image->image_path !== 'images/default-product.png') {
+                            $filePath = public_path($image->image_path);
+                            if (file_exists($filePath)) {
+                                unlink($filePath);
+                            }
+                        }
+                        // Delete the database record
+                        $image->delete();
+                    }
+                }
+            }
+
+            // Handle product variations update
+            $hasVariations = $request->has('has_variations') && $request->has_variations;
+            
+            // Delete variations marked for deletion
+            if ($request->has('delete_variations') && is_array($request->delete_variations)) {
+                foreach ($request->delete_variations as $variationId) {
+                    $variation = Variation::find($variationId);
+                    if ($variation && $variation->product_id == $product->id) {
+                        // Delete variation image if exists
+                        if ($variation->image && file_exists(public_path($variation->image))) {
+                            unlink(public_path($variation->image));
+                        }
+                        $variation->delete();
+                    }
+                }
+            }
+
+            // Update existing variations
+            if ($request->has('existing_variations') && is_array($request->existing_variations)) {
+                foreach ($request->existing_variations as $variationId => $variationData) {
+                    $variation = Variation::find($variationId);
+                    if ($variation && $variation->product_id == $product->id) {
+                        $updateData = [
+                            'sku' => $variationData['sku'],
+                            'price' => isset($variationData['price']) && $variationData['price'] !== '' 
+                                ? $variationData['price'] 
+                                : $product->price,
+                            'stock' => $variationData['stock'],
+                            'model' => $variationData['model'] ?? null,
+                            'processor' => $variationData['processor'] ?? null,
+                            'ram' => $variationData['ram'] ?? null,
+                            'storage' => $variationData['storage'] ?? null,
+                            'is_active' => isset($variationData['is_active']) ? true : false,
+                        ];
+
+                        // Handle variation image update if provided
+                        if (isset($variationData['image_file']) && 
+                            $variationData['image_file'] instanceof \Illuminate\Http\UploadedFile &&
+                            $variationData['image_file']->isValid()) {
+                            
+                            // Delete old image if exists
+                            if ($variation->image && file_exists(public_path($variation->image))) {
+                                unlink(public_path($variation->image));
+                            }
+                            
+                            $variationImage = $variationData['image_file'];
+                            $imageName = 'variation_' . $variation->id . '_' . time() . '.' . $variationImage->getClientOriginalExtension();
+                            $imagePath = 'images/products/variations/' . $imageName;
+                            
+                            // Create directory if it doesn't exist
+                            $directory = public_path('images/products/variations');
+                            if (!file_exists($directory)) {
+                                mkdir($directory, 0755, true);
+                            }
+                            
+                            // Move to public variations directory
+                            $variationImage->move($directory, $imageName);
+                            
+                            $updateData['image'] = $imagePath;
+                        }
+
+                        $variation->update($updateData);
+                    }
+                }
+            }
+
+            // Add new variations
+            if ($hasVariations && $request->has('variations') && is_array($request->variations)) {
+                foreach ($request->variations as $variationIndex => $variationData) {
+                    // Skip if essential data is missing or null
+                    if (empty($variationData['sku']) || !isset($variationData['stock'])) {
+                        continue;
+                    }
+
+                    $variation = Variation::create([
+                        'product_id' => $product->id,
+                        'sku' => $variationData['sku'],
+                        'price' => isset($variationData['price']) && $variationData['price'] !== '' 
+                            ? $variationData['price'] 
+                            : $product->price,
+                        'stock' => $variationData['stock'],
+                        'model' => $variationData['model'] ?? null,
+                        'processor' => $variationData['processor'] ?? null,
+                        'ram' => $variationData['ram'] ?? null,
+                        'storage' => $variationData['storage'] ?? null,
+                        'is_active' => isset($variationData['is_active']) ? true : true,
+                    ]);
+
+                    // Handle variation image upload if provided
+                    if (isset($variationData['image_file']) && 
+                        $variationData['image_file'] instanceof \Illuminate\Http\UploadedFile &&
+                        $variationData['image_file']->isValid()) {
+                        
+                        $variationImage = $variationData['image_file'];
+                        $imageName = 'variation_' . $variation->id . '_' . time() . '.' . $variationImage->getClientOriginalExtension();
+                        $imagePath = 'images/products/variations/' . $imageName;
+                        
+                        // Create directory if it doesn't exist
+                        $directory = public_path('images/products/variations');
+                        if (!file_exists($directory)) {
+                            mkdir($directory, 0755, true);
+                        }
+                        
+                        // Move to public variations directory
+                        $variationImage->move($directory, $imageName);
+                        
+                        $variation->update(['image' => $imagePath]);
+                    }
+                }
+                
+                // Update product to indicate it has variations
+                $product->update(['has_variations' => true]);
+            }
+
+            // Update total stock based on variations if product has variations
+            if ($product->has_variations) {
+                $totalVariationStock = Variation::where('product_id', $product->id)->sum('stock');
+                $product->update(['stock_quantity' => $totalVariationStock]);
             }
 
             DB::commit();
