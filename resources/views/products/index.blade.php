@@ -416,7 +416,7 @@
         }
 
         .recommendation-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-6px);
             box-shadow: var(--shadow-hover);
             border-color: var(--accent-gold);
         }
@@ -438,10 +438,6 @@
             margin: 0;
             padding: 0;
             display: block;
-        }
-
-        .recommendation-card:hover .recommendation-image {
-            transform: scale(1.05);
         }
 
         .recommendation-info {
@@ -1043,6 +1039,51 @@
             padding: 2rem;
             color: #6b7280;
         }
+
+        /* Force both product main & recommendation images to stay square */
+        .product-image-container,
+        .recommendation-image-container {
+            aspect-ratio: 1 / 1;        /* Makes container perfectly square */
+            height: auto !important;    /* Remove forced height */
+            width: 100%;                /* Full width of card */
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Ensure image fits perfectly inside square without overflowing */
+        .product-image-container img,
+        .recommendation-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain !important;   /* Shows whole square image */
+            background: #f3f4f6;              /* Nice neutral background */
+        }
+
+        .product-card > div:first-child {
+            width: 100%;
+            aspect-ratio: 1 / 1;          /* force perfect square */
+            height: auto !important;      /* override inline height: 200/230px */
+            background-color: #f3f4f6;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 2) The actual <img> inside that container */
+        .product-card > div:first-child img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain !important;   /* show whole square banner */
+            display: block;
+        }
+
+        /* Reduce image visible size inside square */
+        .product-card > div:first-child img {
+            padding: 5%;   /* adjust between 5%–15% depending how small you want */
+        }
+
     </style>
 @endsection
 
@@ -1267,9 +1308,12 @@
                     @if($recommendedProducts->count())
                         <div class="recommendation-slider" style="display: flex; overflow-x: auto; gap: 1rem; padding-bottom: 1rem; scrollbar-width: none; -ms-overflow-style: none;">
                             @foreach($recommendedProducts as $product)
-                                <div style="flex: 0 0 auto; width: 300px; background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden; transition: all 0.3s ease; position: relative;" class="product-card" data-product-id="{{ $product->id }}">
+                                <div style="flex: 0 0 auto; width: 300px; background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden; transition: all 0.3s ease; position: relative; cursor: pointer;"
+                                    class="product-card"
+                                    onclick="window.location.href='{{ url('/products/' . $product->slug) }}'"
+                                    data-product-id="{{ $product->id }}">
                                     <div style="width: 100%; height: 200px; background-color: #f3f4f6; overflow: hidden; margin: 0; padding: 0; position: relative;">
-                                        <<img src="{{ asset($product->image ?? 'images/default-product.png') }}"        
+                                        <img src="{{ asset($product->image ?? 'images/default-product.png') }}"        
                                             alt="{{ $product->name }}" 
                                             style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; margin: 0; padding: 0; display: block;">
                                     </div>
