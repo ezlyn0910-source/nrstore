@@ -1,5 +1,137 @@
 @extends('layouts.app')
 
+@section('styles')
+<style>
+/* Payment status badges */
+.payment-status-badge.paid { 
+    background: #d1fae5; 
+    color: #065f46; 
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid #10b981;
+}
+
+.payment-status-badge.pending { 
+    background: #fef3c7; 
+    color: #92400e; 
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid #f59e0b;
+}
+
+.payment-status-badge.failed { 
+    background: #fee2e2; 
+    color: #991b1b; 
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid #ef4444;
+}
+
+/* Order actions */
+.order-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.cancel-btn {
+    padding: 0.5rem 1.25rem;
+    background: #dc2626;
+    color: var(--white);
+    border: none;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+}
+
+.cancel-btn:hover {
+    background: #b91c1c;
+    transform: translateY(-2px);
+}
+
+.cancel-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.order-total-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.payment-status {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Loading spinner */
+.loading-spinner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .order-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .order-footer {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .order-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .order-item {
+        flex-direction: column;
+    }
+    
+    .item-image {
+        width: 100%;
+        height: 200px;
+    }
+}
+</style>
+@endsection
+
 @section('content')
 <div class="orders-page">
     <section class="page-title-section">
@@ -199,7 +331,7 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Order category filtering
@@ -308,134 +440,4 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 </script>
-
-<style>
-/* Payment status badges */
-.payment-status-badge.paid { 
-    background: #d1fae5; 
-    color: #065f46; 
-    padding: 0.25rem 0.75rem;
-    border-radius: 15px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border: 1px solid #10b981;
-}
-
-.payment-status-badge.pending { 
-    background: #fef3c7; 
-    color: #92400e; 
-    padding: 0.25rem 0.75rem;
-    border-radius: 15px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border: 1px solid #f59e0b;
-}
-
-.payment-status-badge.failed { 
-    background: #fee2e2; 
-    color: #991b1b; 
-    padding: 0.25rem 0.75rem;
-    border-radius: 15px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border: 1px solid #ef4444;
-}
-
-/* Order actions */
-.order-actions {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.cancel-btn {
-    padding: 0.5rem 1.25rem;
-    background: #dc2626;
-    color: var(--white);
-    border: none;
-    border-radius: 25px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.875rem;
-}
-
-.cancel-btn:hover {
-    background: #b91c1c;
-    transform: translateY(-2px);
-}
-
-.cancel-btn:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.order-total-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.payment-status {
-    font-size: 0.875rem;
-    color: #6b7280;
-}
-
-/* Loading spinner */
-.loading-spinner {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.8);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-
-.spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Responsive adjustments */
-@media (max-width: 640px) {
-    .order-header {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .order-footer {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .order-actions {
-        width: 100%;
-        justify-content: flex-end;
-    }
-    
-    .order-item {
-        flex-direction: column;
-    }
-    
-    .item-image {
-        width: 100%;
-        height: 200px;
-    }
-}
-</style>
-@endsection
+@endpush

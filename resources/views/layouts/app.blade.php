@@ -515,7 +515,7 @@
             font-weight: 600;
             transition: color 0.3s ease;
             padding: 0.75rem 0;
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             letter-spacing: 0.3px;
             white-space: nowrap;
         }
@@ -676,14 +676,15 @@
         /* Badge for cart count */
         .action-badge {
             position: absolute;
-            top: -2px;
-            right: -2px;
+            top: -8px;
+            right: -8px;
             background: var(--light-green);
             color: var(--white);
             border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 0.7rem;
+            min-width: 16px;
+            height: 16px;
+            padding: 0 5px;
+            font-size: 0.65rem;
             font-weight: 600;
             display: flex;
             align-items: center;
