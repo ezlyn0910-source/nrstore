@@ -809,6 +809,13 @@ body {
                     <input type="file" name="variations[__index__][image_file]" accept="image/*" class="image-input">
                 </div>
             </div>
+            <div class="form-checkboxes">
+                <label class="checkbox-container">
+                    <input type="checkbox" name="variations[__index__][is_active]" value="1" checked>
+                    <span class="checkmark"></span>
+                    Active Variation
+                </label>
+            </div>
         </div>
     </div>
 </template>
@@ -925,18 +932,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Setup image preview for variation image
         const variationImageInput = variationItem.querySelector('.variation-image-box .image-input');
         const variationImageBox = variationItem.querySelector('.variation-image-box');
-        variationImageInput.addEventListener('change', function() {
-            setupImagePreview(this, variationImageBox);
-        });
-    });
+        if (variationImageInput) {
+            variationImageInput.addEventListener('change', function() {
+                setupImagePreview(this, variationImageBox);
+            });
+        }
 
-    // Remove variation
-    variationsContainer.addEventListener('click', function(e) {
-        if (e.target.closest('.remove-variation')) {
-            const variationItem = e.target.closest('.variation-item');
-            variationItem.remove();
-            // Reindex remaining variations
-            reindexVariations();
+        // Setup remove variation button
+        const removeBtn = variationItem.querySelector('.remove-variation');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function() {
+                const variationItem = this.closest('.variation-item');
+                variationItem.remove();
+                reindexVariations();
+            });
         }
     });
 
@@ -958,23 +967,76 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-        // Initialize with existing variations from old input
-        @if(old('has_variations') && old('variations'))
-            @foreach(old('variations') as $index => $variation)
-                setTimeout(() => {
-                    addVariationBtn.click();
-                    // Fill with old data
-                    const variationItem = variationsContainer.lastElementChild;
-                    const oldVariation = {!! json_encode($variation) !!};
-                    Object.keys(oldVariation).forEach(key => {
-                        const input = variationItem.querySelector(`[name="variations[${$index}][${key}]"]`);
-                        if (input && oldVariation[key] !== null) {
-                            input.value = oldVariation[key];
+    // Form submission debug
+    const form = document.getElementById('productForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('Form submitted - checking variation data');
+            
+            // Log all variation inputs
+            const variationInputs = document.querySelectorAll('[name^="variations["]');
+            console.log(`Found ${variationInputs.length} variation inputs`);
+            
+            // Check if has_variations is checked
+            const hasVariations = document.getElementById('has_variations').checked;
+            console.log('Has variations checked:', hasVariations);
+            
+            if (hasVariations && variationInputs.length === 0) {
+                alert('Please add at least one variation when "This product has variations" is checked.');
+                e.preventDefault();
+                return false;
+            }
+            
+            // Validate each variation
+            let isValid = true;
+            const variations = variationsContainer.querySelectorAll('.variation-item');
+            
+            variations.forEach((variation, index) => {
+                const skuInput = variation.querySelector('[name*="[sku]"]');
+                const stockInput = variation.querySelector('[name*="[stock]"]');
+                
+                if (!skuInput || !skuInput.value.trim()) {
+                    alert(`Variation ${index + 1}: SKU is required`);
+                    isValid = false;
+                }
+                
+                if (!stockInput || stockInput.value === '' || parseInt(stockInput.value) < 0) {
+                    alert(`Variation ${index + 1}: Stock quantity is required and must be 0 or greater`);
+                    isValid = false;
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+
+    // Initialize with existing variations from old input
+    @if(old('has_variations') && old('variations'))
+        @foreach(old('variations') as $index => $variation)
+            setTimeout(() => {
+                addVariationBtn.click();
+                // Fill with old data
+                const variationItem = variationsContainer.lastElementChild;
+                const oldVariation = {!! json_encode($variation) !!};
+                
+                // Fill text inputs
+                Object.keys(oldVariation).forEach(key => {
+                    const input = variationItem.querySelector(`[name="variations[${$index}][${key}]"]`);
+                    if (input && oldVariation[key] !== null) {
+                        input.value = oldVariation[key];
+                        
+                        // For checkboxes
+                        if (input.type === 'checkbox') {
+                            input.checked = oldVariation[key] == '1' || oldVariation[key] === true;
                         }
-                    });
-                }, 100);
-            @endforeach
-        @endif
+                    }
+                });
+            }, 100);
+        @endforeach
+    @endif
 });
 </script>
 @endsection

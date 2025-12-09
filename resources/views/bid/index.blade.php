@@ -4,7 +4,7 @@
 <div class="bid-page">
     <!-- Hero Section - DARK -->
     <section class="bid-hero-section">
-        <img src="{{ asset('storage/images/bidbanner.png') }}" alt="Bid Banner" class="bid-hero-banner">
+        <img src="{{ asset('/images/bidbanner.png') }}" alt="Bid Banner" class="bid-hero-banner">
         <div class="hero-overlay-text">
             <h1>Auction Bidding Platform</h1>
             <p>Discover exclusive deals through competitive bidding</p>
@@ -25,28 +25,28 @@
             <div class="brands-row">
                 <a href="{{ route('brand.auctions', 'microsoft') }}" class="brand-card">
                     <div class="brand-logo-circle">
-                        <img src="{{ asset('storage/images/microsoftlogo.png') }}" alt="Microsoft Logo">
+                        <img src="{{ asset('/images/microsoftlogo.png') }}" alt="Microsoft Logo">
                     </div>
                     <h4 class="brand-name">Microsoft</h4>
                 </a>
                 
                 <a href="{{ route('brand.auctions', 'hp') }}" class="brand-card">
                     <div class="brand-logo-circle">
-                        <img src="{{ asset('storage/images/hplogo.png') }}" alt="HP Logo">
+                        <img src="{{ asset('/images/hplogo.png') }}" alt="HP Logo">
                     </div>
                     <h4 class="brand-name">HP</h4>
                 </a>
                 
                 <a href="{{ route('brand.auctions', 'dell') }}" class="brand-card">
                     <div class="brand-logo-circle">
-                        <img src="{{ asset('storage/images/delllogo.png') }}" alt="Dell Logo">
+                        <img src="{{ asset('/images/delllogo.png') }}" alt="Dell Logo">
                     </div>
                     <h4 class="brand-name">Dell</h4>
                 </a>
                 
                 <a href="{{ route('brand.auctions', 'lenovo') }}" class="brand-card">
                     <div class="brand-logo-circle">
-                        <img src="{{ asset('storage/images/lenovologo.png') }}" alt="Lenovo Logo">
+                        <img src="{{ asset('/images/lenovologo.png') }}" alt="Lenovo Logo">
                     </div>
                     <h4 class="brand-name">Lenovo</h4>
                 </a>

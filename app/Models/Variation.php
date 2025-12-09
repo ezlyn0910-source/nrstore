@@ -21,7 +21,6 @@ class Variation extends Model
         'processor',
         'ram',
         'storage',
-        // Removed: storage_type, graphics_card, screen_size, os, warranty, voltage
     ];
 
     protected $casts = [
