@@ -155,18 +155,30 @@
                                 Your trusted partner for premium tech products. We offer the latest in technology with guaranteed quality and exceptional customer service.
                             </p>
                             <div class="footer-social">
-                                <a href="#" class="social-link">
-                                    <i class="fab fa-facebook-f"></i>
+                                <a href="https://shopee.com.my/nr_intellitech_sdn_bhd"
+                                class="social-link social-icon-box"
+                                target="_blank" rel="noopener noreferrer">
+                                    <img src="{{ asset('images/social/shopee.png') }}" class="social-logo" alt="Shopee">
                                 </a>
-                                <a href="#" class="social-link">
-                                    <i class="fab fa-twitter"></i>
+
+                                <a href="https://www.lazada.com.my/shop/nr-intellitech-sdn-bhd"
+                                class="social-link social-icon-box"
+                                target="_blank" rel="noopener noreferrer">
+                                    <img src="{{ asset('images/social/lazada.png') }}" class="social-logo" alt="Lazada">
                                 </a>
-                                <a href="#" class="social-link">
-                                    <i class="fab fa-instagram"></i>
+
+                                <a href="https://carousell.app.link/M5HhdCw2WYb"
+                                class="social-link social-icon-box"
+                                target="_blank" rel="noopener noreferrer">
+                                    <img src="{{ asset('images/social/carousell.png') }}" class="social-logo" alt="Carousell">
                                 </a>
-                                <a href="#" class="social-link">
-                                    <i class="fab fa-linkedin-in"></i>
+
+                                <a href="https://www.tiktok.com/@nr.intellitech?_r=1&_t=ZS-924SNipKiyA"
+                                class="social-link social-icon-box"
+                                target="_blank" rel="noopener noreferrer">
+                                    <img src="{{ asset('images/social/tiktok.png') }}" class="social-logo" alt="TikTok">
                                 </a>
+
                             </div>
                         </div>
                         
@@ -217,10 +229,9 @@
                             <div class="footer-payment">
                                 <span>We accept:</span>
                                 <div class="payment-methods">
-                                    <i class="fab fa-cc-visa"></i>
-                                    <i class="fab fa-cc-mastercard"></i>
-                                    <i class="fab fa-cc-paypal"></i>
-                                    <i class="fab fa-cc-apple-pay"></i>
+                                    <img src="{{ asset('images/payment/visa.png') }}" alt="Visa" class="payment-logo">
+                                    <img src="{{ asset('images/payment/mastercard.png') }}" alt="Mastercard" class="payment-logo">
+                                    <img src="{{ asset('images/payment/fpx.png') }}" alt="FPX" class="payment-logo">
                                 </div>
                             </div>
                         </div>
@@ -515,7 +526,7 @@
             font-weight: 600;
             transition: color 0.3s ease;
             padding: 0.75rem 0;
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             letter-spacing: 0.3px;
             white-space: nowrap;
         }
@@ -676,14 +687,15 @@
         /* Badge for cart count */
         .action-badge {
             position: absolute;
-            top: -2px;
-            right: -2px;
+            top: -8px;
+            right: -8px;
             background: var(--light-green);
             color: var(--white);
             border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 0.7rem;
+            min-width: 16px;
+            height: 16px;
+            padding: 0 5px;
+            font-size: 0.65rem;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -743,6 +755,34 @@
         .footer-social {
             display: flex;
             gap: 0.75rem;
+        }
+
+        /* White background for social icons */
+        .social-icon-box {
+            background: #ffffff !important;
+            border: none !important;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border-radius: 10px;   /* rounded box */
+            overflow: hidden;      /* crop anything outside */
+        }
+
+        /* Make logo slightly bigger than the box so any transparent edge is hidden */
+        .social-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;     /* fill the box & crop edges if needed */
+            display: block;
+        }
+
+        /* Hover effect */
+        .social-icon-box:hover {
+            background: #f1f1f1 !important;     /* Light grey hover */
+            transform: translateY(-2px);
         }
 
         .social-link {
@@ -850,6 +890,21 @@
         .payment-methods {
             display: flex;
             gap: 0.5rem;
+            align-items: center;
+        }
+
+        .payment-methods img {
+            width: 35px;
+            height: 22px;
+            display: block;
+        }
+
+        .payment-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #ffffff;
+            border-radius: 6px;
         }
 
         .payment-methods i {

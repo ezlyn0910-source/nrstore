@@ -680,26 +680,44 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             const formData = new FormData(addToCartForm);
+            const quantity = getQuantity();
 
-            fetch(addToCartForm.action, {
+            const requestData = {
+                product_id: {{ $product->id }},
+                quantity: quantity,
+                source: 'product_show'
+            };
+
+            fetch("{{ route('cart.add') }}", {
                 method: 'POST',
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json'
                 },
-                body: formData
+                body: JSON.stringify(requestData)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success message
-                    showCartAlert('The item has successfully added to cart', false);
+            .then(async (response) => {
+                let data = null;
 
-                    // Update cart count badge if available
-                    updateCartBadge(data.cart_count);
+                // Try to parse JSON; if it fails but response is OK, treat as success
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    if (response.ok) {
+                        showCartAlert('The item has successfully added to cart', false);
+                        return;
+                    }
+                }
+
+                if (data && data.success) {
+                    showCartAlert('The item has successfully added to cart', false);
+                    updateCartBadge(data.cart_count || data.cart_total_items);
                 } else {
-                    showCartAlert(data.message || 'Error adding item to cart.', true);
+                    showCartAlert(
+                        (data && data.message) || 'Error adding item to cart.',
+                        true
+                    );
                 }
             })
             .catch(() => {

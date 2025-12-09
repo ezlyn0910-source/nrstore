@@ -88,7 +88,8 @@ Route::controller(BidController::class)
     });
 
 // Brand auction pages
-Route::get('/brand/{brand}/auctions', [BrandController::class, 'show'])->name('brand.auctions');
+Route::get('/brand/{brand}/auctions', [BidController::class, 'brandAuctions'])
+    ->name('brand.auctions');
 
 // Static Pages
 Route::get('/about', function () {
