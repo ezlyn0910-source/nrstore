@@ -47,21 +47,65 @@ class BidController extends Controller
 
     public function brandAuctions($brand)
     {
-        $brands = ['microsoft', 'hp', 'dell', 'lenovo'];
-        
-        if (!in_array(strtolower($brand), $brands)) {
+        // Normalise brand key
+        $brandKey = strtolower($brand);
+
+        // Allowed brands + display names (and logos if you want later)
+        $brandConfig = [
+            'microsoft' => [
+                'name' => 'Microsoft',
+            ],
+            'hp' => [
+                'name' => 'HP',
+            ],
+            'dell' => [
+                'name' => 'Dell',
+            ],
+            'lenovo' => [
+                'name' => 'Lenovo',
+            ],
+        ];
+
+        // If brand not supported → 404
+        if (!array_key_exists($brandKey, $brandConfig)) {
             abort(404);
         }
 
-        $auctions = Bid::with(['product'])
-            ->whereHas('product', function($query) use ($brand) {
-                $query->where('brand', ucfirst($brand))
-                      ->where('is_active', true);
-            })
+        // Get active auctions for this brand
+        $rawAuctions = Bid::with(['product'])
             ->active()
+            ->whereHas('product', function ($query) use ($brandKey) {
+                $query->where('is_active', true)
+                    ->whereRaw('LOWER(brand) = ?', [$brandKey]);
+            })
             ->get();
 
-        return view('bid.brand', compact('auctions', 'brand'));
+        // Map to a simple object that matches the brand.blade layout
+        $auctions = $rawAuctions->map(function ($bid) {
+            return (object)[
+                'id'             => $bid->id,
+                'product_name'   => $bid->product->name ?? 'Unknown Product',
+                'image'          => $bid->product->main_image_url ?? 'storage/images/placeholder.jpg',
+                'short_description' => $bid->product->short_description ?? null,
+                'spec'           => $bid->product->spec ?? null,
+                'processor'      => $bid->product->processor ?? null,
+                'memory'         => $bid->product->memory ?? null,
+                'storage'        => $bid->product->storage ?? null,
+                'current_bid'    => $bid->current_price,
+                'starting_price' => $bid->starting_price,
+                'end_time'       => $bid->end_time,
+                'time_left'      => $this->formatTimeRemaining($bid->time_remaining),
+            ];
+        });
+
+        // Brand data for the view (name etc.)
+        $brandData = $brandConfig[$brandKey];
+
+        return view('bid.brand', [
+            'auctions'  => $auctions,
+            'brandKey'  => $brandKey,
+            'brandData' => $brandData,
+        ]);
     }
 
     public function show($id)
