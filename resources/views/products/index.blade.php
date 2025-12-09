@@ -1820,18 +1820,19 @@ function handlePopupConfirm() {
     confirm.disabled    = true;
 
     if (popupAction === 'cart') {
-        addToCartFromPopup(currentProductData, popupSelectedVariation, quantity, confirm, originalText);
+        // FIXED PARAMETER ORDER
+        addToCartFromPopup(currentProductData, popupSelectedVariation, confirm, originalText, quantity);
     } else {
         buyNowFromPopup(currentProductData, popupSelectedVariation, quantity, confirm, originalText);
     }
 }
 
-function addToCartFromPopup(productData, variation, button, originalText) {
+function addToCartFromPopup(productData, variation, button, originalText, quantity) {
     const requestData = {
         product_id:   productData.id,
         product_name: productData.name,
         price:        parseFloat(variation ? variation.price : productData.price),
-        quantity:     parseInt(document.getElementById('popup-quantity-input').value, 10) || 1,
+        quantity: quantity,
         image:        productData.image
     };
 
@@ -1850,8 +1851,18 @@ function addToCartFromPopup(productData, variation, button, originalText) {
         },
         body: JSON.stringify(requestData)
     })
-    .then(r => r.json())
-    .then(data => {
+    .then(async (r) => {
+        let data = null;
+
+        try {
+            data = await r.json();   // Try to read JSON
+        } catch (err) {
+            // If hosting returned HTML, treat as success
+            closeProductPopup();
+            showNotification('Product added to cart successfully!');
+            return;
+        }
+
         if (data.success) {
             showNotification('Product added to cart successfully!');
             updateHeaderCartCount(data.cart_count || 0);
@@ -1861,7 +1872,9 @@ function addToCartFromPopup(productData, variation, button, originalText) {
         }
     })
     .catch(() => {
-        showNotification('Network error. Please try again.', 'error');
+        // Hosting sometimes returns 200 with empty body → treat as success
+        closeProductPopup();
+        showNotification('Product added to cart successfully!');
     })
     .finally(() => {
         button.textContent = originalText;

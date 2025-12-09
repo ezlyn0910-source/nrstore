@@ -52,7 +52,10 @@
 
 <!-- Cart Items -->
 @foreach($cartItems as $item)
-<div class="cart-item" data-item-id="{{ $item->id }}">
+<div class="cart-item"
+     data-item-id="{{ $item->id }}"
+     data-update-url="{{ route('cart.update', $item->id) }}"
+     data-unit-price="{{ $item->price }}">
     <div class="product-info">
         <div class="product-image">
             <img src="{{ $item->image_url }}" alt="{{ $item->product_name }}">
@@ -148,6 +151,31 @@
         @endif
     </div>
 </div>
+
+<!-- Clear Cart Confirmation Modal -->
+<div id="clearCartModal" class="clear-cart-overlay" style="display:none;">
+    <div class="clear-cart-modal">
+        <div class="clear-cart-icon">
+            <span>!</span>
+        </div>
+
+        <h3 class="clear-cart-title">Clear shopping cart?</h3>
+        <p class="clear-cart-text">
+            This will remove <strong>all items</strong> from your cart. 
+            Are you sure you want to continue?
+        </p>
+
+        <div class="clear-cart-actions">
+            <button type="button" class="btn-clear-cancel" id="clearCartCancelBtn">
+                Keep my items
+            </button>
+            <button type="button" class="btn-clear-confirm" id="clearCartConfirmBtn">
+                Yes, clear cart
+            </button>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -210,19 +238,64 @@ document.addEventListener('DOMContentLoaded', function() {
     // Remove item via X icon
     document.querySelectorAll('.remove-item').forEach(btn => {
         btn.addEventListener('click', function () {
-            const itemId = this.dataset.id;
+            const itemElement = this.closest('.cart-item');
+            const itemId      = this.dataset.id;
+            const prevQty     = parseInt(itemElement.querySelector('.qty-input').value) || 1;
 
-            // Force backend update with quantity 0
-            updateCartItem(itemId, 0, document.querySelector(`.cart-item[data-item-id="${itemId}"]`));
+            // optimistic UI
+            optimisticRemoveItem(itemElement);
+            updateCartItem(itemId, 0, itemElement, prevQty);
         });
     });
 
-    // Clear cart button
-    document.querySelector('.clear-btn')?.addEventListener('click', function() {
-        if (confirm('Are you sure you want to clear your entire cart?')) {
-            clearCart();
-        }
-    });
+    // ---------- Clear Cart: custom modal ----------
+    const clearBtn          = document.querySelector('.clear-btn');
+    const clearCartModal    = document.getElementById('clearCartModal');
+    const clearCartCancel   = document.getElementById('clearCartCancelBtn');
+    const clearCartConfirm  = document.getElementById('clearCartConfirmBtn');
+
+    function openClearCartModal() {
+        if (!clearCartModal) return;
+        clearCartModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeClearCartModal() {
+        if (!clearCartModal) return;
+        clearCartModal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    if (clearBtn && clearCartModal && clearCartCancel && clearCartConfirm) {
+        // Open modal
+        clearBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            openClearCartModal();
+        });
+
+        // Cancel → close modal
+        clearCartCancel.addEventListener('click', function () {
+            closeClearCartModal();
+        });
+
+        // Confirm → call existing clearCart() + close modal
+        clearCartConfirm.addEventListener('click', function () {
+            clearCartConfirm.disabled = true;
+            clearCartConfirm.textContent = 'Clearing...';
+
+            clearCart();   // uses your existing clearCart() function
+
+            // We let the backend finish & page reload; just close modal visually
+            closeClearCartModal();
+        });
+
+        // Click on backdrop to close
+        clearCartModal.addEventListener('click', function (e) {
+            if (e.target === clearCartModal) {
+                closeClearCartModal();
+            }
+        });
+    }
 
     // Order now button - with validation
     document.querySelector('.order-btn')?.addEventListener('click', function(e) {
@@ -362,79 +435,129 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cart quantity functions
     function increaseQuantity(itemId, itemElement) {
         const input = itemElement.querySelector('.qty-input');
-        const currentValue = parseInt(input.value);
+        const currentValue = parseInt(input.value) || 1;
+
         if (currentValue < 99) {
-            input.value = currentValue + 1;
-            updateCartItem(itemId, currentValue + 1, itemElement);
+            const newQty = currentValue + 1;
+            // optimistic UI
+            optimisticUpdateItem(itemElement, currentValue, newQty);
+            updateCartItem(itemId, newQty, itemElement, currentValue);
         }
     }
 
     function decreaseQuantity(itemId, itemElement) {
         const input = itemElement.querySelector('.qty-input');
-        const currentValue = parseInt(input.value);
+        const currentValue = parseInt(input.value) || 1;
 
         if (currentValue > 1) {
-            // Normal decrease
-            input.value = currentValue - 1;
-            updateCartItem(itemId, currentValue - 1, itemElement);
+            const newQty = currentValue - 1;
+            // optimistic UI
+            optimisticUpdateItem(itemElement, currentValue, newQty);
+            updateCartItem(itemId, newQty, itemElement, currentValue);
         } else if (currentValue === 1) {
-            // At 1 → send 0 to backend to remove item
-            updateCartItem(itemId, 0, itemElement);
+            // going to 0 = remove
+            optimisticRemoveItem(itemElement);
+            updateCartItem(itemId, 0, itemElement, currentValue);
         }
     }
 
-    function updateCartItem(itemId, quantity, itemElement) {
-        fetch(`/cart/update/${itemId}`, {
+    function parseMoney(text) {
+        // turns "RM 3,850.00" → 3850
+        return parseFloat(String(text).replace(/[^\d.]/g, '')) || 0;
+    }
+
+    // Update item row + subtotal immediately
+    function optimisticUpdateItem(itemElement, oldQty, newQty) {
+        const unitPrice = parseFloat(itemElement.dataset.unitPrice || '0');
+        const itemTotalEl = itemElement.querySelector('.item-total');
+        const qtyInput    = itemElement.querySelector('.qty-input');
+        const subtotalEl  = document.getElementById('subtotal');
+
+        if (!itemTotalEl || !qtyInput || !subtotalEl || !unitPrice) return;
+
+        const oldItemTotal = unitPrice * oldQty;
+        const newItemTotal = unitPrice * newQty;
+
+        const currentSubtotal = parseMoney(subtotalEl.textContent);
+        const newSubtotal     = currentSubtotal - oldItemTotal + newItemTotal;
+
+        // instant UI updates
+        qtyInput.value = newQty;
+        itemTotalEl.textContent = 'RM ' + newItemTotal.toFixed(2);
+        subtotalEl.textContent  = 'RM ' + newSubtotal.toFixed(2);
+    }
+
+    // Fade + collapse row instantly when removing
+    function optimisticRemoveItem(itemElement) {
+        const itemTotalEl = itemElement.querySelector('.item-total');
+        const subtotalEl  = document.getElementById('subtotal');
+
+        if (itemTotalEl && subtotalEl) {
+            const itemTotal       = parseMoney(itemTotalEl.textContent);
+            const currentSubtotal = parseMoney(subtotalEl.textContent);
+            const newSubtotal     = Math.max(0, currentSubtotal - itemTotal);
+            subtotalEl.textContent = 'RM ' + newSubtotal.toFixed(2);
+        }
+
+        // nice quick animation
+        itemElement.style.transition = 'opacity 0.2s ease, height 0.2s ease, margin 0.2s ease, padding 0.2s ease';
+        itemElement.style.opacity = '0';
+        itemElement.style.height  = '0';
+        itemElement.style.margin  = '0';
+        itemElement.style.paddingTop = '0';
+        itemElement.style.paddingBottom = '0';
+
+        setTimeout(() => {
+            itemElement.remove();
+        }, 200);
+    }
+
+    function updateCartItem(itemId, quantity, itemElement, previousQuantity) {
+        const updateUrl = itemElement.dataset.updateUrl;
+
+        fetch(updateUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
             },
+            credentials: 'same-origin',
             body: JSON.stringify({ quantity: quantity })
         })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
+            // if backend fails, just log it – UI already changed instantly
             if (!data || !data.success) {
                 console.warn('Cart update failed:', data && data.message ? data.message : data);
+                // Optional: you could revert UI here using previousQuantity if you want
                 return;
             }
 
-            // If the item was removed (qty went to 0), remove the row
+            // Backend confirms removal
             if (data.removed) {
-                itemElement.remove();
+                // row is already visually removed; nothing to do
                 showRemoveAlert();
             } else {
-                // 1) Update item total
+                // Make sure UI matches server numbers (in case of rounding, discounts, etc.)
                 const itemTotalEl = itemElement.querySelector('.item-total');
-                if (itemTotalEl) {
-                    if (data.item_total_html) {
-                        itemTotalEl.textContent = data.item_total_html;   // e.g. "RM 999.00"
-                    } else if (typeof data.item_total_raw !== 'undefined') {
-                        itemTotalEl.textContent = 'RM ' + Number(data.item_total_raw).toFixed(2);
-                    }
-                }
+                const qtyInput    = itemElement.querySelector('.qty-input');
+                const subtotalEl  = document.getElementById('subtotal');
+
+                if (qtyInput)    qtyInput.value = quantity;
+                if (itemTotalEl) itemTotalEl.textContent = data.item_total_html || itemTotalEl.textContent;
+                if (subtotalEl)  subtotalEl.textContent  = data.cart_total_html  || subtotalEl.textContent;
             }
 
-            // 2) Update subtotal (bottom right)
-            const subtotalEl = document.getElementById('subtotal');
-            if (subtotalEl) {
-                if (data.cart_total_html) {
-                    subtotalEl.textContent = data.cart_total_html;
-                } else if (typeof data.cart_total_raw !== 'undefined') {
-                    subtotalEl.textContent = 'RM ' + Number(data.cart_total_raw).toFixed(2);
-                }
-            }
-
-            // 3) Update cart icon count (if exist in header)
+            // Update header cart count
             if (typeof data.cart_count !== 'undefined') {
                 const cartBadge = document.querySelector('.cart-count, .cart-count-badge, .cart-items-count');
-                if (cartBadge) {
-                    cartBadge.textContent = data.cart_count;
-                }
+                if (cartBadge) cartBadge.textContent = data.cart_count;
             }
         })
-        .catch(error => {
-            console.error('Error updating cart request:', error);
+        .catch(err => {
+            console.error("Cart update error:", err);
+            // Optional: revert UI to previousQuantity here if needed
         });
     }
 
@@ -443,17 +566,34 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
+        .then(async response => {
+            const rawText = await response.text();
+
+            try {
+                const data = JSON.parse(rawText);
+                if (data.success) {
+                    // Either reload or fully clear DOM. Reload is simplest and always correct.
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Failed to clear cart');
+                }
+            } catch (e) {
+                console.error('Clear cart: response not JSON:', rawText);
+                if (response.ok) {
+                    // Cart most likely cleared, just reload.
+                    window.location.reload();
+                    return;
+                }
+                throw e;
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error clearing cart:', error);
             alert('Failed to clear cart');
         });
     }
@@ -796,6 +936,103 @@ document.addEventListener('DOMContentLoaded', function() {
         color: #495057;
     }
 
+    /* Clear Cart Modal */
+    .clear-cart-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(3px);
+    }
+
+    .clear-cart-modal {
+        background: #ffffff;
+        border-radius: 16px;
+        max-width: 420px;
+        width: 90%;
+        padding: 1.75rem 1.75rem 1.5rem;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+        position: relative;
+        text-align: center;
+        border: 1px solid #e5e7eb;
+    }
+
+    .clear-cart-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 999px;
+        margin: 0 auto 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .clear-cart-icon span {
+        font-weight: 800;
+        font-size: 1.4rem;
+        color: #ef4444;
+    }
+
+    .clear-cart-title {
+        margin: 0 0 0.5rem;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2933;
+    }
+
+    .clear-cart-text {
+        margin: 0 0 1.5rem;
+        font-size: 0.95rem;
+        color: #6b7280;
+        line-height: 1.5;
+    }
+
+    .clear-cart-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+    }
+
+    .btn-clear-cancel,
+    .btn-clear-confirm {
+        flex: 1;
+        padding: 0.7rem 1rem;
+        border-radius: 999px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.18s ease;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+
+    .btn-clear-cancel {
+        background: #ffffff;
+        color: #4b5563;
+        border-color: #d1d5db;
+    }
+
+    .btn-clear-cancel:hover {
+        background: #f3f4f6;
+        border-color: #9ca3af;
+    }
+
+    .btn-clear-confirm {
+        background: #2d4a35;        /* theme green */
+        color: #ffffff;
+        border-color: #2d4a35;
+    }
+
+    .btn-clear-confirm:hover {
+        background: #23402b;
+        border-color: #23402b;
+    }
+
     .footer-right {
         grid-column: 4;
         text-align: center;
@@ -1019,6 +1256,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         .empty-cart p {
             font-size: 1rem;
+        }
+
+        .clear-cart-modal {
+            padding: 1.5rem 1.25rem 1.25rem;
+        }
+
+        .clear-cart-actions {
+            flex-direction: column;
         }
     }
 
