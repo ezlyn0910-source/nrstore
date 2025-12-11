@@ -38,6 +38,8 @@ class TempUser extends Model
 
     public function isExpired()
     {
-        return $this->expires_at->isPast();
+        return $this->expires_at && now()->greaterThan($this->expires_at);
     }
+
+
 }

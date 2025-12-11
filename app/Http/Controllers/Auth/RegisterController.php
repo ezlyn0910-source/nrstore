@@ -73,8 +73,12 @@ class RegisterController extends Controller
             'email' => $data['email'],
             'phone' => $data['phone'],
             'password' => Hash::make($data['password']),
+            'token' => bin2hex(random_bytes(32)), 
+            'expires_at' => now()->addHours(24),  
         ]);
     }
+
+
 
     /**
      * Show registration success page.
