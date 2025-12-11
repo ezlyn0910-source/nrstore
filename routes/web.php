@@ -201,22 +201,39 @@ Route::middleware(['auth'])->group(function () {
     });
 
     /**
-     * Profile Routes
+     * Profile Routes (My Account area)
      */
-    Route::prefix('profile')->name('profile.')->controller(ProfileController::class)->group(function () {
-        Route::get('/', 'edit')->name('edit');
-        Route::put('/', 'update')->name('update');
-        Route::put('/password', 'updatePassword')->name('password.update');
+    Route::prefix('profile')
+        ->name('profile.')
+        ->controller(ProfileController::class)
+        ->group(function () {
+            // Shell: banner + left menu (index with empty right panel)
+            Route::get('/', 'index')->name('index');
 
-        // Profile orders
-        Route::get('/orders', 'orders')->name('orders');
+            // Personal Information (editpersonal.blade.php)
+            Route::get('/personal', 'editPersonal')->name('personal.edit');
+            Route::put('/personal', 'updatePersonal')->name('personal.update');
 
-        // Profile addresses
-        Route::get('/addresses', 'addresses')->name('addresses');
-        Route::post('/addresses', 'storeAddress')->name('addresses.store');
-        Route::put('/addresses/{address}', 'updateAddress')->name('addresses.update');
-        Route::delete('/addresses/{address}', 'deleteAddress')->name('addresses.delete');
-    });
+            // My Orders in account page – PAST ORDERS ONLY (profile/orders.blade.php)
+            Route::get('/orders', 'orders')->name('orders.index');
+
+            // Manage Address (editaddress.blade.php)
+            Route::get('/addresses', 'addresses')->name('addresses.index');
+            Route::post('/addresses', 'storeAddress')->name('addresses.store');
+            Route::put('/addresses/{address}', 'updateAddress')->name('addresses.update');
+            Route::delete('/addresses/{address}', 'deleteAddress')->name('addresses.delete');
+
+            // Payment Method (editpayment.blade.php)
+            Route::get('/payment-methods', 'paymentMethods')->name('payment.index');
+            Route::post('/payment-methods/cards', 'storeCard')->name('payment.cards.store');
+            Route::delete('/payment-methods/cards/{card}', 'destroyCard')->name('payment.cards.destroy');
+            Route::post('/payment-methods/wallets/{wallet}/toggle', 'toggleWallet')
+                ->name('payment.wallets.toggle');
+
+            // Password Manager (changepassword.blade.php)
+            Route::get('/password', 'editPassword')->name('password.edit');
+            Route::put('/password', 'updatePassword')->name('password.update');
+        });
 
     /**
      * Favorite Routes

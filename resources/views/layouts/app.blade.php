@@ -45,20 +45,20 @@
 
                                     <!-- Show user menu when logged in -->
                                     <div class="user-menu">
-                                        <a href="#" class="header-link">
-                                            <i class="fas fa-user-circle"></i>
-                                            <span>{{ $firstName }}</span>
+                                    <a href="{{ route('profile.index') }}" class="header-link">
+                                        <i class="fas fa-user-circle"></i>
+                                        <span>{{ $firstName }}</span>
+                                    </a>
+                                    <div class="auth-divider"></div>
+                                    <form method="POST" action="{{ route('logout') }}" style="display:inline;">
+                                        @csrf
+                                        <a href="{{ route('logout') }}"
+                                        class="header-link"
+                                        onclick="event.preventDefault(); this.closest('form').submit();">
+                                            <span>Logout</span>
                                         </a>
-                                        <div class="auth-divider"></div>
-                                        <form method="POST" action="{{ route('logout') }}" style="display:inline;">
-                                            @csrf
-                                            <a href="{{ route('logout') }}"
-                                            class="header-link"
-                                            onclick="event.preventDefault(); this.closest('form').submit();">
-                                                <span>Logout</span>
-                                            </a>
-                                        </form>
-                                    </div>
+                                    </form>
+                                </div>
                                 @else
                                     <!-- Show login/register when not logged in -->
                                     <a href="{{ route('login') }}" class="auth-link">
