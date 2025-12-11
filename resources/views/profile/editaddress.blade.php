@@ -21,7 +21,7 @@
     }
 
     .account-hero {
-        background: #dce9df !important;
+        background: #f7f5f2;
         padding: 40px 3rem;
         text-align: center;
         border-bottom: 1px solid #eee;
@@ -256,7 +256,7 @@
     }
 
     .confirm-message {
-        font-size: 0.9rem;
+        font-size: 1rem;
         color: var(--text-muted);
         margin-bottom: 18px;
     }
@@ -345,9 +345,13 @@
                 Payment Method
             </a>
             <a href="{{ route('profile.password.edit') }}" class="account-nav-item">
-                Password Manager
+                Change Password
             </a>
-            <button id="logoutLink" class="account-nav-item logout">
+
+            {{-- Logout button (uses confirmation modal) --}}
+            <button type="button"
+                    id="logoutLink"
+                    class="account-nav-item logout">
                 Logout
             </button>
         </aside>
@@ -385,10 +389,11 @@
                                     Edit
                                 </button>
 
+                                {{-- Hidden delete form --}}
                                 <form id="delete-address-{{ $address->id }}"
-                                    method="POST"
-                                    action="{{ route('profile.addresses.delete', $address) }}"
-                                    style="display:none;">
+                                      method="POST"
+                                      action="{{ route('profile.addresses.delete', $address) }}"
+                                      style="display:none;">
                                     @csrf
                                     @method('DELETE')
                                 </form>
@@ -573,10 +578,14 @@
         </section>
     </div>
 
+    {{-- Hidden logout form --}}
+    <form id="logoutForm" method="POST" action="{{ route('logout') }}">
+        @csrf
+    </form>
+
     {{-- Global confirmation modal --}}
     <div id="confirmOverlay" class="confirm-overlay">
         <div class="confirm-box">
-            <div class="confirm-title">Are you sure?</div>
             <div id="confirmMessage" class="confirm-message">
                 <!-- message goes here -->
             </div>
@@ -594,10 +603,6 @@
             </div>
         </div>
     </div>
-
-    <form id="logoutForm" method="POST" action="{{ route('logout') }}">
-        @csrf
-    </form>
 </div>
 @endsection
 
@@ -609,15 +614,16 @@
         const addBtn      = document.getElementById('toggleAddAddress');
         const addBox      = document.getElementById('addAddressWrapper');
 
+        // Logout with confirmation modal
         if (logoutLink && logoutForm) {
-            logoutLink.addEventListener('click', function (e) {
-                e.preventDefault();
-                if (confirm('Are you sure you want to logout?')) {
+            logoutLink.addEventListener('click', function () {
+                openConfirmModal('Are you sure you want to logout?', function () {
                     logoutForm.submit();
-                }
+                });
             });
         }
 
+        // Show / hide add-address form
         if (addBtn && addBox) {
             addBtn.addEventListener('click', function () {
                 const isHidden = (addBox.style.display === 'none' || addBox.style.display === '');
@@ -634,7 +640,7 @@
         form.style.display = isHidden ? 'block' : 'none';
     }
 
-    // ===== Confirmation Modal Logic =====
+    // ===== Confirmation Modal Logic (ONE place, reused) =====
     let confirmCallback = null;
 
     function openConfirmModal(message, callback) {

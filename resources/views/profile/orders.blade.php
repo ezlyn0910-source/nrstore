@@ -21,7 +21,7 @@
     }
 
     .account-hero {
-        background: #dce9df !important;
+        background: #f7f5f2;
         padding: 40px 3rem;
         text-align: center;
         border-bottom: 1px solid #eee;
@@ -116,78 +116,70 @@
         color: var(--text-main);
     }
 
-    /* Form */
-    .account-form-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0,1fr));
-        gap: 16px 24px;
-        margin-top: 8px;
-    }
-
-    .account-form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .account-form-group label {
-        font-size: 0.9rem;
-        color: var(--text-main);
-        font-weight: 600;
-    }
-
-    .account-form-group span.required {
-        color: #dc2626;
-        margin-left: 2px;
-    }
-
-    .account-form-control,
-    .account-form-select {
-        border-radius: 6px;
-        border: 1px solid var(--border-light);
-        padding: 10px 12px;
-        font-size: 0.95rem;
-        outline: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .account-form-control:focus,
-    .account-form-select:focus {
-        border-color: var(--primary-green);
-        box-shadow: 0 0 0 1px rgba(45,74,53,0.2);
-    }
-
-    .account-form-select {
-        background-color: #fff;
-    }
-
-    .account-actions {
-        margin-top: 24px;
-    }
-
-    .btn-account-primary {
-        background: var(--primary-green) !important;
-        color: #fff;
-        border-radius: 6px;
-        border: none;
-        padding: 10px 20px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.15s ease, transform 0.05s ease;
-    }
-
-    .btn-account-primary:hover {
-        background: #1f3627 !important;
-        transform: translateY(-1px);
-    }
-
     /* Logout hidden form */
     #logoutForm {
         display: none;
     }
 
-    /* Responsive */
+    /* ===== Confirmation Modal (same style as other pages) ===== */
+    .confirm-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .confirm-box {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 20px 24px;
+        max-width: 360px;
+        width: 90%;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
+        text-align: left;
+        font-family: 'Nunito', sans-serif;
+    }
+
+    .confirm-message {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        margin-bottom: 18px;
+    }
+
+    .confirm-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .confirm-btn-cancel {
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--border-light);
+        background: #ffffff;
+        color: var(--text-main);
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+
+    .confirm-btn-ok {
+        padding: 8px 16px;
+        border-radius: 999px;
+        border: none;
+        background: var(--primary-green);
+        color: #ffffff;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .confirm-btn-ok:hover {
+        background: #223627;
+    }
+
     @media (max-width: 992px) {
         .account-wrapper {
             grid-template-columns: 1fr;
@@ -200,9 +192,6 @@
         }
         .account-wrapper {
             padding: 0 1.5rem;
-        }
-        .account-form-grid {
-            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -240,66 +229,67 @@
             </a>
             <a href="{{ route('profile.password.edit') }}"
                class="account-nav-item">
-                Password Manager
+                Change Password
             </a>
-            <button id="logoutLink"
-                    class="account-nav-item logout">
+
+            {{-- Logout button using custom confirmation --}}
+            <button type="button"
+                    id="logoutLink"
+                    class="account-nav-item logout"
+                    style="width:100%; text-align:left;">
                 Logout
             </button>
         </aside>
 
-        {{-- Content --}}
+        {{-- CONTENT SECTION (unchanged layout) --}}
         <section class="account-content">
             <h2 class="account-section-title">My Orders</h2>
 
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                <p style="margin:0; font-size:0.95rem; color:var(--text-muted);">
-                    Orders ({{ $orders->count() }})
-                </p>
-                <div style="display:flex; align-items:center; gap:8px; font-size:0.9rem;">
-                    <span style="color:var(--text-muted);">Sort by :</span>
-                    <select class="account-form-select" style="width:160px;">
-                        <option value="latest">Latest</option>
-                        <option value="oldest">Oldest</option>
-                        <option value="price-high">Price: High to Low</option>
-                        <option value="price-low">Price: Low to High</option>
-                    </select>
-                </div>
-            </div>
-
-            @forelse ($orders as $order)
-                {{-- Past orders only (make sure controller filters) --}}
+            @forelse($orders as $order)
                 <div style="border-radius:8px; overflow:hidden; border:1px solid var(--border-light); margin-bottom:18px;">
-                    {{-- Order summary header --}}
-                    <div style="background:var(--primary-green); padding:12px 16px; display:grid; grid-template-columns:2fr 1.2fr 1.2fr 1.5fr; gap:12px; font-size:0.9rem; font-weight:600;">
+
+                    <div style="background:var(--primary-green);
+                                padding:12px 18px;
+                                display:grid;
+                                grid-template-columns:2fr 1fr 1fr 1.4fr;
+                                gap:16px;
+                                font-size:0.9rem;
+                                font-weight:600;
+                                color:#ffffff;">
                         <div>
-                            <div style="font-size:0.8rem; color:#E5E4E2;">Order ID</div>
+                            <div style="font-size:0.8rem; opacity:0.85;">Order ID</div>
                             <div>#{{ $order->order_number }}</div>
                         </div>
                         <div>
-                            <div style="font-size:0.8rem; color:#E5E4E2;">Total Payment</div>
+                            <div style="font-size:0.8rem; opacity:0.85;">Total Payment</div>
                             <div>RM {{ number_format($order->total_amount, 2) }}</div>
                         </div>
                         <div>
-                            <div style="font-size:0.8rem; color:#E5E4E2;">Payment Method</div>
+                            <div style="font-size:0.8rem; opacity:0.85;">Payment Method</div>
                             <div>{{ $order->payment_method_label ?? ucfirst($order->payment_method) }}</div>
                         </div>
                         <div>
-                            <div style="font-size:0.8rem; color:#E5E4E2;">
-                                {{ $order->status === 'shipped' || $order->status === 'delivered' ? 'Delivered / Shipped Date' : 'Updated At' }}
+                            <div style="font-size:0.8rem; opacity:0.85;">
+                                {{ in_array($order->status, ['delivered','shipped']) ? 'Delivered Date' : 'Updated At' }}
                             </div>
-                            <div>{{ $order->shipped_at?->format('d F Y') ?? $order->updated_at->format('d F Y') }}</div>
+                            <div>
+                                {{ $order->delivered_at?->format('d F Y') ?? $order->updated_at->format('d F Y') }}
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Order items --}}
-                    <div style="padding:16px;">
-                        @foreach ($order->items as $item)
-                            <div style="display:grid; grid-template-columns:80px 1fr; gap:16px; padding:10px 0; border-bottom:1px solid #f3f4f6;">
+                    {{-- Body --}}
+                    <div style="padding:16px 18px 18px;">
+                        @foreach($order->items as $item)
+                            <div style="display:grid;
+                                        grid-template-columns:70px 1fr;
+                                        gap:14px;
+                                        padding:10px 0;
+                                        border-bottom:1px solid #f3f4f6;">
                                 <div>
                                     <img src="{{ $item->product->thumbnail_url ?? asset('images/default-product.jpg') }}"
                                          alt="{{ $item->product_name }}"
-                                         style="width:80px; height:80px; object-fit:cover; border-radius:4px;">
+                                         style="width:70px; height:70px; object-fit:cover; border-radius:4px;">
                                 </div>
                                 <div style="display:flex; flex-direction:column; justify-content:center;">
                                     <div style="font-weight:600; margin-bottom:4px; color:var(--text-main);">
@@ -308,7 +298,7 @@
                                     <div style="font-size:0.85rem; color:var(--text-muted);">
                                         {{ $item->variation_summary ?? '' }}
                                         @if($item->variation_summary)
-                                            |
+                                            &nbsp;|&nbsp;
                                         @endif
                                         Qty: {{ $item->quantity }}
                                     </div>
@@ -316,39 +306,102 @@
                             </div>
                         @endforeach
 
-                        {{-- Status row --}}
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:12px;">
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                @if($order->status === 'shipped' || $order->status === 'delivered')
-                                    <span style="font-size:0.8rem; padding:4px 10px; border-radius:999px; background:#dcfce7; color:#15803d; border:1px solid #22c55e;">{{ ucfirst($order->status) }}</span>
-                                @elseif($order->status === 'cancelled')
-                                    <span style="font-size:0.8rem; padding:4px 10px; border-radius:999px; background:#fee2e2; color:#b91c1c; border:1px solid #f87171;">Cancelled</span>
-                                @else
-                                    <span style="font-size:0.8rem; padding:4px 10px; border-radius:999px; background:#e5e7eb; color:#374151; border:1px solid #d1d5db;">{{ ucfirst($order->status) }}</span>
-                                @endif
+                        {{-- Status + message row --}}
+                        <div style="display:flex; align-items:center; gap:12px; padding-top:12px; margin-bottom:16px;">
+                            @php
+                                $status = $order->status;
+                            @endphp
 
-                                <span style="font-size:0.9rem; color:var(--text-muted);">
-                                    {{ $order->status_label ?? ucfirst($order->status) }}
+                            @if($status === 'delivered')
+                                <span style="font-size:0.8rem;
+                                             padding:4px 12px;
+                                             border-radius:999px;
+                                             background:#dcfce7;
+                                             color:#15803d;
+                                             border:1px solid #22c55e;">
+                                    Delivered
                                 </span>
-                            </div>
+                                <span style="font-size:0.9rem; color:var(--text-main);">
+                                    Your order has been delivered
+                                </span>
+                            @elseif($status === 'shipped')
+                                <span style="font-size:0.8rem;
+                                             padding:4px 12px;
+                                             border-radius:999px;
+                                             background:#dbeafe;
+                                             color:#1d4ed8;
+                                             border:1px solid #3b82f6;">
+                                    Shipped
+                                </span>
+                                <span style="font-size:0.9rem; color:var(--text-main);">
+                                    Your order is on the way
+                                </span>
+                            @elseif($status === 'cancelled')
+                                <span style="font-size:0.8rem;
+                                             padding:4px 12px;
+                                             border-radius:999px;
+                                             background:#fee2e2;
+                                             color:#b91c1c;
+                                             border:1px solid #f87171;">
+                                    Cancelled
+                                </span>
+                                <span style="font-size:0.9rem; color:var(--text-main);">
+                                    Your order has been cancelled
+                                </span>
+                            @else
+                                <span style="font-size:0.8rem;
+                                             padding:4px 12px;
+                                             border-radius:999px;
+                                             background:#e5e7eb;
+                                             color:#374151;
+                                             border:1px solid #d1d5db;">
+                                    {{ ucfirst($status) }}
+                                </span>
+                                <span style="font-size:0.9rem; color:var(--text-main);">
+                                    Your order is being processed
+                                </span>
+                            @endif
                         </div>
                     </div>
                 </div>
             @empty
-                <p style="font-size:0.95rem; color:var(--text-muted);">
+                <p style="font-size:0.95rem; color:var(--text-muted); margin-top:8px;">
                     You don't have any past orders yet.
                 </p>
             @endforelse
         </section>
     </div>
 
+    {{-- Hidden logout form --}}
     <form id="logoutForm" method="POST" action="{{ route('logout') }}">
         @csrf
     </form>
+
+    {{-- Global confirmation modal --}}
+    <div id="confirmOverlay" class="confirm-overlay">
+        <div class="confirm-box">
+            <div id="confirmMessage" class="confirm-message">
+                <!-- message goes here -->
+            </div>
+            <div class="confirm-actions">
+                <button type="button"
+                        class="confirm-btn-cancel"
+                        onclick="closeConfirmModal()">
+                    Cancel
+                </button>
+                <button type="button"
+                        class="confirm-btn-ok"
+                        id="confirmOkBtn">
+                    Yes, continue
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const logoutLink = document.getElementById('logoutLink');
@@ -357,11 +410,37 @@
         if (logoutLink && logoutForm) {
             logoutLink.addEventListener('click', function (e) {
                 e.preventDefault();
-                if (confirm('Are you sure you want to logout?')) {
+                openConfirmModal('Are you sure you want to logout?', function () {
                     logoutForm.submit();
-                }
+                });
             });
         }
     });
+
+    let confirmCallback = null;
+
+    function openConfirmModal(message, callback) {
+        const overlay  = document.getElementById('confirmOverlay');
+        const msgEl    = document.getElementById('confirmMessage');
+        const okButton = document.getElementById('confirmOkBtn');
+
+        if (!overlay || !msgEl || !okButton) return;
+
+        msgEl.textContent = message || 'Are you sure you want to continue?';
+        confirmCallback = typeof callback === 'function' ? callback : null;
+
+        overlay.style.display = 'flex';
+
+        okButton.onclick = function () {
+            overlay.style.display = 'none';
+            if (confirmCallback) confirmCallback();
+        };
+    }
+
+    function closeConfirmModal() {
+        const overlay = document.getElementById('confirmOverlay');
+        if (overlay) overlay.style.display = 'none';
+        confirmCallback = null;
+    }
 </script>
-@endsection
+@endpush
