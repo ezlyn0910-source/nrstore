@@ -7,7 +7,6 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ManageUserController;
 use App\Http\Controllers\ManageOrderController;
 use App\Http\Controllers\ManageBidController;
-use App\Http\Controllers\ManageReportController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CheckoutController;
@@ -23,13 +22,27 @@ use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Authentication Routes
-Auth::routes(['register' => true]);
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
 
-// Starter/Landing Page
+// ==================== AUTHENTICATION ROUTES ====================
+// This automatically creates: login, register, password reset, AND email verification routes
+Auth::routes(['register' => true, 'verify' => true]);
+
+// ==================== PUBLIC ROUTES (No login required) ====================
+
+// Home Page
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// Public Product Routes
+// Product Routes (Public)
 Route::controller(ProductController::class)->group(function () {
     Route::get('/products', 'index')->name('products.index');
     Route::post('/buy-now', 'buyNow')->name('buy-now');
@@ -41,7 +54,7 @@ Route::controller(ProductController::class)->group(function () {
     Route::get('/products/{product}/variations', 'getVariations')->name('products.variations');
 });
 
-// Public Cart Routes
+// Cart Routes (Public)
 Route::controller(CartController::class)
     ->prefix('cart')
     ->name('cart.')
@@ -54,44 +67,24 @@ Route::controller(CartController::class)
         Route::delete('/remove/{id}', 'remove')->name('remove');
         Route::post('/clear', 'clear')->name('clear');
         Route::get('/count', 'getCount')->name('count');
-
-        // Cart validation routes - PUBLIC (no auth required)
         Route::get('/validate-stock', 'validateStock')->name('validate.stock');
         Route::get('/validate-quantities', 'validateQuantities')->name('validate.quantities');
     });
 
-// API Routes for AJAX calls - PUBLIC
-Route::prefix('api')->name('api.')->group(function () {
-    Route::get('/check-auth', function () {
-        return response()->json([
-            'authenticated' => auth()->check(),
-            'user' => auth()->check() ? [
-                'id'    => auth()->user()->id,
-                'name'  => auth()->user()->name,
-                'email' => auth()->user()->email,
-            ] : null,
-        ]);
-    })->name('check.auth');
-
-    Route::get('/states/{country}', [CheckoutController::class, 'getStates'])->name('states');
-    Route::get('/cities/{state}', [CheckoutController::class, 'getCities'])->name('cities');
-});
-
-// Bid Routes (Public viewing, authenticated for placing bids)
+// Bid Routes (View only - Public)
 Route::controller(BidController::class)
     ->prefix('bid')
     ->name('bid.')
     ->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/{id}', 'show')->name('show');
-        Route::middleware(['auth'])->post('/{id}/place', 'placeBid')->name('place');
     });
 
-// Brand auction pages
+// Brand auction pages (Public)
 Route::get('/brand/{brand}/auctions', [BidController::class, 'brandAuctions'])
     ->name('brand.auctions');
 
-// Static Pages
+// Static Pages (Public)
 Route::get('/about', function () {
     return view('pages.about');
 })->name('about');
@@ -106,13 +99,45 @@ Route::post('/contact', function () {
         ->with('success', 'Thank you for your message. We will get back to you soon!');
 })->name('contact.store');
 
-Route::get('/faq', fn () => view('pages.faq'))->name('faq');
-Route::get('/shipping-info', fn () => view('pages.shipping'))->name('shipping.info');
-Route::get('/return-policy', fn () => view('pages.returns'))->name('return.policy');
-Route::get('/privacy-policy', fn () => view('pages.privacy'))->name('privacy.policy');
-Route::get('/terms-conditions', fn () => view('pages.terms'))->name('terms.conditions');
+Route::get('/faq', function () {
+    return view('pages.faq');
+})->name('faq');
 
-// Authenticated User Routes
+Route::get('/shipping-info', function () {
+    return view('pages.shipping');
+})->name('shipping.info');
+
+Route::get('/return-policy', function () {
+    return view('pages.returns');
+})->name('return.policy');
+
+Route::get('/privacy-policy', function () {
+    return view('pages.privacy');
+})->name('privacy.policy');
+
+Route::get('/terms-conditions', function () {
+    return view('pages.terms');
+})->name('terms.conditions');
+
+// API Routes for AJAX calls (Public)
+Route::prefix('api')->name('api.')->group(function () {
+    Route::get('/check-auth', function () {
+        return response()->json([
+            'authenticated' => auth()->check(),
+            'user' => auth()->check() ? [
+                'id'    => auth()->user()->id,
+                'name'  => auth()->user()->name,
+                'email' => auth()->user()->email,
+                'verified' => auth()->user()->hasVerifiedEmail(),
+            ] : null,
+        ]);
+    })->name('check.auth');
+
+    Route::get('/states/{country}', [CheckoutController::class, 'getStates'])->name('states');
+    Route::get('/cities/{state}', [CheckoutController::class, 'getCities'])->name('cities');
+});
+
+// ==================== AUTHENTICATED ROUTES (Require login) ====================
 Route::middleware(['auth'])->group(function () {
 
     /**
@@ -243,7 +268,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/add', 'add')->name('add');
         Route::post('/remove', 'remove')->name('remove');
     });
-
+    
     /**
      * Wishlist Routes
      */
@@ -253,7 +278,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/remove/{wishlistItem}', 'remove')->name('remove');
         Route::delete('/clear', 'clear')->name('clear');
     });
-
+    
     /**
      * Review Routes
      */
@@ -265,16 +290,97 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{product}/create', 'create')->name('create');
         Route::get('/{review}/edit', 'edit')->name('edit');
     });
+    
+    // ========== SHOPPING & ORDER ROUTES ==========
+    
+    /**
+     * Order Routes (Customer side)
+     */
+    Route::prefix('orders')->name('orders.')->controller(OrderController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{order}', 'show')->name('show');
+        Route::get('/{order}/details', 'details')->name('details');
+        Route::post('/{order}/cancel', 'cancel')->name('cancel');
+        Route::post('/process-checkout', 'processCheckout')->name('process-checkout');
+    });
+    
+    // ========== VERIFIED EMAIL ONLY ROUTES ==========
+    // These routes require both login AND verified email
+    
+    Route::middleware(['verified'])->group(function () {
+        
+        /**
+         * CHECKOUT ROUTES (Require verified email)
+         */
+        Route::prefix('checkout')->name('checkout.')->group(function () {
+            Route::get('/', [CheckoutController::class, 'index'])->name('index');
+            Route::get('/review', [CheckoutController::class, 'review'])->name('review');
+            Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('place-order');
+            Route::post('/validate', [CheckoutController::class, 'validateCheckout'])->name('validate');
+            Route::post('/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('calculate-shipping');
+            Route::post('/apply-promo', [CheckoutController::class, 'applyPromo'])->name('apply-promo');
+            Route::post('/remove-promo', [CheckoutController::class, 'removePromoCode'])->name('remove-promo');
+            
+            // Address routes (checkout-specific)
+            Route::post('/address/store', [CheckoutController::class, 'storeAddress'])->name('address.store');
+            Route::get('/addresses', [CheckoutController::class, 'getAddresses'])->name('addresses.index');
+            Route::put('/address/{address}', [CheckoutController::class, 'updateAddress'])->name('address.update');
+            Route::delete('/address/{address}', [CheckoutController::class, 'deleteAddress'])->name('address.delete');
+            
+            // Checkout data
+            Route::get('/shipping-methods', [CheckoutController::class, 'getShippingMethods'])->name('shipping-methods');
+            Route::get('/payment-methods', [CheckoutController::class, 'getPaymentMethods'])->name('payment-methods');
+            Route::get('/verify-stock', [CheckoutController::class, 'verifyStock'])->name('verify-stock');
+            
+            // Checkout results
+            Route::get('/success/{order}', [CheckoutController::class, 'success'])->name('success');
+            Route::get('/failed', [CheckoutController::class, 'failed'])->name('failed');
+        });
+        
+        /**
+         * PAYMENT PROCESSING ROUTES (Require verified email)
+         */
+        Route::prefix('payment')
+            ->name('payment.')
+            ->controller(PaymentController::class)
+            ->group(function () {
+                // Called from the "Place Order" button on checkout page
+                Route::post('/process', 'process')->name('process');
+                
+                // STRIPE (Card)
+                Route::get('/stripe/success', 'stripeSuccess')->name('stripe.success');
+                Route::get('/stripe/cancel', 'stripeCancel')->name('stripe.cancel');
+                Route::post('/stripe/webhook', 'stripeWebhook')->name('stripe.webhook');
+                
+                // TOYYIBPAY (FPX)
+                Route::post('/toyyibpay/callback', 'toyyibpayCallback')->name('toyyibpay.callback');
+                Route::get('/toyyibpay/return', 'toyyibpayReturn')->name('toyyibpay.return');
+                
+                // BILLPLZ (FPX)
+                Route::post('/billplz/callback', 'billplzCallback')->name('billplz.callback');
+                Route::get('/billplz/return', 'billplzReturn')->name('billplz.return');
+            });
+        
+        /**
+         * BID ROUTES - Placing bids (Require verified email)
+         */
+        Route::controller(BidController::class)
+            ->prefix('bid')
+            ->name('bid.')
+            ->group(function () {
+                Route::post('/{id}/place', 'placeBid')->name('place');
+            });
+    });
 });
 
-// Admin Routes
+// ==================== ADMIN ROUTES ====================
 Route::middleware(['auth'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
         // Admin Dashboard
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-
+        
         // Admin Product Management Routes
         Route::prefix('products')
             ->name('manageproduct.')
@@ -287,18 +393,18 @@ Route::middleware(['auth'])
                 Route::get('/{product}/edit', 'edit')->name('edit');
                 Route::put('/{product}', 'update')->name('update');
                 Route::delete('/{product}', 'destroy')->name('destroy');
-
+                
                 // Additional product actions
                 Route::post('/{product}/toggle-featured', 'toggleFeatured')->name('toggle-featured');
                 Route::post('/{product}/toggle-active', 'toggleActive')->name('toggle-active');
                 Route::get('/search', 'search')->name('search');
-
+                
                 // Bulk actions
                 Route::post('/bulkAction', 'bulkAction')->name('bulkAction');
                 Route::put('/{product}/status', 'updateStatus')->name('update-status');
                 Route::delete('/product-images/{image}', 'deleteImage')->name('delete-image');
             });
-
+        
         // Product Variations Management
         Route::prefix('products/{product}/variations')
             ->name('variations.')
@@ -311,7 +417,7 @@ Route::middleware(['auth'])
                 Route::delete('/{variation}', 'destroy')->name('destroy');
                 Route::post('/{variation}/toggle-active', 'toggleActive')->name('toggle-active');
             });
-
+        
         // Bid Management Routes
         Route::prefix('bids')
             ->name('managebid.')
@@ -328,13 +434,13 @@ Route::middleware(['auth'])
                 Route::post('/{bid}/start', 'startBid')->name('start');
                 Route::post('/{bid}/pause', 'pauseBid')->name('pause');
                 Route::post('/{bid}/complete', 'completeBid')->name('complete');
-
+                
                 // Additional bid management routes
                 Route::post('/{bid}/assign-winner', 'assignWinner')->name('assign-winner');
                 Route::get('/{bid}/participants', 'participants')->name('participants');
                 Route::get('/users/{user}/bid-history', 'userBidHistory')->name('user-history');
             });
-
+        
         // User Management Routes
         Route::prefix('users')
             ->name('manageuser.')
@@ -347,13 +453,13 @@ Route::middleware(['auth'])
                 Route::get('/{user}/edit', 'edit')->name('edit');
                 Route::put('/{user}', 'update')->name('update');
                 Route::delete('/{user}', 'destroy')->name('destroy');
-
+                
                 // Additional user actions
                 Route::post('/{user}/suspend', 'suspend')->name('suspend');
                 Route::post('/{user}/activate', 'activate')->name('activate');
                 Route::post('/bulk-action', 'bulkAction')->name('bulk-action');
             });
-
+        
         // Order Management Routes (Admin)
         Route::prefix('orders')
             ->name('manageorder.')
@@ -369,7 +475,21 @@ Route::middleware(['auth'])
             });
     });
 
-// Fallback Route (404 Page)
+// ==================== FALLBACK ROUTE ====================
 Route::fallback(function () {
     return view('errors.404');
+});
+
+Route::get('/debug-auth', function() {
+    $data = [
+        'is_logged_in' => auth()->check(),
+        'user' => auth()->check() ? [
+            'id' => auth()->id(),
+            'email' => auth()->user()->email,
+            'verified' => auth()->user()->hasVerifiedEmail(),
+        ] : null,
+        'session_data' => session()->all(),
+    ];
+    
+    return response()->json($data);
 });

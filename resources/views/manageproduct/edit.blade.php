@@ -613,22 +613,6 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="type">Type</label>
-                    <input type="text" id="type" name="type" value="{{ old('type', $product->type) }}">
-                    @error('type')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="sub_type">Sub Type</label>
-                    <input type="text" id="sub_type" name="sub_type" value="{{ old('sub_type', $product->sub_type) }}">
-                    @error('sub_type')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group">
                     <label for="price">Price (RM) *</label>
                     <input type="number" id="price" name="price" step="0.01" min="0" value="{{ old('price', $product->price) }}" required>
                     @error('price')
