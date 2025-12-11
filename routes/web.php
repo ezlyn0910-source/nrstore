@@ -34,8 +34,16 @@ use Illuminate\Support\Facades\Route;
 */
 
 // ==================== AUTHENTICATION ROUTES ====================
-// This automatically creates: login, register, password reset, AND email verification routes
-Auth::routes(['register' => true, 'verify' => true]);
+// Disable Laravel's default email verification since we have custom 2-step verification
+Auth::routes(['register' => true, 'verify' => false]);
+
+// ==================== CUSTOM EMAIL VERIFICATION ROUTES ====================
+// Custom 2-step registration verification routes
+Route::controller(\App\Http\Controllers\Auth\RegisterController::class)->group(function () {
+    Route::get('/register/verify/{token}', 'verifyEmail')->name('register.verify');
+    Route::post('/register/resend-verification', 'resendVerification')->name('register.resend-verification');
+    Route::get('/register/success', 'showSuccessPage')->name('register.success');
+});
 
 // ==================== PUBLIC ROUTES (No login required) ====================
 
@@ -143,13 +151,13 @@ Route::middleware(['auth'])->group(function () {
     // ========== USER PROFILE & ACCOUNT ROUTES ==========
     
     /**
-     * Profile Routes
+     * Profile Routes - These should NOT require email verification
+     * Users should be able to update profile even before verifying email
      */
     Route::prefix('profile')->name('profile.')->controller(ProfileController::class)->group(function () {
         Route::get('/', 'edit')->name('edit');
         Route::put('/', 'update')->name('update');
         Route::put('/password', 'updatePassword')->name('password.update');
-        Route::get('/orders', 'orders')->name('orders');
         Route::get('/addresses', 'addresses')->name('addresses');
         Route::post('/addresses', 'storeAddress')->name('addresses.store');
         Route::put('/addresses/{address}', 'updateAddress')->name('addresses.update');
@@ -179,31 +187,40 @@ Route::middleware(['auth'])->group(function () {
      * Review Routes
      */
     Route::prefix('reviews')->name('reviews.')->controller(ReviewController::class)->group(function () {
-        Route::post('/', 'store')->name('store');
-        Route::post('/{product}', 'storeProductReview')->name('store.product');
-        Route::put('/{review}', 'update')->name('update');
-        Route::delete('/{review}', 'destroy')->name('destroy');
         Route::get('/{product}/create', 'create')->name('create');
         Route::get('/{review}/edit', 'edit')->name('edit');
-    });
-    
-    // ========== SHOPPING & ORDER ROUTES ==========
-    
-    /**
-     * Order Routes (Customer side)
-     */
-    Route::prefix('orders')->name('orders.')->controller(OrderController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/{order}', 'show')->name('show');
-        Route::get('/{order}/details', 'details')->name('details');
-        Route::post('/{order}/cancel', 'cancel')->name('cancel');
-        Route::post('/process-checkout', 'processCheckout')->name('process-checkout');
     });
     
     // ========== VERIFIED EMAIL ONLY ROUTES ==========
     // These routes require both login AND verified email
     
     Route::middleware(['verified'])->group(function () {
+        
+        /**
+         * Order Routes (Customer side) - MOVE TO VERIFIED GROUP
+         */
+        Route::prefix('orders')->name('orders.')->controller(OrderController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{order}', 'show')->name('show');
+            Route::get('/{order}/details', 'details')->name('details');
+            Route::post('/{order}/cancel', 'cancel')->name('cancel');
+            Route::post('/process-checkout', 'processCheckout')->name('process-checkout');
+        });
+        
+        // User Profile Orders - MOVE TO VERIFIED GROUP
+        Route::prefix('profile')->name('profile.')->controller(ProfileController::class)->group(function () {
+            Route::get('/orders', 'orders')->name('orders');
+        });
+        
+        /**
+         * Review Submission Routes - MOVE TO VERIFIED GROUP
+         */
+        Route::prefix('reviews')->name('reviews.')->controller(ReviewController::class)->group(function () {
+            Route::post('/', 'store')->name('store');
+            Route::post('/{product}', 'storeProductReview')->name('store.product');
+            Route::put('/{review}', 'update')->name('update');
+            Route::delete('/{review}', 'destroy')->name('destroy');
+        });
         
         /**
          * CHECKOUT ROUTES (Require verified email)
@@ -376,6 +393,7 @@ Route::fallback(function () {
     return view('errors.404');
 });
 
+// Debug route for testing authentication
 Route::get('/debug-auth', function() {
     $data = [
         'is_logged_in' => auth()->check(),

@@ -3,39 +3,26 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\TempUser;
 use App\Models\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Registered;
+use App\Notifications\VerifyRegistrationEmail;
 
 class RegisterController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Register Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles the registration of new users as well as their
-    | validation and creation. By default this controller uses a trait to
-    | provide this functionality without requiring any additional code.
-    |
-    */
-
     use RegistersUsers;
 
     /**
-     * Where to redirect users after registration.
-     *
-     * @var string
+     * Where to redirect users after TEMPORARY registration.
      */
-    protected $redirectTo = '/email/verify';
+    protected $redirectTo = '/register/success';
 
     /**
      * Create a new controller instance.
-     *
-     * @return void
      */
     public function __construct()
     {
@@ -44,77 +31,128 @@ class RegisterController extends Controller
 
     /**
      * Get a validator for an incoming registration request.
-     *
-     * @param  array  $data
-     * @return \Illuminate\Contracts\Validation\Validator
      */
     protected function validator(array $data)
     {
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email', 'unique:temp_users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'phone' => ['required', 'string', 'max:20'],
         ]);
     }
 
     /**
-     * Create a new user instance after a valid registration.
-     *
-     * @param  array  $data
-     * @return \App\Models\User
-     */
-    protected function create(array $data)
-    {
-        return User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'phone' => $data['phone'],
-            'status' => 'inactive',
-            'role' => 'customer',
-        ]);
-    }
-
-    /**
      * Handle a registration request for the application.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
     public function register(Request $request)
     {
         $this->validator($request->all())->validate();
 
-        event(new Registered($user = $this->create($request->all())));
+        // Store in temp table instead of creating real user
+        $tempUser = $this->createTempUser($request->all());
 
-        // Log the user in (this is Laravel's default behavior)
-        $this->guard()->login($user);
+        // Send verification email
+        $tempUser->notify(new VerifyRegistrationEmail($tempUser));
 
-        // Check if user needs email verification
-        if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && !$user->hasVerifiedEmail()) {
-            // User is logged in but not verified
-            // They will see the verification notice page
-            return $this->registered($request, $user)
-                ?: redirect($this->redirectPath());
-        }
+        // Store email in session for display on success page
+        session(['registered_email' => $tempUser->email]);
 
-        return $this->registered($request, $user)
-            ?: redirect($this->redirectPath());
+        // Fix: Use redirect()->route() instead of redirect($this->redirectPath())
+        return redirect()->route('register.success')  // ← CHANGE THIS LINE
+            ->with('success', 'Registration successful! Please check your email to verify your account.');
     }
 
     /**
-     * The user has been registered.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  mixed  $user
-     * @return mixed
+     * Create a temporary user record.
      */
-    protected function registered(Request $request, $user)
+    protected function createTempUser(array $data)
     {
-        // Set success message
-        session()->flash('success', 'Registration successful! Please check your email to verify your account.');
+        return TempUser::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'],
+            'password' => Hash::make($data['password']),
+        ]);
+    }
+
+    /**
+     * Show registration success page.
+     */
+    public function showSuccessPage()
+    {
+        // Check if user just registered (has email in session)
+        if (!session()->has('registered_email')) {
+            return redirect()->route('register');
+        }
         
-        return null; // Let the register() method handle redirect
+        return view('auth.register-success');
+    }
+
+    /**
+     * Verify email and create real user.
+     */
+    public function verifyEmail($token)
+    {
+        $tempUser = TempUser::where('token', $token)->first();
+
+        if (!$tempUser) {
+            return redirect('/register')
+                ->with('error', 'Invalid verification link.');
+        }
+
+        if ($tempUser->isExpired()) {
+            $tempUser->delete();
+            return redirect('/register')
+                ->with('error', 'Verification link has expired. Please register again.');
+        }
+
+        // Create real user
+        $user = User::create([
+            'name' => $tempUser->name,
+            'email' => $tempUser->email,
+            'phone' => $tempUser->phone,
+            'password' => $tempUser->password,
+            'status' => 'active',
+            'role' => 'customer',
+            'email_verified_at' => now(), // Mark as verified
+        ]);
+
+        // Delete temp user
+        $tempUser->delete();
+
+        // Log the user in
+        auth()->login($user);
+
+        // Send welcome email if needed
+        // event(new Registered($user));
+
+        return redirect('/')
+            ->with('success', 'Email verified successfully! Your account has been created.');
+    }
+
+    /**
+     * Resend verification email.
+     */
+    public function resendVerification(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $tempUser = TempUser::where('email', $request->email)->first();
+
+        if (!$tempUser) {
+            return back()->with('error', 'Email not found in pending registrations.');
+        }
+
+        if ($tempUser->isExpired()) {
+            $tempUser->delete();
+            return redirect('/register')
+                ->with('error', 'Registration expired. Please register again.');
+        }
+
+        // Send new verification email
+        $tempUser->notify(new VerifyRegistrationEmail($tempUser));
+
+        return back()->with('success', 'Verification email sent again!');
     }
 }
