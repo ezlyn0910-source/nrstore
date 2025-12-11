@@ -33,9 +33,11 @@ class VerifyRegistrationEmail extends Notification
     /**
      * Get the mail representation of the notification.
      */
+
     public function toMail(object $notifiable): MailMessage
     {
-        $verificationUrl = url('/register/verify/' . $this->tempUser->token);
+        // Use route() instead of url()
+        $verificationUrl = route('register.verify', ['token' => $this->tempUser->token]);
 
         return (new MailMessage)
             ->subject('Verify Your Email - NR Store')
@@ -46,4 +48,5 @@ class VerifyRegistrationEmail extends Notification
             ->line('This verification link will expire in 24 hours.')
             ->line('If you did not create an account, no further action is required.');
     }
+
 }

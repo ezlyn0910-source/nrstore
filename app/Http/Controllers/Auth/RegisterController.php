@@ -64,23 +64,6 @@ class RegisterController extends Controller
     }
 
     /**
-     * Create a temporary user record.
-     */
-    protected function createTempUser(array $data)
-    {
-        return TempUser::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'],
-            'password' => Hash::make($data['password']),
-            'token' => bin2hex(random_bytes(32)), 
-            'expires_at' => now()->addHours(24),  
-        ]);
-    }
-
-
-
-    /**
      * Show registration success page.
      */
     public function showSuccessPage()
