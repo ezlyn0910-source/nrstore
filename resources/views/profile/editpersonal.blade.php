@@ -16,10 +16,12 @@
         min-height: 70vh;
         background: #ffffff;
         font-family: 'Nunito', sans-serif;
+        padding: 0 0 60px;
+        box-sizing: border-box;
     }
 
     .account-hero {
-        background: #C1E1C1 !important;
+        background: #f7f5f2;
         padding: 40px 3rem;
         text-align: center;
         border-bottom: 1px solid #eee;
@@ -239,6 +241,64 @@
         display: none;
     }
 
+    /* ===== Confirmation Modal (same style as address page) ===== */
+    .confirm-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .confirm-box {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 20px 24px;
+        max-width: 360px;
+        width: 90%;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
+        text-align: left;
+        font-family: 'Nunito', sans-serif;
+    }
+
+    .confirm-message {
+        font-size: 1rem;
+        color: var(--text-muted);
+        margin-bottom: 18px;
+    }
+
+    .confirm-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .confirm-btn-cancel {
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--border-light);
+        background: #ffffff;
+        color: var(--text-main);
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+
+    .confirm-btn-ok {
+        padding: 8px 16px;
+        border-radius: 999px;
+        border: none;
+        background: var(--primary-green);
+        color: #ffffff;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .confirm-btn-ok:hover {
+        background: #223627;
+    }
+
     /* Responsive */
     @media (max-width: 992px) {
         .account-wrapper {
@@ -290,9 +350,12 @@
                 Payment Method
             </a>
             <a href="{{ route('profile.password.edit') }}" class="account-nav-item">
-                Password Manager
+                Change Password
             </a>
-            <button id="logoutLink"
+
+            {{-- Logout button (uses confirmation modal) --}}
+            <button type="button"
+                    id="logoutLink"
                     class="account-nav-item logout">
                 Logout
             </button>
@@ -307,24 +370,6 @@
                   enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
-
-                <div class="profile-header">
-                    <div class="profile-avatar-wrapper">
-                        <img src="{{ $user->avatar_url ?? asset('images/default-avatar.jpg') }}"
-                             alt="Profile picture">
-                        <button type="button"
-                                class="avatar-upload-btn"
-                                onclick="document.getElementById('avatarInput').click();">
-                            <i class="fas fa-camera"></i>
-                        </button>
-                        <input type="file" id="avatarInput" name="avatar"
-                               accept="image/*" style="display:none;">
-                    </div>
-                    <div class="profile-name-email">
-                        <h2>{{ $user->first_name }} {{ $user->last_name }}</h2>
-                        <p>{{ $user->email }}</p>
-                    </div>
-                </div>
 
                 <div class="account-form-grid">
                     <div class="account-form-group">
@@ -376,26 +421,76 @@
         </section>
     </div>
 
+    {{-- Hidden logout form --}}
     <form id="logoutForm" method="POST" action="{{ route('logout') }}">
         @csrf
     </form>
+
+    {{-- Global confirmation modal (same as other account pages) --}}
+    <div id="confirmOverlay" class="confirm-overlay">
+        <div class="confirm-box">
+            <div id="confirmMessage" class="confirm-message">
+                <!-- message goes here -->
+            </div>
+            <div class="confirm-actions">
+                <button type="button"
+                        class="confirm-btn-cancel"
+                        onclick="closeConfirmModal()">
+                    Cancel
+                </button>
+                <button type="button"
+                        class="confirm-btn-ok"
+                        id="confirmOkBtn">
+                    Yes, continue
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const logoutLink = document.getElementById('logoutLink');
-        const logoutForm = document.getElementById('logoutForm');
+        const logoutLink  = document.getElementById('logoutLink');
+        const logoutForm  = document.getElementById('logoutForm');
 
+        // Logout with confirmation modal
         if (logoutLink && logoutForm) {
-            logoutLink.addEventListener('click', function (e) {
-                e.preventDefault();
-                if (confirm('Are you sure you want to logout?')) {
+            logoutLink.addEventListener('click', function () {
+                openConfirmModal('Are you sure you want to logout?', function () {
                     logoutForm.submit();
-                }
+                });
             });
         }
     });
+
+    // ===== Confirmation Modal Logic (reused) =====
+    let confirmCallback = null;
+
+    function openConfirmModal(message, callback) {
+        const overlay  = document.getElementById('confirmOverlay');
+        const msgEl    = document.getElementById('confirmMessage');
+        const okButton = document.getElementById('confirmOkBtn');
+
+        if (!overlay || !msgEl || !okButton) return;
+
+        msgEl.textContent = message || 'Are you sure you want to continue?';
+        confirmCallback = typeof callback === 'function' ? callback : null;
+
+        overlay.style.display = 'flex';
+
+        okButton.onclick = function () {
+            overlay.style.display = 'none';
+            if (confirmCallback) confirmCallback();
+        };
+    }
+
+    function closeConfirmModal() {
+        const overlay = document.getElementById('confirmOverlay');
+        if (overlay) overlay.style.display = 'none';
+        confirmCallback = null;
+    }
 </script>
-@endsection
+@endpush

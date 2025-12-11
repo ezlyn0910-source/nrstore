@@ -16,6 +16,8 @@
         min-height: 70vh;
         background: #ffffff;
         font-family: 'Nunito', sans-serif;
+        padding: 0 0 60px;
+        box-sizing: border-box;
     }
 
     .account-hero {
@@ -63,6 +65,7 @@
         border-radius: 8px;
         border: 1px solid var(--border-light);
         padding: 6px;
+        margin-top: 20px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.03);
         height: fit-content;
     }
@@ -88,8 +91,8 @@
     }
 
     .account-nav-item.active {
-        background: var(--accent-gold);
-        color: #111827;
+        background: var(--primary-green);
+        color: #ffffff;
     }
 
     .account-nav-item.logout {
@@ -102,6 +105,7 @@
         border-radius: 8px;
         border: 1px solid var(--border-light);
         padding: 24px 32px 32px;
+        margin: 20px 0 40px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
 
@@ -110,60 +114,6 @@
         font-weight: 700;
         margin-bottom: 20px;
         color: var(--text-main);
-    }
-
-    /* Personal info layout */
-    .profile-header {
-        display: flex;
-        align-items: center;
-        gap: 24px;
-        margin-bottom: 24px;
-    }
-
-    .profile-avatar-wrapper {
-        position: relative;
-        width: 96px;
-        height: 96px;
-        border-radius: 50%;
-        overflow: hidden;
-        border: 3px solid var(--accent-gold);
-        flex-shrink: 0;
-    }
-
-    .profile-avatar-wrapper img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .avatar-upload-btn {
-        position: absolute;
-        right: 0;
-        bottom: 0;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        border: none;
-        background: var(--accent-brown);
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 0.8rem;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-    }
-
-    .profile-name-email h2 {
-        margin: 0 0 4px;
-        font-size: 1.2rem;
-        color: var(--text-main);
-    }
-
-    .profile-name-email p {
-        margin: 0;
-        color: var(--text-muted);
-        font-size: 0.9rem;
     }
 
     /* Form */
@@ -216,7 +166,7 @@
     }
 
     .btn-account-primary {
-        background: var(--accent-brown);
+        background: var(--primary-green);
         color: #fff;
         border-radius: 6px;
         border: none;
@@ -232,11 +182,7 @@
         transform: translateY(-1px);
     }
 
-    /* Logout hidden form */
-    #logoutForm {
-        display: none;
-    }
-
+    /* Password fields */
     .password-row {
         position: relative;
     }
@@ -262,6 +208,69 @@
         color:var(--primary-green);
         text-decoration:none;
         margin-left:auto;
+    }
+
+    /* ===== Confirmation Modal (same style as address page) ===== */
+    .confirm-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .confirm-box {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 20px 24px;
+        max-width: 360px;
+        width: 90%;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
+        text-align: left;
+        font-family: 'Nunito', sans-serif;
+    }
+
+    .confirm-message {
+        font-size: 1rem;
+        color: var(--text-muted);
+        margin-bottom: 18px;
+    }
+
+    .confirm-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .confirm-btn-cancel {
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--border-light);
+        background: #ffffff;
+        color: var(--text-main);
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+
+    .confirm-btn-ok {
+        padding: 8px 16px;
+        border-radius: 999px;
+        border: none;
+        background: var(--primary-green);
+        color: #ffffff;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .confirm-btn-ok:hover {
+        background: #223627;
+    }
+
+    /* Logout hidden form */
+    #logoutForm {
+        display: none;
     }
 
     /* Responsive */
@@ -297,6 +306,7 @@
     </div>
 
     <div class="account-wrapper">
+        {{-- Sidebar --}}
         <aside class="account-sidebar">
             <a href="{{ route('profile.index') }}" class="account-nav-item">
                 Personal Information
@@ -313,11 +323,16 @@
             <a href="{{ route('profile.password.edit') }}" class="account-nav-item active">
                 Change Password
             </a>
-            <button id="logoutLink" class="account-nav-item logout">
+
+            {{-- Logout button using same confirmation modal style --}}
+            <button type="button"
+                    id="logoutLink"
+                    class="account-nav-item logout">
                 Logout
             </button>
         </aside>
 
+        {{-- Content --}}
         <section class="account-content">
             <h2 class="account-section-title">Change Password</h2>
 
@@ -327,7 +342,7 @@
 
                 <div class="account-form-grid" style="grid-template-columns:1fr;">
                     <div class="account-form-group password-row">
-                        <div style="display:flex; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:8px;">
                             <label>Password <span class="required">*</span></label>
                             <a href="{{ route('password.request') }}" class="forgot-link">Forgot Password?</a>
                         </div>
@@ -372,27 +387,50 @@
         </section>
     </div>
 
+    {{-- Hidden logout form --}}
     <form id="logoutForm" method="POST" action="{{ route('logout') }}">
         @csrf
     </form>
+
+    {{-- Global confirmation modal (same as address page) --}}
+    <div id="confirmOverlay" class="confirm-overlay">
+        <div class="confirm-box">
+            <div id="confirmMessage" class="confirm-message">
+                <!-- message goes here -->
+            </div>
+            <div class="confirm-actions">
+                <button type="button"
+                        class="confirm-btn-cancel"
+                        onclick="closeConfirmModal()">
+                    Cancel
+                </button>
+                <button type="button"
+                        class="confirm-btn-ok"
+                        id="confirmOkBtn">
+                    Yes, continue
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const logoutLink = document.getElementById('logoutLink');
         const logoutForm = document.getElementById('logoutForm');
 
+        // Logout with confirmation modal (same behaviour as address page)
         if (logoutLink && logoutForm) {
-            logoutLink.addEventListener('click', function (e) {
-                e.preventDefault();
-                if (confirm('Are you sure you want to logout?')) {
+            logoutLink.addEventListener('click', function () {
+                openConfirmModal('Are you sure you want to logout?', function () {
                     logoutForm.submit();
-                }
+                });
             });
         }
 
+        // Show / hide passwords
         document.querySelectorAll('.password-toggle').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 const targetId = this.dataset.target;
@@ -409,5 +447,32 @@
             });
         });
     });
+
+    // ===== Confirmation Modal Logic (same as editaddress) =====
+    let confirmCallback = null;
+
+    function openConfirmModal(message, callback) {
+        const overlay  = document.getElementById('confirmOverlay');
+        const msgEl    = document.getElementById('confirmMessage');
+        const okButton = document.getElementById('confirmOkBtn');
+
+        if (!overlay || !msgEl || !okButton) return;
+
+        msgEl.textContent = message || 'Are you sure you want to continue?';
+        confirmCallback = typeof callback === 'function' ? callback : null;
+
+        overlay.style.display = 'flex';
+
+        okButton.onclick = function () {
+            overlay.style.display = 'none';
+            if (confirmCallback) confirmCallback();
+        };
+    }
+
+    function closeConfirmModal() {
+        const overlay = document.getElementById('confirmOverlay');
+        if (overlay) overlay.style.display = 'none';
+        confirmCallback = null;
+    }
 </script>
-@endsection
+@endpush

@@ -16,6 +16,8 @@
         min-height: 70vh;
         background: #ffffff;
         font-family: 'Nunito', sans-serif;
+        padding: 0 0 60px;
+        box-sizing: border-box;
     }
 
     .account-hero {
@@ -63,6 +65,7 @@
         border-radius: 8px;
         border: 1px solid var(--border-light);
         padding: 6px;
+        margin-top: 20px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.03);
         height: fit-content;
     }
@@ -88,8 +91,8 @@
     }
 
     .account-nav-item.active {
-        background: var(--accent-gold);
-        color: #111827;
+        background: var(--primary-green);
+        color: #ffffff;
     }
 
     .account-nav-item.logout {
@@ -231,11 +234,17 @@
                 Payment Method
             </a>
             <a href="{{ route('profile.password.edit') }}" class="account-nav-item">
-                Password Manager
+                Change Password
             </a>
-            <button id="logoutLink" class="account-nav-item logout">
-                Logout
-            </button>
+            <form method="POST"
+                action="{{ route('logout') }}"
+                onsubmit="return confirm('Are you sure you want to logout?');"
+                style="margin:0;">
+                @csrf
+                <button type="submit" class="account-nav-item logout" style="width:100%; text-align:left;">
+                    Logout
+                </button>
+            </form>
         </aside>
 
         <section class="account-content">
@@ -293,26 +302,119 @@
         </section>
     </div>
 
-    <form id="logoutForm" method="POST" action="{{ route('logout') }}">
-        @csrf
-    </form>
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" style="
+        position: fixed; 
+        inset: 0; 
+        background: rgba(0,0,0,0.3);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    ">
+        <div style="
+            background: #ffffff;
+            width: 380px;
+            border-radius: 10px;
+            padding: 24px 28px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border: 1px solid #dce9df;
+            font-family: 'Nunito', sans-serif;
+        ">
+            <h3 id="confirmTitle" style="
+                font-size: 1.2rem;
+                font-weight: 700;
+                color: #2d4a35;
+                margin-bottom: 10px;
+            ">Are you sure?</h3>
+
+            <p id="confirmMessage" style="
+                font-size: 0.95rem;
+                color: #6b7280;
+                margin-bottom: 22px;
+                line-height: 1.5;
+            ">
+                Do you want to proceed with this action?
+            </p>
+
+            <div style="display:flex; justify-content:flex-end; gap:12px;">
+                <button id="confirmCancelBtn" style="
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    border: 1px solid #dce9df;
+                    background: #ffffff;
+                    color: #1f2933;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                ">Cancel</button>
+
+                <button id="confirmOkBtn" style="
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    border: none;
+                    background: #2d4a35;
+                    color: #ffffff;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                ">Confirm</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const logoutLink = document.getElementById('logoutLink');
-        const logoutForm = document.getElementById('logoutForm');
+        // Find the logout form in the sidebar WITHOUT changing the HTML
+        const logoutForm = document.querySelector('.account-sidebar form[action$="/logout"]');
+        const logoutButton = logoutForm ? logoutForm.querySelector('button[type="submit"]') : null;
 
-        if (logoutLink && logoutForm) {
-            logoutLink.addEventListener('click', function (e) {
+        if (logoutForm && logoutButton) {
+            logoutButton.addEventListener('click', function (e) {
                 e.preventDefault();
-                if (confirm('Are you sure you want to logout?')) {
-                    logoutForm.submit();
-                }
+
+                showConfirmation({
+                    title: 'Logout',
+                    message: 'Are you sure you want to logout?'
+                }).then((confirmed) => {
+                    if (confirmed) {
+                        // Programmatic submit bypasses the inline onsubmit confirm()
+                        logoutForm.submit();
+                    }
+                });
             });
         }
     });
+
+    function showConfirmation(options) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('confirmModal');
+            const title = document.getElementById('confirmTitle');
+            const message = document.getElementById('confirmMessage');
+            const btnCancel = document.getElementById('confirmCancelBtn');
+            const btnOk = document.getElementById('confirmOkBtn');
+
+            title.textContent = options.title || "Are you sure?";
+            message.textContent = options.message || "Do you want to proceed?";
+
+            modal.style.display = "flex";
+
+            // CANCEL
+            btnCancel.onclick = () => {
+                modal.style.display = "none";
+                resolve(false);
+            };
+
+            // OK
+            btnOk.onclick = () => {
+                modal.style.display = "none";
+                resolve(true);
+            };
+        });
+    }
 </script>
-@endsection
+@endpush
