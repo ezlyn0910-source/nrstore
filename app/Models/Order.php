@@ -109,6 +109,14 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    /**
+     * Alias for orderItems to support $order->items or with('items')
+     */
+    public function items(): HasMany
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
     public function statusHistory(): HasMany
     {
         return $this->hasMany(OrderStatusHistory::class);

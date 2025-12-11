@@ -147,23 +147,127 @@ Route::prefix('api')->name('api.')->group(function () {
 
 // ==================== AUTHENTICATED ROUTES (Require login) ====================
 Route::middleware(['auth'])->group(function () {
-    
-    // ========== USER PROFILE & ACCOUNT ROUTES ==========
-    
+
     /**
-     * Profile Routes - These should NOT require email verification
-     * Users should be able to update profile even before verifying email
+     * Checkout Routes (Authentication Required)
      */
-    Route::prefix('profile')->name('profile.')->controller(ProfileController::class)->group(function () {
-        Route::get('/', 'edit')->name('edit');
-        Route::put('/', 'update')->name('update');
-        Route::put('/password', 'updatePassword')->name('password.update');
-        Route::get('/addresses', 'addresses')->name('addresses');
-        Route::post('/addresses', 'storeAddress')->name('addresses.store');
-        Route::put('/addresses/{address}', 'updateAddress')->name('addresses.update');
-        Route::delete('/addresses/{address}', 'deleteAddress')->name('addresses.delete');
+    Route::prefix('checkout')->name('checkout.')->group(function () {
+        Route::get('/', [CheckoutController::class, 'index'])->name('index');
+        Route::get('/review', [CheckoutController::class, 'review'])->name('review');
+
+        // Checkout actions
+        Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('place-order');
+        Route::post('/validate', [CheckoutController::class, 'validateCheckout'])->name('validate');
+        Route::post('/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('calculate-shipping');
+        Route::post('/apply-promo', [CheckoutController::class, 'applyPromo'])->name('apply-promo');
+        Route::post('/remove-promo', [CheckoutController::class, 'removePromoCode'])->name('remove-promo');
+
+        // Address routes (checkout-specific)
+        Route::post('/address/store', [CheckoutController::class, 'storeAddress'])->name('address.store');
+        Route::get('/addresses', [CheckoutController::class, 'getAddresses'])->name('addresses.index');
+        Route::put('/address/{address}', [CheckoutController::class, 'updateAddress'])->name('address.update');
+        Route::delete('/address/{address}', [CheckoutController::class, 'deleteAddress'])->name('address.delete');
+
+        // Checkout data
+        Route::get('/shipping-methods', [CheckoutController::class, 'getShippingMethods'])->name('shipping-methods');
+        Route::get('/payment-methods', [CheckoutController::class, 'getPaymentMethods'])->name('payment-methods');
+        Route::get('/verify-stock', [CheckoutController::class, 'verifyStock'])->name('verify-stock');
+
+        // Checkout results
+        Route::get('/success/{order}', [CheckoutController::class, 'success'])->name('success');
+        Route::get('/failed', [CheckoutController::class, 'failed'])->name('failed');
     });
-    
+
+    /**
+     * Payment Processing Routes
+     *
+     * These handle:
+     * - Stripe card payments
+     * - Toyyibpay FPX
+     * - Billplz FPX
+     */
+    Route::prefix('payment')
+        ->name('payment.')
+        ->controller(PaymentController::class)
+        ->group(function () {
+            // Called from the "Place Order" button on checkout page
+            Route::post('/process', 'process')->name('process');
+
+            /**
+             * STRIPE (Card)
+             * - After PaymentController@process creates Stripe Checkout Session,
+             *   you redirect user to Stripe's hosted page.
+             * - Stripe redirects back to these URLs after payment.
+             */
+            Route::get('/stripe/success', 'stripeSuccess')->name('stripe.success');
+            Route::get('/stripe/cancel', 'stripeCancel')->name('stripe.cancel');
+            Route::post('/stripe/webhook', 'stripeWebhook')->name('stripe.webhook');
+
+            /**
+             * TOYYIBPAY (FPX)
+             * - Callback: server-to-server notification from Toyyibpay
+             * - Return: user browser redirect after payment
+             */
+            Route::post('/toyyibpay/callback', 'toyyibpayCallback')->name('toyyibpay.callback');
+            Route::get('/toyyibpay/return', 'toyyibpayReturn')->name('toyyibpay.return');
+
+            /**
+             * BILLPLZ (FPX)
+             * - Callback: server-to-server notification from Billplz
+             * - Return: user browser redirect after payment
+             */
+            Route::post('/billplz/callback', 'billplzCallback')->name('billplz.callback');
+            Route::get('/billplz/return', 'billplzReturn')->name('billplz.return');
+        });
+
+    /**
+     * Order Routes (Customer side)
+     */
+    Route::prefix('orders')->name('orders.')->controller(OrderController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{order}', 'show')->name('show');
+        Route::get('/{order}/details', 'details')->name('details');
+        Route::post('/{order}/cancel', 'cancel')->name('cancel');
+
+        // If not used anywhere, you can remove this later
+        Route::post('/process-checkout', 'processCheckout')->name('process-checkout');
+    });
+
+    /**
+     * Profile Routes (My Account area)
+     */
+    Route::prefix('profile')
+        ->name('profile.')
+        ->controller(ProfileController::class)
+        ->group(function () {
+            // Shell: banner + left menu (index with empty right panel)
+            Route::get('/', 'index')->name('index');
+
+            // Personal Information (editpersonal.blade.php)
+            Route::get('/personal', 'editPersonal')->name('personal.edit');
+            Route::put('/personal', 'updatePersonal')->name('personal.update');
+
+            // My Orders in account page – PAST ORDERS ONLY (profile/orders.blade.php)
+            Route::get('/orders', 'orders')->name('orders.index');
+
+            // Manage Address (editaddress.blade.php)
+            Route::get('/addresses', 'addresses')->name('addresses.index');
+            Route::post('/addresses', 'storeAddress')->name('addresses.store');
+            Route::put('/addresses/{address}', 'updateAddress')->name('addresses.update');
+            Route::delete('/addresses/{address}', 'deleteAddress')->name('addresses.delete');
+
+            // Payment Method (editpayment.blade.php)
+            Route::get('/payment-methods', 'paymentMethods')->name('payment.index');
+            Route::post('/payment-methods/cards', 'storeCard')->name('payment.cards.store');
+            Route::delete('/payment-methods/cards/{card}', 'destroyCard')->name('payment.cards.destroy');
+            Route::post('/payment-methods/wallets/{wallet}/toggle', 'toggleWallet')
+                ->name('payment.wallets.toggle');
+
+            // Password Manager (changepassword.blade.php)
+            Route::get('/password', 'editPassword')->name('password.edit');
+            Route::put('/password', 'updatePassword')->name('password.update');
+        });
+
     /**
      * Favorite Routes
      */
