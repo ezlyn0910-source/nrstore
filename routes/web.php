@@ -179,48 +179,6 @@ Route::middleware(['auth'])->group(function () {
     });
 
     /**
-     * Payment Processing Routes
-     *
-     * These handle:
-     * - Stripe card payments
-     * - Toyyibpay FPX
-     * - Billplz FPX
-     */
-    Route::prefix('payment')
-        ->name('payment.')
-        ->controller(PaymentController::class)
-        ->group(function () {
-            // Called from the "Place Order" button on checkout page
-            Route::post('/process', 'process')->name('process');
-
-            /**
-             * STRIPE (Card)
-             * - After PaymentController@process creates Stripe Checkout Session,
-             *   you redirect user to Stripe's hosted page.
-             * - Stripe redirects back to these URLs after payment.
-             */
-            Route::get('/stripe/success', 'stripeSuccess')->name('stripe.success');
-            Route::get('/stripe/cancel', 'stripeCancel')->name('stripe.cancel');
-            Route::post('/stripe/webhook', 'stripeWebhook')->name('stripe.webhook');
-
-            /**
-             * TOYYIBPAY (FPX)
-             * - Callback: server-to-server notification from Toyyibpay
-             * - Return: user browser redirect after payment
-             */
-            Route::post('/toyyibpay/callback', 'toyyibpayCallback')->name('toyyibpay.callback');
-            Route::get('/toyyibpay/return', 'toyyibpayReturn')->name('toyyibpay.return');
-
-            /**
-             * BILLPLZ (FPX)
-             * - Callback: server-to-server notification from Billplz
-             * - Return: user browser redirect after payment
-             */
-            Route::post('/billplz/callback', 'billplzCallback')->name('billplz.callback');
-            Route::get('/billplz/return', 'billplzReturn')->name('billplz.return');
-        });
-
-    /**
      * Order Routes (Customer side)
      */
     Route::prefix('orders')->name('orders.')->controller(OrderController::class)->group(function () {
@@ -240,15 +198,11 @@ Route::middleware(['auth'])->group(function () {
         ->name('profile.')
         ->controller(ProfileController::class)
         ->group(function () {
-            // Shell: banner + left menu (index with empty right panel)
             Route::get('/', 'index')->name('index');
 
             // Personal Information (editpersonal.blade.php)
             Route::get('/personal', 'editPersonal')->name('personal.edit');
             Route::put('/personal', 'updatePersonal')->name('personal.update');
-
-            // My Orders in account page – PAST ORDERS ONLY (profile/orders.blade.php)
-            Route::get('/orders', 'orders')->name('orders.index');
 
             // Manage Address (editaddress.blade.php)
             Route::get('/addresses', 'addresses')->name('addresses.index');
@@ -313,7 +267,7 @@ Route::middleware(['auth'])->group(function () {
         
         // User Profile Orders - MOVE TO VERIFIED GROUP
         Route::prefix('profile')->name('profile.')->controller(ProfileController::class)->group(function () {
-            Route::get('/orders', 'orders')->name('orders');
+            Route::get('/orders', 'orders')->name('orders.index'); // ✅ change here
         });
         
         /**
@@ -363,19 +317,10 @@ Route::middleware(['auth'])->group(function () {
             ->group(function () {
                 // Called from the "Place Order" button on checkout page
                 Route::post('/process', 'process')->name('process');
-                
-                // STRIPE (Card)
-                Route::get('/stripe/success', 'stripeSuccess')->name('stripe.success');
-                Route::get('/stripe/cancel', 'stripeCancel')->name('stripe.cancel');
-                Route::post('/stripe/webhook', 'stripeWebhook')->name('stripe.webhook');
-                
-                // TOYYIBPAY (FPX)
-                Route::post('/toyyibpay/callback', 'toyyibpayCallback')->name('toyyibpay.callback');
-                Route::get('/toyyibpay/return', 'toyyibpayReturn')->name('toyyibpay.return');
-                
-                // BILLPLZ (FPX)
-                Route::post('/billplz/callback', 'billplzCallback')->name('billplz.callback');
-                Route::get('/billplz/return', 'billplzReturn')->name('billplz.return');
+
+                // STRIPE (Card) – redirects from Stripe after customer pays
+                Route::get('/stripe/success/{order}', 'stripeSuccess')->name('stripe.success');
+                Route::get('/stripe/cancel/{order}', 'stripeCancel')->name('stripe.cancel');
             });
         
         /**
@@ -491,6 +436,18 @@ Route::middleware(['auth'])
                 Route::post('/bulk-action', 'bulkAction')->name('bulk-action');
             });
     });
+
+// ==================== PAYMENT CALLBACK ROUTES (NO AUTH) ====================
+    Route::prefix('payment')
+        ->name('payment.')
+        ->controller(PaymentController::class)
+        ->group(function () {
+            // Toyyibpay server-to-server callback
+            Route::post('/toyyibpay/callback', 'toyyibpayCallback')->name('toyyibpay.callback');
+
+            // Optional generic webhook (Stripe, etc.)
+            Route::post('/webhook/{gateway}', 'webhook')->name('webhook');
+        });
 
 // ==================== FALLBACK ROUTE ====================
 Route::fallback(function () {
