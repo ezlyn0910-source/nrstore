@@ -9,21 +9,25 @@
                     <h4 class="mb-0">Verify Your Email Address</h4>
                 </div>
                 <div class="card-body">
-                    @if (session('resent'))
+
+                    {{-- Success alert --}}
+                    @if (session('message'))
                         <div class="alert alert-success">
-                            A fresh verification link has been sent to your email address.
+                            {{ session('message') }}
                         </div>
                     @endif
 
                     <p>Before proceeding, please check your email for a verification link.</p>
                     <p>If you did not receive the email:</p>
-                    
-                    <form method="POST" action="{{ route('verification.resend') }}">
+
+                    {{-- UPDATED: correct resend verification route --}}
+                    <form method="POST" action="{{ route('verification.send') }}">
                         @csrf
                         <button type="submit" class="btn btn-primary">
                             Click here to request another verification email
                         </button>
                     </form>
+
                 </div>
             </div>
         </div>

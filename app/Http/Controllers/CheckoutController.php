@@ -56,7 +56,23 @@ class CheckoutController extends Controller
         ->orderBy('created_at', 'desc')
         ->get();
 
-        // 5. Return View
+        // 5. Define banks for online banking
+        $banks = [
+            ['img' => 'maybank.png', 'name' => 'Maybank'],
+            ['img' => 'cimb.png', 'name' => 'CIMB Bank'],
+            ['img' => 'public-bank.png', 'name' => 'Public Bank'],
+            ['img' => 'rhb.png', 'name' => 'RHB Bank'],
+            ['img' => 'hong-leong.png', 'name' => 'Hong Leong Bank'],
+            ['img' => 'bank-islam.png', 'name' => 'Bank Islam'],
+            ['img' => 'ambank.png', 'name' => 'AmBank'],
+            ['img' => 'bank-rakyat.png', 'name' => 'Bank Rakyat'],
+            ['img' => 'hsbc.png', 'name' => 'HSBC'],
+            ['img' => 'ocbc.png', 'name' => 'OCBC'],
+            ['img' => 'uob.png', 'name' => 'UOB'],
+            ['img' => 'standard-chartered.png', 'name' => 'Standard Chartered'],
+        ];
+
+        // 6. Return View with all variables
         return view('checkout.index', compact(
             'cartItems',
             'subtotal',
@@ -64,7 +80,8 @@ class CheckoutController extends Controller
             'tax',
             'discount',
             'addresses',
-            'buyNowOrder'
+            'buyNowOrder',
+            'banks' // Add banks to the compact function
         ));
     }
 
@@ -174,7 +191,8 @@ class CheckoutController extends Controller
 
             // Same validation rules as storeAddress
             $request->validate([
-                'full_name'       => 'required|string|max:255',
+                'first_name'       => 'required|string|max:100',
+                'last_name'        => 'required|string|max:100',
                 'phone'           => 'required|string|max:20',
                 'address_line_1'  => 'required|string|max:255',
                 'address_line_2'  => 'nullable|string|max:255',
@@ -199,7 +217,8 @@ class CheckoutController extends Controller
             }
 
             // Update basic fields
-            $address->full_name       = $request->full_name;
+            $address->first_name      = $request->first_name;
+            $address->last_name       = $request->last_name;
             $address->phone           = $request->phone;
             $address->address_line_1  = $request->address_line_1;
             $address->address_line_2  = $request->address_line_2;
@@ -266,7 +285,8 @@ class CheckoutController extends Controller
             ]);
             
             $request->validate([
-                'full_name' => 'required|string|max:255',
+                'first_name' => 'required|string|max:100',
+                'last_name' => 'required|string|max:100',
                 'phone' => 'required|string|max:20',
                 'address_line_1' => 'required|string|max:255',
                 'address_line_2' => 'nullable|string|max:255',
@@ -294,7 +314,8 @@ class CheckoutController extends Controller
             $address = Address::create([
                 'user_id' => $user->id,
                 'type' => 'shipping',
-                'full_name' => $request->full_name,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
                 'phone' => $request->phone,
                 'address_line_1' => $request->address_line_1,
                 'address_line_2' => $request->address_line_2,

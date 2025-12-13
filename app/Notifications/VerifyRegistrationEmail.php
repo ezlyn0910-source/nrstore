@@ -39,9 +39,12 @@ class VerifyRegistrationEmail extends Notification
         // Use route() instead of url()
         $verificationUrl = route('register.verify', ['token' => $this->tempUser->token]);
 
+        $firstName = $this->tempUser->first_name;
+        $fullName = $this->tempUser->first_name . ' ' . $this->tempUser->last_name;
+
         return (new MailMessage)
             ->subject('Verify Your Email - NR Store')
-            ->greeting('Hello ' . $this->tempUser->name . '!')
+            ->greeting('Hello ' . $firstName . '!')
             ->line('Thank you for registering with NR Store.')
             ->line('Please click the button below to verify your email address and complete your registration.')
             ->action('Verify Email & Create Account', $verificationUrl)

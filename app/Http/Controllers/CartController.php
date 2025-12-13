@@ -490,75 +490,62 @@ class CartController extends Controller
     {
         try {
             $cart = $this->getCart();
-            
+
             if (!$cart) {
                 return response()->json([
-                    'valid' => false,
+                    'valid'           => false,
                     'outOfStockItems' => 0,
-                    'message' => 'Cart not found'
+                    'details'         => [],
+                    'message'         => 'Cart not found',
                 ]);
             }
 
-            $cartItems = $cart->items()->with(['product.images', 'product.variations'])->get();
-            $outOfStockItems = 0;
+            // Use the scopes/accessors defined in CartItem
+            $cartItems = $cart->items()
+                ->withStockInfo()
+                ->get();
+
+            $outOfStockItems   = 0;
             $outOfStockDetails = [];
 
             foreach ($cartItems as $item) {
-                $availableStock = 0;
-                $productName = 'Unknown Product';
-                
-                // Check if product exists
-                if ($item->product) {
-                    $productName = $item->product->name;
-                    
-                    // Check if product has variations
-                    if ($item->product->has_variations && $item->variation_id) {
-                        // Get variation stock
-                        $variation = $item->product->variations->where('id', $item->variation_id)->first();
-                        if ($variation) {
-                            $availableStock = $variation->stock ?? 0;
-                        }
-                    } else {
-                        // Get main product stock
-                        $availableStock = $item->product->stock_quantity ?? 0;
-                    }
-                    
-                    // Check stock availability
-                    if ($availableStock < $item->quantity) {
-                        $outOfStockItems++;
-                        $outOfStockDetails[] = [
-                            'product_name' => $productName,
-                            'requested' => $item->quantity,
-                            'available' => $availableStock,
-                            'item_id' => $item->id
-                        ];
-                    }
-                } else {
-                    // Product might be deleted or not found
+                $availableStock = $item->available_stock ?? 0;
+                $requested      = (int) $item->quantity;
+
+                $productName = $item->product->name ?? 'Unknown Product';
+
+                if ($availableStock < $requested) {
                     $outOfStockItems++;
+
                     $outOfStockDetails[] = [
-                        'product_name' => 'Unknown Product',
-                        'requested' => $item->quantity,
-                        'available' => 0,
-                        'item_id' => $item->id
+                        'product_name' => $productName,
+                        'requested'    => $requested,
+                        'available'    => $availableStock,
+                        'item_id'      => $item->id,
                     ];
                 }
             }
 
             return response()->json([
-                'valid' => $outOfStockItems === 0,
+                'valid'           => $outOfStockItems === 0,
                 'outOfStockItems' => $outOfStockItems,
-                'details' => $outOfStockDetails,
-                'message' => $outOfStockItems === 0 ? 'All items are in stock' : 'Some items are out of stock'
+                'details'         => $outOfStockDetails,
+                'message'         => $outOfStockItems === 0
+                    ? 'All items are in stock'
+                    : 'Some items are out of stock',
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('Stock validation error: ' . $e->getMessage());
-            return response()->json([
-                'valid' => false,
-                'outOfStockItems' => 0,
-                'message' => 'Error validating stock'
+        } catch (\Throwable $e) {
+            \Log::error('Stock validation error: '.$e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
             ]);
+
+            return response()->json([
+                'valid'           => false,
+                'outOfStockItems' => 0,
+                'details'         => [],
+                'message'         => 'Error checking stock: '.$e->getMessage(),
+            ], 500);
         }
     }
 

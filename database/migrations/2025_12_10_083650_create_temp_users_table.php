@@ -6,11 +6,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         Schema::create('temp_users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('first_name'); // Add this
+            $table->string('last_name');  // Add this
             $table->string('email')->unique();
             $table->string('phone');
             $table->string('password');

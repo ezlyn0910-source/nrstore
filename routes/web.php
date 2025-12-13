@@ -33,9 +33,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+
 // ==================== AUTHENTICATION ROUTES ====================
 // Disable Laravel's default email verification since we have custom 2-step verification
 Auth::routes(['register' => true, 'verify' => false]);
+
 
 // ==================== CUSTOM EMAIL VERIFICATION ROUTES ====================
 // Custom 2-step registration verification routes
@@ -44,6 +46,8 @@ Route::controller(\App\Http\Controllers\Auth\RegisterController::class)->group(f
     Route::post('/register/resend-verification', 'resendVerification')->name('register.resend-verification');
     Route::get('/register/success', 'showSuccessPage')->name('register.success');
 });
+
+
 
 // ==================== PUBLIC ROUTES (No login required) ====================
 
@@ -145,12 +149,11 @@ Route::prefix('api')->name('api.')->group(function () {
     Route::get('/cities/{state}', [CheckoutController::class, 'getCities'])->name('cities');
 });
 
+
 // ==================== AUTHENTICATED ROUTES (Require login) ====================
 Route::middleware(['auth'])->group(function () {
 
-    /**
-     * Checkout Routes (Authentication Required)
-     */
+    /*Checkout Routes (Authentication Required)*/
     Route::prefix('checkout')->name('checkout.')->group(function () {
         Route::get('/', [CheckoutController::class, 'index'])->name('index');
         Route::get('/review', [CheckoutController::class, 'review'])->name('review');
@@ -178,9 +181,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/failed', [CheckoutController::class, 'failed'])->name('failed');
     });
 
-    /**
-     * Order Routes (Customer side)
-     */
+    /*Order Routes (Customer side)*/
     Route::prefix('orders')->name('orders.')->controller(OrderController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/{order}', 'show')->name('show');
@@ -191,14 +192,22 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/process-checkout', 'processCheckout')->name('process-checkout');
     });
 
-    /**
-     * Profile Routes (My Account area)
-     */
+    /*Bid Routes – actions that require login*/
+    Route::controller(BidController::class)
+        ->prefix('bid')
+        ->name('bid.')
+        ->group(function () {
+            Route::post('/{id}/place', 'placeBid')->name('place');
+        });
+
+    /*Profile Routes (My Account area)*/
     Route::prefix('profile')
         ->name('profile.')
         ->controller(ProfileController::class)
         ->group(function () {
             Route::get('/', 'index')->name('index');
+
+            Route::get('/orders', 'orders')->name('orders.index');
 
             // Personal Information (editpersonal.blade.php)
             Route::get('/personal', 'editPersonal')->name('personal.edit');
@@ -222,18 +231,14 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/password', 'updatePassword')->name('password.update');
         });
 
-    /**
-     * Favorite Routes
-     */
+    /*Favorite Routes*/
     Route::prefix('favorites')->name('favorites.')->controller(FavoriteController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/add', 'add')->name('add');
         Route::post('/remove', 'remove')->name('remove');
     });
     
-    /**
-     * Wishlist Routes
-     */
+    /*Wishlist Routes*/
     Route::prefix('wishlist')->name('wishlist.')->controller(WishlistController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/add/{product}', 'add')->name('add');
@@ -241,99 +246,33 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/clear', 'clear')->name('clear');
     });
     
-    /**
-     * Review Routes
-     */
+    /*Review Routes*/
     Route::prefix('reviews')->name('reviews.')->controller(ReviewController::class)->group(function () {
         Route::get('/{product}/create', 'create')->name('create');
         Route::get('/{review}/edit', 'edit')->name('edit');
-    });
-    
-    // ========== VERIFIED EMAIL ONLY ROUTES ==========
-    // These routes require both login AND verified email
-    
-    Route::middleware(['verified'])->group(function () {
-        
-        /**
-         * Order Routes (Customer side) - MOVE TO VERIFIED GROUP
-         */
-        Route::prefix('orders')->name('orders.')->controller(OrderController::class)->group(function () {
-            Route::get('/', 'index')->name('index');
-            Route::get('/{order}', 'show')->name('show');
-            Route::get('/{order}/details', 'details')->name('details');
-            Route::post('/{order}/cancel', 'cancel')->name('cancel');
-            Route::post('/process-checkout', 'processCheckout')->name('process-checkout');
-        });
-        
-        // User Profile Orders - MOVE TO VERIFIED GROUP
-        Route::prefix('profile')->name('profile.')->controller(ProfileController::class)->group(function () {
-            Route::get('/orders', 'orders')->name('orders.index'); // ✅ change here
-        });
-        
-        /**
-         * Review Submission Routes - MOVE TO VERIFIED GROUP
-         */
-        Route::prefix('reviews')->name('reviews.')->controller(ReviewController::class)->group(function () {
-            Route::post('/', 'store')->name('store');
-            Route::post('/{product}', 'storeProductReview')->name('store.product');
-            Route::put('/{review}', 'update')->name('update');
-            Route::delete('/{review}', 'destroy')->name('destroy');
-        });
-        
-        /**
-         * CHECKOUT ROUTES (Require verified email)
-         */
-        Route::prefix('checkout')->name('checkout.')->group(function () {
-            Route::get('/', [CheckoutController::class, 'index'])->name('index');
-            Route::get('/review', [CheckoutController::class, 'review'])->name('review');
-            Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('place-order');
-            Route::post('/validate', [CheckoutController::class, 'validateCheckout'])->name('validate');
-            Route::post('/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('calculate-shipping');
-            Route::post('/apply-promo', [CheckoutController::class, 'applyPromo'])->name('apply-promo');
-            Route::post('/remove-promo', [CheckoutController::class, 'removePromoCode'])->name('remove-promo');
-            
-            // Address routes (checkout-specific)
-            Route::post('/address/store', [CheckoutController::class, 'storeAddress'])->name('address.store');
-            Route::get('/addresses', [CheckoutController::class, 'getAddresses'])->name('addresses.index');
-            Route::put('/address/{address}', [CheckoutController::class, 'updateAddress'])->name('address.update');
-            Route::delete('/address/{address}', [CheckoutController::class, 'deleteAddress'])->name('address.delete');
-            
-            // Checkout data
-            Route::get('/shipping-methods', [CheckoutController::class, 'getShippingMethods'])->name('shipping-methods');
-            Route::get('/payment-methods', [CheckoutController::class, 'getPaymentMethods'])->name('payment-methods');
-            Route::get('/verify-stock', [CheckoutController::class, 'verifyStock'])->name('verify-stock');
-            
-            // Checkout results
-            Route::get('/success/{order}', [CheckoutController::class, 'success'])->name('success');
-            Route::get('/failed', [CheckoutController::class, 'failed'])->name('failed');
-        });
-        
-        /**
-         * PAYMENT PROCESSING ROUTES (Require verified email)
-         */
-        Route::prefix('payment')
-            ->name('payment.')
-            ->controller(PaymentController::class)
-            ->group(function () {
-                // Called from the "Place Order" button on checkout page
-                Route::post('/process', 'process')->name('process');
 
-                // STRIPE (Card) – redirects from Stripe after customer pays
-                Route::get('/stripe/success/{order}', 'stripeSuccess')->name('stripe.success');
-                Route::get('/stripe/cancel/{order}', 'stripeCancel')->name('stripe.cancel');
-            });
-        
-        /**
-         * BID ROUTES - Placing bids (Require verified email)
-         */
-        Route::controller(BidController::class)
-            ->prefix('bid')
-            ->name('bid.')
-            ->group(function () {
-                Route::post('/{id}/place', 'placeBid')->name('place');
-            });
+        Route::post('/', 'store')->name('store');
+        Route::post('/{product}', 'storeProductReview')->name('store.product');
+        Route::put('/{review}', 'update')->name('update');
+        Route::delete('/{review}', 'destroy')->name('destroy');
     });
+
+    /*PAYMENT PROCESSING ROUTES (Require login only)*/
+    Route::prefix('payment')
+        ->name('payment.')
+        ->controller(PaymentController::class)
+        ->group(function () {
+            // Called from the "Place Order" button on checkout page
+            Route::post('/process', 'process')->name('process');
+
+            // STRIPE (Card) – redirects from Stripe after customer pays
+            Route::get('/stripe/success/{order}', 'stripeSuccess')->name('stripe.success');
+            Route::get('/stripe/cancel/{order}', 'stripeCancel')->name('stripe.cancel');
+        });
+
 });
+
+
 
 // ==================== ADMIN ROUTES ====================
 Route::middleware(['auth'])
@@ -437,6 +376,7 @@ Route::middleware(['auth'])
             });
     });
 
+
 // ==================== PAYMENT CALLBACK ROUTES (NO AUTH) ====================
     Route::prefix('payment')
         ->name('payment.')
@@ -448,6 +388,7 @@ Route::middleware(['auth'])
             // Optional generic webhook (Stripe, etc.)
             Route::post('/webhook/{gateway}', 'webhook')->name('webhook');
         });
+
 
 // ==================== FALLBACK ROUTE ====================
 Route::fallback(function () {

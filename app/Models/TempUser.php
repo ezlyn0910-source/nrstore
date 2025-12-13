@@ -12,7 +12,8 @@ class TempUser extends Model
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',  
         'email',
         'phone',
         'password',
@@ -35,6 +36,8 @@ class TempUser extends Model
             $tempUser->expires_at = now()->addHours(24); // 24 hours to verify
         });
     }
+
+    protected $dates = ['expires_at'];
 
     public function isExpired()
     {

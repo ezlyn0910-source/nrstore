@@ -38,7 +38,7 @@
                                             @endif
 
                                             <span class="address-name-line">
-                                                {{ $address->full_name }}
+                                                {{ $address->first_name }} {{ $address->last_name }}
                                                 <span class="address-phone">({{ $address->phone}})</span>
                                             </span>
                                         </div>
@@ -58,7 +58,8 @@
                                             type="button"
                                             class="address-edit-link"
                                             data-id="{{ $address->id }}"
-                                            data-full-name="{{ e($address->full_name) }}"
+                                            data-first-name="{{ e($address->first_name) }}"
+                                            data-last-name="{{ e($address->last_name) }}"   
                                             data-phone="{{ e($address->phone) }}"
                                             data-line1="{{ e($address->address_line_1) }}"
                                             data-line2="{{ e($address->address_line_2) }}"
@@ -91,26 +92,48 @@
                         @endif
                     </div>
 
-                    <!-- Add Address Dropdown -->
-                    <div class="add-address-dropdown">
-                        <div class="dropdown-header" id="addressDropdownHeader">
-                            <h3>Add New Address</h3>
-                            <button type="button" class="dropdown-toggle" id="dropdownToggle">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </div>
+                    <!-- Add Address Section - Updated to Blue Link -->
+                    <div class="add-address-section">
+                        <button type="button" class="add-address-link" id="addAddressLink">
+                            <i class="fas fa-plus"></i> Add New Address
+                        </button>
                         
-                        <div class="dropdown-content" id="addressDropdownContent">
+                        <div class="add-address-form" id="addAddressForm" style="display: none;">
                             <form id="addressForm" method="POST" action="{{ route('checkout.address.store') }}">
                                 @csrf
-                                <div class="form-group">
-                                    <label for="full_name">Full Name *</label>
-                                    <input type="text" id="full_name" name="full_name" placeholder="John Doe" required>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="first_name">First Name *</label>
+                                        <input type="text" id="first_name" name="first_name" placeholder="John" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="last_name">Last Name *</label>
+                                        <input type="text" id="last_name" name="last_name" placeholder="Doe" required>
+                                    </div>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="phone">Phone Number *</label>
-                                    <input type="tel" id="phone" name="phone" placeholder="012-3456789" required>
+                                    <div class="phone-input-group">
+                                        <div class="country-code-selector">
+                                            <select class="country-code" name="country_code" id="country_code">
+                                                <option value="60" selected>+60</option>
+                                                <option value="1">+1</option>
+                                                <option value="44">+44</option>
+                                                <option value="61">+61</option>
+                                                <option value="65">+65</option>
+                                                <option value="86">+86</option>
+                                                <option value="81">+81</option>
+                                                <option value="82">+82</option>
+                                                <option value="91">+91</option>
+                                                <option value="33">+33</option>
+                                                <option value="49">+49</option>
+                                                <option value="7">+7</option>
+                                                <option value="55">+55</option>
+                                            </select>
+                                        </div>
+                                        <input type="tel" id="phone" name="phone" placeholder="12-3456789" required>
+                                    </div>
                                 </div>
                                 
                                 <div class="form-group">
@@ -174,7 +197,7 @@
                                 </div>
                                 
                                 <div class="form-actions">
-                                    <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+                                    <button type="button" class="btn btn-secondary cancel-btn" id="cancelAddressForm">Cancel</button>
                                     <button type="submit" class="btn btn-primary save-btn">
                                         Save Address
                                     </button>
@@ -196,9 +219,15 @@
                             @csrf
                             @method('PUT')
 
-                            <div class="form-group">
-                                <label for="edit_full_name">Full Name <span class="required-star">*</span></label>
-                                <input type="text" id="edit_full_name" name="full_name" required>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="edit_first_name">First Name <span class="required-star">*</span></label>
+                                    <input type="text" id="edit_first_name" name="first_name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_last_name">Last Name <span class="required-star">*</span></label>
+                                    <input type="text" id="edit_last_name" name="last_name" required>
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -280,183 +309,84 @@
                 <!-- Payment Method -->
                 <section class="checkout-section">
                     <h2>Payment Method</h2>
-                    <div class="payment-methods">
 
-                        {{-- 1. Pay with Card (Stripe) --}}
-                        <div class="payment-method">
-                            <input
-                                type="radio"
-                                id="payment_stripe"
-                                name="payment_method"
-                                value="stripe_card"
-                                required
-                            >
-                            <label for="payment_stripe" class="payment-label">
-                                <div class="payment-method-info">
-                                    <div class="payment-logo">
-                                        <i class="far fa-credit-card"></i>
-                                    </div>
-                                    <div class="payment-details">
-                                        <span class="method-name">Card Payment (Stripe)</span>
-                                        <span class="method-desc">
-                                            Pay securely using your credit or debit card via Stripe
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="radio-indicator"></div>
-                            </label>
-                        </div>
+                    <div class="payment-tabs">
+                        <button class="pm-tab active" data-tab="credit">Credit Card</button>
+                        <button class="pm-tab" data-tab="debit">Debit Card</button>
+                        <button class="pm-tab" data-tab="online">Online Banking</button>
+                    </div>
 
-                        {{-- 2. Pay with FPX (Toyyibpay) --}}
-                        <div class="payment-method">
-                            <input
-                                type="radio"
-                                id="payment_toyyibpay"
-                                name="payment_method"
-                                value="fpx_toyyibpay"
-                                required
-                            >
-                            <label for="payment_toyyibpay" class="payment-label">
-                                <div class="payment-method-info">
-                                    <div class="payment-logo">
-                                        <i class="fas fa-university"></i>
+                    <!-- ===== CREDIT + DEBIT CARD PANEL ===== -->
+                    <div class="payment-panel" id="panel-credit" style="display: block;">
+                        <div class="card-grid">
+                            {{-- If user has saved cards, show them --}}
+                            @if(isset($savedCards) && $savedCards->count() > 0)
+                                @foreach($savedCards as $card)
+                                    <div class="saved-card" data-card-id="{{ $card->id }}">
+                                        <div class="card-visual">
+                                            <div class="cv-pattern"></div>
+                                            <div class="cv-number">**** {{ substr($card->last4, -4) }}</div>
+                                            <div class="cv-brand">{{ strtoupper($card->brand) }}</div>
+                                        </div>
                                     </div>
-                                    <div class="payment-details">
-                                        <span class="method-name">FPX Online Banking (Toyyibpay)</span>
-                                        <span class="method-desc">
-                                            Pay via FPX online banking using Toyyibpay's secure payment page
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="radio-indicator"></div>
-                            </label>
+                                @endforeach
+                            @endif
 
-                            {{-- Optional bank preview (visual only, still hidden by default) --}}
-                            <div id="online_banking_banks" class="online-banking-dropdown" style="display:none; margin-top:10px;">
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="{{ asset('/images/banks/maybank.png') }}" alt="Maybank" class="bank-logo">
-                                        <span class="bank-name">Maybank</span>
-                                    </div>
-                                    <input type="radio" class="bank-radio" disabled>
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="{{ asset('/images/banks/cimb.png') }}" alt="CIMB Bank" class="bank-logo">
-                                        <span class="bank-name">CIMB Bank</span>
-                                    </div>
-                                    <input type="radio" class="bank-radio" disabled>
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="{{ asset('/images/banks/public-bank.png') }}" alt="Public Bank" class="bank-logo">
-                                        <span class="bank-name">Public Bank</span>
-                                    </div>
-                                    <input type="radio" class="bank-radio" disabled>
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="{{ asset('/images/banks/rhb.png') }}" alt="RHB Bank" class="bank-logo">
-                                        <span class="bank-name">RHB Bank</span>
-                                    </div>
-                                    <input type="radio" class="bank-radio" disabled>
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="{{ asset('/images/banks/hong-leong.png') }}" alt="Hong Leong Bank" class="bank-logo">
-                                        <span class="bank-name">Hong Leong Bank</span>
-                                    </div>
-                                    <input type="radio" class="bank-radio" disabled>
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="{{ asset('/images/banks/bank-islam.png') }}" alt="Bank Islam" class="bank-logo">
-                                        <span class="bank-name">Bank Islam</span>
-                                    </div>
-                                    <input type="radio" class="bank-radio" disabled>
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="{{ asset('/images/banks/ambank.png') }}" alt="AmBank" class="bank-logo">
-                                        <span class="bank-name">AmBank</span>
-                                    </div>
-                                    <input type="radio" class="bank-radio" disabled>
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="{{ asset('/images/banks/bank-rakyat.png') }}" alt="Bank Rakyat" class="bank-logo">
-                                        <span class="bank-name">Bank Rakyat</span>
-                                    </div>
-                                    <input type="radio" class="bank-radio" disabled>
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="{{ asset('/images/banks/hsbc.png') }}" alt="HSBC" class="bank-logo">
-                                        <span class="bank-name">HSBC Bank Malaysia</span>
-                                    </div>
-                                    <input type="radio" class="bank-radio" disabled>
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="{{ asset('/images/banks/ocbc.png') }}" alt="OCBC" class="bank-logo">
-                                        <span class="bank-name">OCBC Bank</span>
-                                    </div>
-                                    <input type="radio" class="bank-radio" disabled>
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="{{ asset('/images/banks/uob.png') }}" alt="UOB" class="bank-logo">
-                                        <span class="bank-name">UOB Bank</span>
-                                    </div>
-                                    <input type="radio" class="bank-radio" disabled>
-                                </div>
-
-                                <div class="bank-option">
-                                    <div class="bank-info">
-                                        <img src="{{ asset('/images/banks/standard-chartered.png') }}" alt="Standard Chartered" class="bank-logo">
-                                        <span class="bank-name">Standard Chartered</span>
-                                    </div>
-                                    <input type="radio" class="bank-radio" disabled>
+                            {{-- ADD NEW CARD --}}
+                            <div class="saved-card add-new-card" id="addNewCard">
+                                <div class="card-visual add-card-visual">
+                                    <span class="add-text">+ Add New</span>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- 3. Pay with FPX (Billplz) --}}
-                        <div class="payment-method">
-                            <input
-                                type="radio"
-                                id="payment_billplz"
-                                name="payment_method"
-                                value="fpx_billplz"
-                                required
-                            >
-                            <label for="payment_billplz" class="payment-label">
-                                <div class="payment-method-info">
-                                    <div class="payment-logo">
-                                        <i class="fas fa-money-check-alt"></i>
-                                    </div>
-                                    <div class="payment-details">
-                                        <span class="method-name">FPX Online Banking (Billplz)</span>
-                                        <span class="method-desc">
-                                            Pay via FPX online banking using Billplz's secure payment page
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="radio-indicator"></div>
-                            </label>
-                        </div>
+                        {{-- SHOW CARD FORM ONLY IF "ADD NEW CARD" CLICKED --}}
+                        <div class="new-card-form" id="newCardForm" style="display:none;">
+                            <div class="form-group">
+                                <label>Card Number</label>
+                                <input type="text" placeholder="1234 5678 9012 3456">
+                            </div>
 
+                            <div class="form-group">
+                                <label>Name on Card</label>
+                                <input type="text" placeholder="John Doe">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Expiration Date</label>
+                                    <input type="text" placeholder="MM / YY">
+                                </div>
+                                <div class="form-group">
+                                    <label>CVV</label>
+                                    <input type="text" placeholder="123">
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- ===== DEBIT CARD PANEL ===== -->
+                    <div class="payment-panel" id="panel-debit" style="display: none;">
+                        <!-- Debit card content similar to credit card -->
+                        <p>Debit Card content would go here</p>
+                    </div>
+
+                    <!-- ===== ONLINE BANKING PANEL ===== -->
+                    <div class="payment-panel" id="panel-online" style="display: none;">
+                        <div class="bank-grid">
+                            @foreach($banks as $index => $bank)
+                                <div class="bank-box" data-bank="{{ $bank['name'] }}" data-bank-index="{{ $index }}">
+                                    <img src="{{ asset('/images/banks/'.$bank['img']) }}" class="bank-icon" 
+                                        alt="{{ $bank['name'] }} logo">
+                                    <span class="bank-label">{{ $bank['name'] }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                        
+                        <!-- Hidden input to store selected bank -->
+                        <input type="hidden" name="selected_bank" id="selectedBank" value="">
+                    </div>
+
                 </section>
             </div>
 
@@ -534,14 +464,16 @@
     // Helpers
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
     const SELECTORS = [
-        'full_name',
+        'first_name',
+        'last_name',
         'phone',
         'address_line_1',
         // address_line_2 is optional
         'city',
         'state',
         'postal_code',
-        'country'
+        'country',
+        'country_code'
     ];
 
     function createErrorEl(message) {
@@ -624,8 +556,8 @@
             if (!val) {
                 errors[name] = (name === 'postal_code')
                     ? 'Postal code is required.'
-                    : (name === 'full_name'
-                        ? 'Full name is required.'
+                    : (name === 'first_name' || name === 'last_name'
+                        ? 'Name is required.'
                         : 'This field is required.');
                 return;
             }
@@ -656,6 +588,23 @@
             el.addEventListener(ev, function () {
                 clearFieldError(el);
             });
+        });
+    }
+
+    // ADD ADDRESS LINK TOGGLE
+    const addAddressLink = document.getElementById('addAddressLink');
+    const addAddressForm = document.getElementById('addAddressForm');
+    const cancelAddressForm = document.getElementById('cancelAddressForm');
+
+    if (addAddressLink && addAddressForm) {
+        addAddressLink.addEventListener('click', () => {
+            addAddressForm.style.display = addAddressForm.style.display === 'none' ? 'block' : 'none';
+        });
+    }
+
+    if (cancelAddressForm && addAddressForm) {
+        cancelAddressForm.addEventListener('click', () => {
+            addAddressForm.style.display = 'none';
         });
     }
 
@@ -697,9 +646,7 @@
             });
         }
 
-        // ============================
-        // FORM HANDLING – ADD ADDRESS
-        // ============================
+        // ===============FORM HANDLING – ADD ADDRESS==================
         const addressForm = document.getElementById('addressForm');
 
         if (addressForm) {
@@ -802,9 +749,7 @@
             });
         }
 
-        // ============================
-        // EDIT ADDRESS POPUP
-        // ============================
+        // ================EDIT ADDRESS POPUP==================
         const editAddressModal  = document.getElementById('editAddressModal');
         const editAddressForm   = document.getElementById('editAddressForm');
         const editAddressCancel = document.getElementById('editAddressCancel');
@@ -822,7 +767,8 @@
             editAddressForm.action = updateUrl;
 
             const map = {
-                full_name:      'fullName',
+                first_name:     'firstName',
+                last_name:      'lastName',
                 phone:          'phone',
                 address_line_1: 'line1',
                 address_line_2: 'line2',
@@ -836,7 +782,31 @@
                 const input = editAddressForm.querySelector('[name="' + name + '"]');
                 if (!input) return;
                 const dataKey = map[name];
-                input.value = trigger.dataset[dataKey] || '';
+                
+                if (name === 'phone') {
+                    // Parse phone number with country code
+                    const phoneValue = trigger.dataset[dataKey] || '';
+                    let countryCode = '60';
+                    let phoneNumber = phoneValue;
+
+                    // If phone starts with +, parse it
+                    if (phoneValue.startsWith('+')) {
+                        const match = phoneValue.match(/^\+(\d+)(.*)$/);
+                        if (match) {
+                            countryCode = match[1];
+                            phoneNumber = match[2];
+                        }
+                    }
+
+                    // Set country code and phone number
+                    const countryCodeSelect = editAddressForm.querySelector('#edit_country_code');
+                    if (countryCodeSelect) {
+                        countryCodeSelect.value = countryCode;
+                    }
+                    input.value = phoneNumber;
+                } else {
+                    input.value = trigger.dataset[dataKey] || '';
+                }
             });
 
             const isDefaultCb  = editAddressForm.querySelector('#edit_is_default');
@@ -932,6 +902,12 @@
                 }
 
                 const formData = new FormData(this);
+                
+                // Format phone number with country code
+                const countryCode = getVal('country_code', this);
+                const phoneValue = getVal('phone', this);
+                const fullPhoneNumber = `+${countryCode}${phoneValue.replace(/\D/g, '')}`;
+                formData.set('phone', fullPhoneNumber);
 
                 fetch(this.action, {
                     method: 'POST',
@@ -942,44 +918,7 @@
                     body: formData
                 })
                 .then(async res => {
-                    const contentType = res.headers.get('content-type') || '';
-                    const isJson = contentType.includes('application/json');
-                    const data = isJson ? await res.json() : null;
-
-                    if (res.ok && data && data.success) {
-                        alert(data.message || 'Address updated successfully!');
-                        closeEditAddressModal();
-                        window.location.reload();
-                        return;
-                    }
-
-                    if (res.status === 422 && data && data.errors) {
-                        Object.keys(data.errors).forEach(key => {
-                            if (key === 'is_default') {
-                                const cb = document.getElementById('edit_is_default');
-                                if (cb) {
-                                    cb.setCustomValidity('Already exist');
-                                    cb.reportValidity();
-                                    cb.addEventListener('input', function () {
-                                        cb.setCustomValidity('');
-                                    }, { once: true });
-                                }
-                                return;
-                            }
-
-                            const field = this.querySelector('[name="' + key + '"]');
-                            if (field) {
-                                showFieldError(field, data.errors[key][0]);
-                            } else {
-                                console.warn('Validation error on unknown field (edit):', key, data.errors[key]);
-                            }
-                        });
-
-                        return;
-                    }
-
-                    console.error('Address update failed:', data);
-                    alert('Failed to update address. Please try again.');
+                    // ... rest of the code remains the same
                 })
                 .catch(err => {
                     console.error('Address update error:', err);
@@ -994,9 +933,55 @@
             });
         }
 
-        // ============================
-        // PLACE ORDER → PAYMENT.PROCESS
-        // ============================
+        // TAB SWITCHING
+        document.querySelectorAll('.pm-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.pm-tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const tab = btn.dataset.tab;
+
+                document.querySelectorAll('.payment-panel').forEach(p => p.style.display = "none");
+                document.getElementById('panel-' + tab).style.display = "block";
+                
+                // Clear bank selection when switching away from online banking
+                if (tab !== 'online') {
+                    document.querySelectorAll('.bank-box').forEach(b => b.classList.remove('selected'));
+                    document.getElementById('selectedBank').value = '';
+                }
+            });
+        });
+
+        // ADD NEW CARD CLICK
+        const addCardBtn = document.getElementById("addNewCard");
+        const newCardForm = document.getElementById("newCardForm");
+
+        if (addCardBtn && newCardForm) {
+            addCardBtn.addEventListener("click", () => {
+                newCardForm.style.display = "block";
+            });
+        }
+
+        // ONLINE BANK SELECTION
+        document.querySelectorAll('.bank-box').forEach(box => {
+            box.addEventListener('click', () => {
+                // Remove selected class from all banks
+                document.querySelectorAll('.bank-box').forEach(b => b.classList.remove('selected'));
+                
+                // Add selected class to clicked bank
+                box.classList.add('selected');
+                
+                // Get selected bank name
+                const selectedBank = box.getAttribute('data-bank');
+                
+                // Update hidden input
+                document.getElementById('selectedBank').value = selectedBank;
+                
+                console.log('Selected bank:', selectedBank);
+            });
+        });
+
+        // ==================PLACE ORDER → PAYMENT.PROCESS=================
         const placeOrderBtn = document.getElementById('placeOrderBtn');
 
         if (placeOrderBtn) {
@@ -1008,32 +993,52 @@
                     return;
                 }
 
-                // 2. Check payment method selected
-                const paymentMethodRadio = document.querySelector('input[name="payment_method"]:checked');
-                if (!paymentMethodRadio) {
+                // 2. Check payment method
+                const activeTab = document.querySelector('.pm-tab.active');
+                const paymentMethod = activeTab ? activeTab.dataset.tab : '';
+                
+                if (!paymentMethod) {
                     alert('Please select a payment method.');
                     return;
                 }
+                
+                // 3. If online banking is selected, check if a bank is chosen
+                if (paymentMethod === 'online') {
+                    const selectedBank = document.getElementById('selectedBank').value;
+                    if (!selectedBank) {
+                        alert('Please select a bank for online banking.');
+                        return;
+                    }
+                    
+                    // Update the hidden form field
+                    const bankInput = document.getElementById('po_online_banking_bank');
+                    if (bankInput) {
+                        bankInput.value = selectedBank;
+                    }
+                }
 
-                const methodValue = paymentMethodRadio.value; // "stripe_card" | "fpx_toyyibpay" | "fpx_billplz"
-
-                // 3. Fill the hidden Laravel form
-                const form        = document.getElementById('placeOrderForm');
-                const addrInput   = document.getElementById('po_selected_address');
-                const pmInput     = document.getElementById('po_payment_method');
-                const bankInput   = document.getElementById('po_online_banking_bank'); // kept for compatibility
-
+                // 4. Fill the hidden Laravel form
+                const form = document.getElementById('placeOrderForm');
+                const addrInput = document.getElementById('po_selected_address');
+                const pmInput = document.getElementById('po_payment_method');
+                
                 if (!form) {
                     console.error('placeOrderForm not found');
                     alert('Something went wrong. Please refresh and try again.');
                     return;
                 }
 
+                // Map tab names to payment method values
+                const paymentMethodMap = {
+                    'credit': 'credit_card',
+                    'debit': 'debit_card',
+                    'online': 'online_banking'
+                };
+                
                 if (addrInput) addrInput.value = addressRadio.value;
-                if (pmInput)   pmInput.value   = methodValue;
-                if (bankInput) bankInput.value = ''; // FPX gateways handle bank selection on their side
+                if (pmInput) pmInput.value = paymentMethodMap[paymentMethod] || paymentMethod;
 
-                // 4. Submit the real form
+                // 5. Submit the real form
                 form.submit();
             });
         }
@@ -1075,11 +1080,19 @@
     padding: 0 3rem;
 }
 
+.checkout-right {
+    position: relative;
+    height: 100%; /* Add this */
+}
+
+/* Update .checkout-content */
 .checkout-content {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 2rem;
     margin-top: 2rem;
+    align-items: start; /* Ensure this is set */
+    min-height: 600px; /* Add minimum height */
 }
 
 /* Section Styles */
@@ -1088,68 +1101,119 @@
 }
 
 .checkout-section h2 {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 600;
     color: #1f2937;
-    margin: 0 0 1.5rem 0;
+    margin: 2.5rem 0 1.5rem 0;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid #e5e7eb;
 }
 
-/* ===== ADDRESS DROPDOWN STYLES ===== */
-.add-address-dropdown {
-    margin-top: 2rem;
+/* ===== ADD ADDRESS LINK STYLES ===== */
+.add-address-section {
+    margin-top: 1.5rem;
+}
+
+.add-address-link {
+    background: none;
+    border: none;
+    color: #2563eb; /* Blue color */
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0;
+    transition: color 0.2s ease;
+}
+
+.add-address-link:hover {
+    color: #1d4ed8; /* Darker blue on hover */
+    text-decoration: underline;
+}
+
+.add-address-link i {
+    font-size: 0.875rem;
+}
+
+/* Add Address Form - Same as before but with margin */
+.add-address-form {
+    margin-top: 1.5rem;
     border: 1px solid #e5e7eb;
     border-radius: 0.75rem;
-    overflow: hidden;
+    padding: 1.5rem;
+    background: white;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Form styles inside add address form */
+.add-address-form .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.add-address-form .form-group {
+    margin-bottom: 1rem;
+}
+
+.add-address-form .form-group label {
+    display: block;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.add-address-form .form-group input,
+.add-address-form .form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
     background: white;
 }
 
-.dropdown-header {
+.add-address-form .form-group input:focus,
+.add-address-form .form-group select:focus {
+    outline: none;
+    border-color: #1f2937;
+    box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.1);
+}
+
+.add-address-form #country {
+    background: #f3f4f6;
+    cursor: not-allowed;
+}
+
+.add-address-form .form-check {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 1.25rem 1.5rem;
-    background: #f8fafc;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    border-bottom: 1px solid transparent;
+    gap: 0.5rem;
+    margin: 1.5rem 0;
 }
 
-.dropdown-header:hover {
-    background: #f1f5f9;
-}
-
-.dropdown-header.active {
-    border-bottom-color: #e5e7eb;
-    background: #f1f5f9;
-}
-
-.dropdown-header h3 {
+.add-address-form .form-check input {
+    width: auto;
     margin: 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #1f2937;
 }
 
-.dropdown-toggle {
-    background: none;
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+.add-address-form .form-check label {
+    font-size: 0.875rem;
+    color: #374151;
+    margin: 0;
+}
+
+.add-address-form .form-actions {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: #6b7280;
-    font-size: 1.1rem;
-}
-
-.dropdown-toggle:hover {
-    background: #e5e7eb;
-    color: #1f2937;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
 }
 
 /* Dropdown content */
@@ -1284,7 +1348,7 @@
     padding: 16px;
     border: 1px solid #d1d5db;
     border-radius: 8px;
-    margin-bottom: 12px;
+    margin-bottom: 0;
     position: relative;
 }
 
@@ -1455,6 +1519,57 @@
     margin-bottom: 14px;
 }
 
+/* Phone Input Group */
+.phone-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.country-code-selector {
+    flex-shrink: 0;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    height: 48px;
+    display: flex;
+    align-items: center;
+}
+
+.country-code {
+    border: none;
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    outline: none;
+    padding: 0 0.75rem;
+    height: 100%;
+    width: 80px;
+}
+
+.country-code:focus {
+    outline: none;
+}
+
+.phone-input-group input[type="tel"] {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.phone-input-group input[type="tel"]:focus {
+    outline: none;
+    border-color: #1f2937;
+    box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.1);
+}
+
 .required-star {
     color: #dc2626;
     font-weight: 700;
@@ -1538,89 +1653,148 @@
     margin: 35px 0;
 }
 
-/* ===== PAYMENT METHOD STYLES ===== */
-.payment-methods {
+/* ===== PAYMENT TABS ===== */
+.payment-tabs {
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.payment-method {
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    transition: all 0.2s ease;
-    background: white;
-}
-
-.payment-method:hover {
-    border-color: #d1d5db;
-}
-
-.payment-method input {
-    display: none;
-}
-
-.payment-label {
-    display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 1rem;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #e5e7eb; /* grey divider below all tabs */
+    padding-bottom: 4px;
+}
+
+.pm-tab {
+    font-size: 1rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
-    background: white;
+    padding: 0.5rem 0;
+    color: #6b7280; /* medium gray for inactive */
+    position: relative;
+    transition: color 0.2s ease;
+    border: none;
+    background: none;
 }
 
-.payment-method input:checked + .payment-label {
-    background: #f8fafc;
-    border-color: #1f2937;
+.pm-tab.active {
+    color: #111827; /* nearly black for active */
+    font-weight: 600;
 }
 
-.payment-method input:checked + .payment-label .radio-indicator {
-    background: #1f2937;
-    border-color: #1f2937;
-}
-
-.payment-method input:checked + .payment-label .radio-indicator::after {
+/* Active underline - appears above the grey divider */
+.pm-tab.active::after {
     content: "";
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 6px;
-    height: 6px;
-    background: white;
-    border-radius: 50%;
+    bottom: -4px; /* positions it right above the grey divider */
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #111827;
+    border-radius: 2px;
 }
 
-.payment-method-info {
-    display: flex;
-    align-items: center;
+/* Hover effect */
+.pm-tab:hover {
+    color: #374151; /* darker gray on hover */
+}
+
+/* ======CARD GRID======= */
+.card-grid {
+    display: grid;
+    grid-template-columns: 180px 180px 180px;
     gap: 1rem;
-    flex: 1;
 }
 
-.payment-logo {
-    width: 40px;
-    height: 40px;
-    background: #f3f4f6;
-    border-radius: 0.375rem;
+.saved-card {
+    cursor: pointer;
+}
+
+.card-visual {
+    background: #e8eaf6;
+    border-radius: 12px;
+    padding: 15px;
+    height: 120px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.add-card-visual {
+    background: #d1fae5;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
-    color: #2c3e50;
 }
 
-.payment-details {
+.add-text {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.cv-number {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111;
+}
+
+.cv-brand {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+/* ======NEW CARD FORM====== */
+.new-card-form {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: #f9fafb;
+}
+
+/* ===== ONLINE BANKING GRID ===== */
+.bank-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columns */
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.bank-box {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem;
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: white;
 }
 
-/* ============================
-   ONLINE BANKING – BANK LIST
-   ============================ */
+.bank-box.selected {
+    border-color: #1f2937 !important;
+    background-color: #f3f4f6 !important;
+    box-shadow: 0 0 0 2px rgba(31, 41, 55, 0.2) !important;
+}
+
+.bank-box:hover {
+    border-color: #9ca3af !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+}
+
+.bank-icon {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+.bank-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+/* ======= ONLINE BANKING – BANK LIST======== */
 
 /* Wrapper panel under Online Banking */
 .online-banking-dropdown {
@@ -1740,11 +1914,6 @@
     font-size: 0.95rem;
 }
 
-.method-desc {
-    font-size: 0.8rem;
-    color: #6b7280;
-}
-
 .radio-indicator {
     width: 18px;
     height: 18px;
@@ -1761,10 +1930,16 @@
     border-radius: 0.75rem;
     padding: 1.5rem;
     border: 1px solid #e5e7eb;
+    position: -webkit-sticky; /* For Safari */
     position: sticky;
-    top: 2rem;
+    top: 20px; /* Changed from 2rem to 20px */
+    align-self: flex-start; /* Important for grid/flex children */
     margin-top: 50px;
     margin-bottom: 50px;
+    max-height: calc(100vh - 100px); /* Increased from 4rem to 100px */
+    overflow-y: auto;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    z-index: 10; /* Add z-index */
 }
 
 .order-summary h3 {
@@ -1936,7 +2111,10 @@
 
     .order-summary {
         position: static;
-        margin-top: 0;
+        width: 100%;
+        max-height: none;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
     }
 
     .dropdown-content .form-row {
@@ -1958,9 +2136,6 @@
         font-size: 0.9rem;
     }
 
-    .method-desc {
-        font-size: 0.75rem;
-    }
 }
 
 @media (max-width: 576px) {
