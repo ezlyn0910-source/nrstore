@@ -69,26 +69,48 @@
                                 </div>
                             </div>
 
+                            <!-- Email Field -->
                             <div class="form-group">
                                 <label for="email">{{ __('Email Address') }}</label>
                                 <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" 
                                     name="email" value="{{ old('email') }}" required autocomplete="email"
                                     placeholder="Enter your email">
                                 @error('email')
-                                    <span class="invalid-feedback" role="alert">
+                                    <span class="error-message" role="alert">
                                         <strong>{{ $message }}</strong>
                                     </span>
                                 @enderror
                             </div>
 
-                            <!-- ADD PHONE FIELD HERE -->
+                            <!-- Phone Number Field -->
                             <div class="form-group">
                                 <label for="phone">{{ __('Phone Number') }}</label>
-                                <input id="phone" type="text" class="form-control @error('phone') is-invalid @enderror" 
-                                    name="phone" value="{{ old('phone') }}" required autocomplete="phone"
-                                    placeholder="Enter your phone number">
+                                <div class="phone-input-container">
+                                    <div class="country-code-select">
+                                        <select name="country_code" class="country-code">
+                                            <option value="+86" selected>+86</option>
+                                            <option value="+1">+1</option>
+                                            <option value="+44">+44</option>
+                                            <option value="+81">+81</option>
+                                            <option value="+82">+82</option>
+                                            <option value="+65">+65</option>
+                                            <option value="+60">+60</option>
+                                            <option value="+63">+63</option>
+                                            <option value="+84">+84</option>
+                                            <option value="+66">+66</option>
+                                            <option value="+62">+62</option>
+                                            <option value="+91">+91</option>
+                                            <option value="+61">+61</option>
+                                        </select>
+                                    </div>
+                                    <input id="phone" type="tel" class="form-control phone-input @error('phone') is-invalid @enderror" 
+                                        name="phone" value="{{ old('phone') }}" required 
+                                        pattern="[0-9]{7,15}" 
+                                        title="Please enter a valid phone number (7-15 digits)"
+                                        placeholder="135 4321 3456">
+                                </div>
                                 @error('phone')
-                                    <span class="invalid-feedback" role="alert">
+                                    <span class="error-message" role="alert">
                                         <strong>{{ $message }}</strong>
                                     </span>
                                 @enderror
@@ -270,7 +292,7 @@
                 flex: 1;
                 padding: 40px 50px;
                 display: flex;
-                align-items: flex-start; /* Changed from center to flex-start */
+                align-items: flex-start;
                 justify-content: center;
                 background: var(--white);
                 overflow-y: auto;
@@ -279,8 +301,8 @@
 
             .auth-form-container {
                 width: 100%;
-                max-width: 400px;
-                margin-top: 20px; /* Added top margin to push content down */
+                max-width: 500px;
+                margin-top: 20px;
             }
 
             .auth-header {
@@ -315,14 +337,13 @@
                 margin-bottom: 0.5rem;
                 font-weight: 600;
                 color: var(--pinetree);
-                font-size: 0.9rem; /* Slightly smaller */
+                font-size: 0.9rem;
             }
 
             .form-row {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: 1rem;
-                margin-bottom: 1.5rem;
             }
 
             .form-control {
@@ -346,6 +367,76 @@
             }
 
             .form-control::placeholder {
+                color: var(--morningblue);
+            }
+
+            /* Phone Input Styles */
+            .phone-input-container {
+                display: flex;
+                gap: 0.5rem;
+                align-items: center;
+            }
+
+            .country-code-select {
+                flex-shrink: 0;
+                width: 85px;
+                position: relative;
+            }
+            .country-code {
+                width: 100%;
+                padding: 0.875rem 0.25rem;
+                border: 2px solid var(--dustyblue);
+                border-radius: 12px;
+                background: rgba(255, 255, 255, 0.9);
+                color: var(--pinetree);
+                font-size: 0.9rem;
+                transition: all 0.3s ease;
+                cursor: pointer;
+                text-align: center;
+                appearance: none;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                padding-right: 1.5rem;
+            }
+            .country-code-select::after {
+                content: "▼";
+                position: absolute;
+                right: 0.75rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--morningblue);
+                font-size: 0.7rem;
+                pointer-events: none;
+            }
+
+            .country-code:focus {
+                outline: none;
+                border-color: var(--sagegreen);
+                box-shadow: 0 0 0 3px rgba(0, 80, 55, 0.327);
+                background: var(--white);
+            }
+
+            .phone-input {
+                flex: 1;
+                padding: 0.875rem 1.25rem;
+                border: 2px solid var(--dustyblue);
+                border-radius: 12px;
+                background: rgba(255, 255, 255, 0.9);
+                color: var(--pinetree);
+                font-size: 0.95rem;
+                transition: all 0.3s ease;
+                box-sizing: border-box;
+            }
+
+            .phone-input:focus {
+                outline: none;
+                border-color: var(--sagegreen);
+                box-shadow: 0 0 0 3px rgba(0, 80, 55, 0.327);
+                background: var(--white);
+                color: var(--pinetree);
+            }
+
+            .phone-input::placeholder {
                 color: var(--morningblue);
             }
 
@@ -537,6 +628,30 @@
                 box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.1);
             }
 
+            /* Error message styling */
+            .error-message {
+                display: block;
+                margin-top: 0.5rem;
+                color: #dc3545; /* Red color */
+                font-size: 0.85rem;
+                font-weight: 400;
+            }
+
+            .error-message strong {
+                font-weight: 600;
+            }
+
+            /* Style for invalid input fields */
+            .form-control.is-invalid {
+                border-color: #dc3545;
+                box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1);
+            }
+
+            /* Remove the old invalid-feedback style if it exists */
+            .invalid-feedback {
+                display: none;
+            }
+
             /* Responsive Design */
             @media (max-width: 968px) {
                 .auth-wrapper {
@@ -546,12 +661,12 @@
                 }
 
                 .auth-left {
-                    min-height: 150px; /* Reduced min-height */
+                    min-height: 150px;
                     padding: 20px;
                 }
 
                 .auth-right {
-                    padding: 30px 25px; /* Reduced padding */
+                    padding: 30px 25px;
                 }
 
                 .image-placeholder-content h2 {
@@ -606,6 +721,19 @@
 
                 .image-placeholder-content h2 {
                     font-size: 1.5rem;
+                }
+
+                .phone-input-container {
+                    flex-direction: column;
+                    gap: 0.5rem;
+                }
+                
+                .country-code-select {
+                    width: 100%;
+                }
+                
+                .country-code {
+                    width: 100%;
                 }
             }
 
