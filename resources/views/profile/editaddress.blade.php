@@ -409,31 +409,64 @@
 
                         {{-- Inline EDIT form (hidden by default) --}}
                         <form id="editAddressForm-{{ $address->id }}"
-                              method="POST"
-                              action="{{ route('profile.addresses.update', $address) }}"
-                              style="display:none; margin-top:16px; border-top:1px solid #f3f4f6; padding-top:12px;">
+                            method="POST"
+                            action="{{ route('profile.addresses.update', $address) }}"
+                            style="display:none; margin-top:16px; border-top:1px solid #f3f4f6; padding-top:12px;">
                             @csrf
                             @method('PUT')
+
+                            <!-- Add address type field (hidden since editing existing address) -->
+                            <input type="hidden" name="type" value="{{ $address->type }}">
 
                             <div class="account-form-grid">
                                 <div class="account-form-group">
                                     <label>First Name <span class="required">*</span></label>
                                     <input type="text" name="first_name"
-                                           class="account-form-control"
-                                           value="{{ old('first_name', $address->first_name) }}" required>
+                                        class="account-form-control"
+                                        value="{{ old('first_name', $address->first_name) }}" required>
                                 </div>
                                 <div class="account-form-group">
                                     <label>Last Name <span class="required">*</span></label>
                                     <input type="text" name="last_name"
-                                           class="account-form-control"
-                                           value="{{ old('last_name', $address->last_name) }}" required>
+                                        class="account-form-control"
+                                        value="{{ old('last_name', $address->last_name) }}" required>
                                 </div>
+                                
+                                <div class="account-form-group" style="grid-column: span 2;">
+                                    <label>Address Line 1 <span class="required">*</span></label>
+                                    <input type="text" name="address_line_1"
+                                        class="account-form-control"
+                                        value="{{ old('address_line_1', $address->address_line_1) }}" required>
+                                </div>
+                                
+                                <div class="account-form-group" style="grid-column: span 2;">
+                                    <label>Address Line 2 (Optional)</label>
+                                    <input type="text" name="address_line_2"
+                                        class="account-form-control"
+                                        value="{{ old('address_line_2', $address->address_line_2) }}">
+                                </div>
+                                
                                 <div class="account-form-group">
-                                    <label>Company Name (Optional)</label>
-                                    <input type="text" name="company"
-                                           class="account-form-control"
-                                           value="{{ old('company', $address->company) }}">
+                                    <label>City <span class="required">*</span></label>
+                                    <input type="text" name="city"
+                                        class="account-form-control"
+                                        value="{{ old('city', $address->city) }}" required>
                                 </div>
+                                
+                                <div class="account-form-group">
+                                    <label>State <span class="required">*</span></label>
+                                    <input type="text" name="state"
+                                        class="account-form-control"
+                                        value="{{ old('state', $address->state) }}" required>
+                                </div>
+                                
+                                <div class="account-form-group">
+                                    <label>Postal Code <span class="required">*</span></label>
+                                    <input type="text" name="postal_code"
+                                        class="account-form-control"
+                                        value="{{ old('postal_code', $address->postal_code) }}" required>
+                                </div>
+                                
                                 <div class="account-form-group">
                                     <label>Country <span class="required">*</span></label>
                                     <select name="country" class="account-form-select" required>
@@ -441,48 +474,38 @@
                                         <option value="Malaysia" {{ old('country', $address->country) == 'Malaysia' ? 'selected' : '' }}>Malaysia</option>
                                     </select>
                                 </div>
+
                                 <div class="account-form-group">
-                                    <label>Street Address <span class="required">*</span></label>
-                                    <input type="text" name="street"
-                                           class="account-form-control"
-                                           value="{{ old('street', $address->street) }}" required>
+                                    <label>Country Code <span class="required">*</span></label>
+                                    <input type="text" name="country_code" 
+                                        class="account-form-control"
+                                        value="{{ old('country_code', $address->country_code) }}" 
+                                        placeholder="MY" 
+                                        required>
+                                    <small style="color: var(--text-muted); font-size: 0.8rem;">
+                                        ISO country code (e.g., MY for Malaysia)
+                                    </small>
                                 </div>
-                                <div class="account-form-group">
-                                    <label>City <span class="required">*</span></label>
-                                    <input type="text" name="city"
-                                           class="account-form-control"
-                                           value="{{ old('city', $address->city) }}" required>
-                                </div>
-                                <div class="account-form-group">
-                                    <label>State <span class="required">*</span></label>
-                                    <input type="text" name="state"
-                                           class="account-form-control"
-                                           value="{{ old('state', $address->state) }}" required>
-                                </div>
-                                <div class="account-form-group">
-                                    <label>Zip Code <span class="required">*</span></label>
-                                    <input type="text" name="postcode"
-                                           class="account-form-control"
-                                           value="{{ old('postcode', $address->postcode) }}" required>
-                                </div>
+                                
                                 <div class="account-form-group">
                                     <label>Phone <span class="required">*</span></label>
                                     <input type="text" name="phone"
-                                           class="account-form-control"
-                                           value="{{ old('phone', $address->phone) }}" required>
+                                        class="account-form-control"
+                                        value="{{ old('phone', $address->phone) }}" required>
                                 </div>
+                                
                                 <div class="account-form-group">
                                     <label>Email <span class="required">*</span></label>
                                     <input type="email" name="email"
-                                           class="account-form-control"
-                                           value="{{ old('email', $address->email) }}" required>
+                                        class="account-form-control"
+                                        value="{{ old('email', $address->email) }}" required>
                                 </div>
                             </div>
 
                             <div style="margin-top:12px; display:flex; align-items:center; gap:8px;">
                                 <input type="checkbox" id="is_default_{{ $address->id }}" name="is_default" value="1"
-                                       style="width:16px;height:16px;"
-                                       {{ old('is_default', $address->is_default) ? 'checked' : '' }}>
+                                    style="width:16px;height:16px;"
+                                    {{ old('is_default', $address->is_default) ? 'checked' : '' }}>
                                 <label for="is_default_{{ $address->id }}" style="font-size:0.9rem; color:var(--text-main);">
                                     Set as default address
                                 </label>
@@ -540,6 +563,17 @@
                                 <option value="Malaysia">Malaysia</option>
                             </select>
                         </div>
+                        <div class="account-form-group">
+                            <label>Country Code <span class="required">*</span></label>
+                            <input type="text" name="country_code" 
+                                class="account-form-control" 
+                                value="MY" 
+                                placeholder="MY" 
+                                required>
+                            <small style="color: var(--text-muted); font-size: 0.8rem;">
+                                ISO country code (e.g., MY for Malaysia)
+                            </small>
+                        </div>
                         <div class="account-form-group" style="grid-column: span 2;">
                             <label>Address Line 1 <span class="required">*</span></label>
                             <input type="text" name="address_line_1" class="account-form-control" required placeholder="Street address, P.O. box, company name">
@@ -571,12 +605,13 @@
                         </div>
                     </div>
 
-                    <div style="margin-top:16px; display:flex; align-items:center; gap:8px;">
-                        <input type="checkbox" id="is_default" name="is_default" value="1"
-                               style="width:16px;height:16px;">
-                        <label for="is_default" style="font-size:0.9rem; color:var(--text-main);">
-                            Set as default address
-                        </label>
+                    <div style="font-weight:600; color:var(--text-main); margin-bottom:4px;">
+                        {{ $address->first_name }} {{ $address->last_name }}
+                        @if($address->is_default)
+                            <span style="font-size:0.7rem; padding:3px 8px; border-radius:999px; background:#dcfce7; color:#15803d; margin-left:8px;">
+                                Default
+                            </span>
+                        @endif
                     </div>
 
                     <div class="account-actions">

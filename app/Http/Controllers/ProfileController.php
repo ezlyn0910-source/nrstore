@@ -99,6 +99,7 @@ class ProfileController extends Controller
             'state'      => 'required|string',
             'postal_code' => 'required|string',
             'country'    => 'required|string',
+            'country_code'   => 'required|string|max:10',
             'phone'      => 'required|string|max:20',
             'email'      => 'required|email',
             'type'       => 'required|in:shipping,billing'
@@ -122,6 +123,7 @@ class ProfileController extends Controller
             'state'          => $request->state,
             'postal_code'    => $request->postal_code,
             'country'        => $request->country,
+            'country_code'   => $request->country_code,
             'phone'          => $request->phone,
             'email'          => $request->email,
             'is_default'     => $request->is_default ? 1 : 0
@@ -146,6 +148,7 @@ class ProfileController extends Controller
             'state'      => 'required|string',
             'postal_code' => 'required|string',
             'country'    => 'required|string',
+            'country_code'   => 'required|string|max:10',
             'phone'      => 'required|string|max:20',
             'email'      => 'required|email'
         ]);
@@ -175,6 +178,7 @@ class ProfileController extends Controller
             'state'          => $request->state,
             'postal_code'    => $request->postal_code,
             'country'        => $request->country,
+            'country_code'   => $request->country_code,
             'phone'          => $request->phone,
             'email'          => $request->email,
             'is_default'     => $address->is_default,
