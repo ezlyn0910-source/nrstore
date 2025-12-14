@@ -618,6 +618,10 @@
                             <span class="status-text">Pending</span>
                             <span class="status-count">{{ $orders->where('status', 'pending')->count() }}</span>
                         </button>
+                        <button class="status-category" data-status="paid">
+                            <span class="status-text">Paid</span>
+                            <span class="status-count">{{ $orders->where('status', 'paid')->count() }}</span>
+                        </button>
                         <button class="status-category" data-status="processing">
                             <span class="status-text">Processing</span>
                             <span class="status-count">{{ $orders->where('status', 'processing')->count() }}</span>
@@ -625,10 +629,6 @@
                         <button class="status-category" data-status="shipped">
                             <span class="status-text">Shipped</span>
                             <span class="status-count">{{ $orders->where('status', 'shipped')->count() }}</span>
-                        </button>
-                        <button class="status-category" data-status="delivered">
-                            <span class="status-text">Delivered</span>
-                            <span class="status-count">{{ $orders->where('status', 'delivered')->count() }}</span>
                         </button>
                         <button class="status-category" data-status="cancelled">
                             <span class="status-text">Cancelled</span>

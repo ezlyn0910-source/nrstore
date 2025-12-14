@@ -566,6 +566,11 @@
         flex-direction: column;
         text-align: center;
     }
+
+    .stat-icon.shipped {
+        background: rgba(40, 167, 69, 0.1);
+        color: var(--success);
+    }
 }
 </style>
 
@@ -585,6 +590,16 @@
             <div class="stat-content">
                 <h3 class="stat-number">{{ $stats['total'] }}</h3>
                 <p class="stat-label">Total Orders</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon pending">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-number">{{ $stats['pending'] }}</h3>
+                <p class="stat-label">Pending</p>
             </div>
         </div>
         
@@ -712,6 +727,7 @@
                 <label>Status</label>
                 <select id="statusFilter">
                     <option value="">All Status</option>
+                    <option value="pending">Pending</option>
                     <option value="paid">Paid</option>
                     <option value="processing">Processing</option>
                     <option value="shipped">Shipped</option>
