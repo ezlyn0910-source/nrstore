@@ -93,25 +93,49 @@ class CartItem extends Model
     }
 
     /**
-     * Get display image URL with null safety
+     * Get the image URL for cart display
      */
-    public function getDisplayImageUrlAttribute()
+    public function getImageUrlAttribute()
     {
-        // Priority 1: Variation image with null checks
-        if ($this->variation_id && $this->relationLoaded('variation') && $this->variation) {
-            if ($this->variation->image) {
-                return Storage::disk('public')->exists($this->variation->image)
-                    ? asset('storage/' . $this->variation->image)
-                    : asset('images/default-product.png');
+        // If image_url is stored in session/cart (for guest users)
+        if (isset($this->attributes['image_url']) && $this->attributes['image_url']) {
+            $imagePath = $this->attributes['image_url'];
+            // Ensure proper path format
+            if (!str_starts_with($imagePath, 'http')) {
+                if (!str_starts_with($imagePath, 'images/')) {
+                    $imagePath = 'images/products/' . ltrim($imagePath, '/');
+                }
+                return asset($imagePath);
+            }
+            return $imagePath;
+        }
+        
+        // If we have a product relation
+        if ($this->product) {
+            // Check for variation image first
+            if ($this->variation_id && $this->variation && $this->variation->image) {
+                $imagePath = $this->variation->image;
+                if (!str_starts_with($imagePath, 'http')) {
+                    if (!str_starts_with($imagePath, 'images/')) {
+                        $imagePath = 'images/products/' . ltrim($imagePath, '/');
+                    }
+                    return asset($imagePath);
+                }
+                return $imagePath;
+            }
+            
+            // Get product's main image
+            if ($this->product->main_image_url) {
+                return $this->product->main_image_url;
+            }
+            
+            // Try via primary image relationship
+            if ($this->product->primaryImage) {
+                return $this->product->primaryImage->image_url;
             }
         }
         
-        // Priority 2: Product main image with null checks
-        if ($this->relationLoaded('product') && $this->product) {
-            return $this->product->main_image_url;
-        }
-        
-        // Fallback: Default image
+        // Fallback to default image
         return asset('images/default-product.png');
     }
 

@@ -60,7 +60,7 @@ class Order extends Model
         'status_label',
         'is_shipped',
         'is_cancelled',
-        // getIsPaidAttribute() is still accessible as $order->is_paid
+        'is_paid',
     ];
 
     /**
@@ -71,6 +71,17 @@ class Order extends Model
     const STATUS_PROCESSING = 'processing';
     const STATUS_SHIPPED    = 'shipped';
     const STATUS_CANCELLED  = 'cancelled';
+
+    /**
+     * Order status progression (lower → earlier, higher → later)
+     */
+    public const STATUS_FLOW = [
+        self::STATUS_PENDING    => 1,
+        self::STATUS_PAID       => 2,
+        self::STATUS_PROCESSING => 3,
+        self::STATUS_SHIPPED    => 4,
+        self::STATUS_CANCELLED  => 99, // terminal state
+    ];
 
     /**
      * Payment method constants.
@@ -164,11 +175,7 @@ class Order extends Model
 
     public function getIsPaidAttribute(): bool
     {
-        return in_array($this->status, [
-            self::STATUS_PAID,
-            self::STATUS_PROCESSING,
-            self::STATUS_SHIPPED,
-        ], true);
+        return $this->payment_status === self::PAYMENT_STATUS_PAID;
     }
 
     public function getIsShippedAttribute(): bool
@@ -214,7 +221,7 @@ class Order extends Model
             $this->gateway_meta = is_array($rawPayload) ? $rawPayload : (array) $rawPayload;
         }
 
-        // Keep main order status consistent + log history
+        // Update order status to 'paid' (not 'processing' automatically)
         $this->updateStatus(self::STATUS_PAID, 'Payment successful via ' . strtoupper($gateway));
 
         if (is_null($this->paid_at)) {
@@ -250,7 +257,32 @@ class Order extends Model
      */
     public function updateStatus(string $status, string $notes = null): void
     {
-        $oldStatus    = $this->status;
+        if (! array_key_exists($status, self::STATUS_FLOW)) {
+            throw new \InvalidArgumentException("Invalid status: {$status}");
+        }
+
+        $oldStatus = $this->status;
+
+        // Prevent backward status transition
+        if (
+            isset(self::STATUS_FLOW[$oldStatus]) &&
+            self::STATUS_FLOW[$status] < self::STATUS_FLOW[$oldStatus]
+        ) {
+            throw new \LogicException(
+                "Order status cannot be reverted from {$oldStatus} to {$status}"
+            );
+        }
+
+        // Prevent any change once shipped
+        if ($oldStatus === self::STATUS_SHIPPED && $status !== self::STATUS_SHIPPED) {
+            throw new \LogicException('Shipped orders cannot be modified.');
+        }
+
+        // Prevent resurrecting cancelled orders
+        if ($oldStatus === self::STATUS_CANCELLED) {
+            throw new \LogicException('Cancelled orders cannot be modified.');
+        }
+
         $this->status = $status;
 
         switch ($status) {
@@ -280,6 +312,7 @@ class Order extends Model
             ]);
         }
     }
+
 
     /**
      * Set tracking number.
@@ -339,6 +372,20 @@ class Order extends Model
     public function scopePaymentFailed($query)
     {
         return $query->where('payment_status', self::PAYMENT_STATUS_FAILED);
+    }
+
+    /**
+     * Get all valid statuses
+     */
+    public static function getValidStatuses(): array
+    {
+        return [
+            self::STATUS_PENDING,
+            self::STATUS_PAID,
+            self::STATUS_PROCESSING,
+            self::STATUS_SHIPPED,
+            self::STATUS_CANCELLED,
+        ];
     }
 
     /**

@@ -16,15 +16,15 @@ class ManageOrderController extends Controller
     public function index(): View
     {
         $orders = Order::with(['user', 'shippingAddress', 'billingAddress'])
+            ->where('status', '!=', Order::STATUS_PENDING)
             ->latest()
             ->paginate(10);
 
         $stats = [
-            'total' => Order::count(),
-            'paid' => Order::where('status', Order::STATUS_PAID)->count(),
+            'paid'       => Order::where('status', Order::STATUS_PAID)->count(),
             'processing' => Order::where('status', Order::STATUS_PROCESSING)->count(),
-            'shipped' => Order::where('status', Order::STATUS_SHIPPED)->count(),
-            'cancelled' => Order::where('status', Order::STATUS_CANCELLED)->count(),
+            'shipped'    => Order::where('status', Order::STATUS_SHIPPED)->count(),
+            'cancelled'  => Order::where('status', Order::STATUS_CANCELLED)->count(),
         ];
 
         return view('manageorder.index', compact('orders', 'stats'));

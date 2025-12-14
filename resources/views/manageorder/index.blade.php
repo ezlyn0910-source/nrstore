@@ -566,6 +566,11 @@
         flex-direction: column;
         text-align: center;
     }
+
+    .stat-icon.shipped {
+        background: rgba(40, 167, 69, 0.1);
+        color: var(--success);
+    }
 }
 </style>
 

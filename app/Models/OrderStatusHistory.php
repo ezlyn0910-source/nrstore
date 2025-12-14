@@ -43,11 +43,11 @@ class OrderStatusHistory extends Model
     public function getStatusLabelAttribute()
     {
         return match($this->status) {
+            Order::STATUS_PENDING    => 'Pending',
             Order::STATUS_PAID => 'Paid',
             Order::STATUS_PROCESSING => 'Processing',
             Order::STATUS_SHIPPED => 'Shipped',
             Order::STATUS_CANCELLED => 'Cancelled',
-            Order::STATUS_DELIVERED => 'Delivered',
             default => ucfirst($this->status)
         };
     }
