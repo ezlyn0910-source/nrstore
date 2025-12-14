@@ -60,7 +60,7 @@ class Order extends Model
         'status_label',
         'is_shipped',
         'is_cancelled',
-        // getIsPaidAttribute() is still accessible as $order->is_paid
+        'is_paid',
     ];
 
     /**
@@ -164,11 +164,7 @@ class Order extends Model
 
     public function getIsPaidAttribute(): bool
     {
-        return in_array($this->status, [
-            self::STATUS_PAID,
-            self::STATUS_PROCESSING,
-            self::STATUS_SHIPPED,
-        ], true);
+        return $this->payment_status === self::PAYMENT_STATUS_PAID;
     }
 
     public function getIsShippedAttribute(): bool
@@ -214,7 +210,7 @@ class Order extends Model
             $this->gateway_meta = is_array($rawPayload) ? $rawPayload : (array) $rawPayload;
         }
 
-        // Keep main order status consistent + log history
+        // Update order status to 'paid' (not 'processing' automatically)
         $this->updateStatus(self::STATUS_PAID, 'Payment successful via ' . strtoupper($gateway));
 
         if (is_null($this->paid_at)) {
@@ -250,6 +246,17 @@ class Order extends Model
      */
     public function updateStatus(string $status, string $notes = null): void
     {
+        // Validate status
+        if (!in_array($status, [
+            self::STATUS_PENDING,
+            self::STATUS_PAID,
+            self::STATUS_PROCESSING,
+            self::STATUS_SHIPPED,
+            self::STATUS_CANCELLED
+        ])) {
+            throw new \InvalidArgumentException("Invalid status: {$status}");
+        }
+
         $oldStatus    = $this->status;
         $this->status = $status;
 
@@ -339,6 +346,20 @@ class Order extends Model
     public function scopePaymentFailed($query)
     {
         return $query->where('payment_status', self::PAYMENT_STATUS_FAILED);
+    }
+
+    /**
+     * Get all valid statuses
+     */
+    public static function getValidStatuses(): array
+    {
+        return [
+            self::STATUS_PENDING,
+            self::STATUS_PAID,
+            self::STATUS_PROCESSING,
+            self::STATUS_SHIPPED,
+            self::STATUS_CANCELLED,
+        ];
     }
 
     /**
