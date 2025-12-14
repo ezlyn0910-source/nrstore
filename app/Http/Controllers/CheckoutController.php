@@ -36,7 +36,8 @@ class CheckoutController extends Controller
             // LOAD BUY NOW DATA
             $cartItems = collect($buyNowOrder['items']);
             $subtotal = $buyNowOrder['total'];
-            $total = $subtotal;
+            $shippingFee = 10.99;
+            $total = $subtotal + $shippingFee;
         } else {
             // 3. Fallback to Database Cart
             $cart = $this->getOrCreateCart();
@@ -47,7 +48,8 @@ class CheckoutController extends Controller
 
             $cartItems = $cart->items()->with(['product.images', 'variation'])->get();
             $subtotal = $cart->total_amount;
-            $total = $subtotal;
+            $shippingFee = 10.99;
+            $total = $subtotal + $shippingFee;
         }
 
         // 4. Get Addresses - FIXED QUERY
@@ -81,7 +83,8 @@ class CheckoutController extends Controller
             'discount',
             'addresses',
             'buyNowOrder',
-            'banks' // Add banks to the compact function
+            'banks',
+            'shippingFee'
         ));
     }
 
@@ -200,11 +203,10 @@ class CheckoutController extends Controller
                 'state'           => 'required|string|max:100',
                 'postal_code'     => 'required|string|max:10',
                 'country'         => 'required|string|max:100',
-                'is_default'      => 'nullable|boolean',
+                'is_default'      => 'nullable|in:0,1,on,off,true,false'
             ]);
 
-            // Do we want to make THIS address the default?
-            $makeDefault = $request->boolean('is_default');
+            $makeDefault = in_array($request->is_default, ['1', 'on', 'true', true], true);
 
             \DB::beginTransaction();
 
@@ -294,7 +296,7 @@ class CheckoutController extends Controller
                 'state' => 'required|string|max:100',
                 'postal_code' => 'required|string|max:10',
                 'country' => 'required|string|max:100',
-                'is_default' => 'nullable|boolean'
+                'is_default' => 'nullable|in:0,1,on,off,true,false'
             ]);
 
             \Log::info('Validation passed');
@@ -323,7 +325,7 @@ class CheckoutController extends Controller
                 'state' => $request->state,
                 'postal_code' => $request->postal_code,
                 'country' => $request->country ?? 'Malaysia',
-                'is_default' => $isFirstAddress || $request->boolean('is_default')
+                'is_default' => $isFirstAddress || in_array($request->is_default, ['1', 'on', 'true', true], true)
             ]);
 
             \Log::info('Address created:', ['address_id' => $address->id]);
@@ -382,9 +384,15 @@ class CheckoutController extends Controller
     /**
      * Display success page
      */
-    public function success(Request $request)
+    public function success(Order $order)
     {
-        return view('checkout.success');
+        if ($order->payment_status !== Order::PAYMENT_STATUS_PAID) {
+            return redirect()
+                ->route('checkout.failed')
+                ->with('error', 'Payment was not completed.');
+        }
+
+        return view('checkout.success', compact('order'));
     }
 
     /**
