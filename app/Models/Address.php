@@ -23,6 +23,7 @@ class Address extends Model
         'postal_code',
         'country',
         'is_default',
+        'email',
     ];
 
 

@@ -61,18 +61,18 @@ class ProfileController extends Controller
 
     /**
      * MY ORDERS (ACCOUNT PAGE)
-     * Show ONLY past orders: delivered, cancelled, completed
+     * Show ONLY past orders: shipped, cancelled (since no delivered status)
      */
     public function orders()
     {
         $user = Auth::user();
 
-        // Modify status list to match your database
-        $statuses = ['delivered', 'completed', 'cancelled'];
+        // Updated to match your Order model statuses
+        $statuses = ['shipped', 'cancelled']; // Only shipped and cancelled for past orders
 
         $orders = Order::where('user_id', $user->id)
                         ->whereIn('status', $statuses)
-                        ->with('items.product') // load products inside items
+                        ->with(['orderItems.product', 'orderItems.variation']) // Use correct relationship name
                         ->latest()
                         ->get();
 
@@ -93,33 +93,38 @@ class ProfileController extends Controller
         $request->validate([
             'first_name' => 'required|string|max:150',
             'last_name'  => 'required|string|max:150',
-            'street'     => 'required|string',
+            'address_line_1' => 'required|string',
+            'address_line_2' => 'nullable|string',
             'city'       => 'required|string',
             'state'      => 'required|string',
-            'postcode'   => 'required|string',
+            'postal_code' => 'required|string',
             'country'    => 'required|string',
             'phone'      => 'required|string|max:20',
-            'email'      => 'required|email'
+            'email'      => 'required|email',
+            'type'       => 'required|in:shipping,billing'
         ]);
 
-        // If set as default, unset previous default
+        // If set as default, unset previous default of the same type
         if ($request->is_default) {
-            Address::where('user_id', Auth::id())->update(['is_default' => 0]);
+            Address::where('user_id', Auth::id())
+                   ->where('type', $request->type)
+                   ->update(['is_default' => 0]);
         }
 
         Address::create([
-            'user_id'    => Auth::id(),
-            'first_name' => $request->first_name,
-            'last_name'  => $request->last_name,
-            'company'    => $request->company,
-            'street'     => $request->street,
-            'city'       => $request->city,
-            'state'      => $request->state,
-            'postcode'   => $request->postcode,
-            'country'    => $request->country,
-            'phone'      => $request->phone,
-            'email'      => $request->email,
-            'is_default' => $request->is_default ? 1 : 0
+            'user_id'        => Auth::id(),
+            'type'           => $request->type,
+            'first_name'     => $request->first_name,
+            'last_name'      => $request->last_name,
+            'address_line_1' => $request->address_line_1,
+            'address_line_2' => $request->address_line_2,
+            'city'           => $request->city,
+            'state'          => $request->state,
+            'postal_code'    => $request->postal_code,
+            'country'        => $request->country,
+            'phone'          => $request->phone,
+            'email'          => $request->email,
+            'is_default'     => $request->is_default ? 1 : 0
         ]);
 
         return back()->with('success', 'Address added successfully!');
@@ -127,7 +132,7 @@ class ProfileController extends Controller
 
     public function updateAddress(Request $request, Address $address)
     {
-        // Simple ownership check instead of policy
+        // Ownership check
         if ($address->user_id !== Auth::id()) {
             abort(403, 'You are not allowed to update this address.');
         }
@@ -135,35 +140,44 @@ class ProfileController extends Controller
         $request->validate([
             'first_name' => 'required|string|max:150',
             'last_name'  => 'required|string|max:150',
-            'street'     => 'required|string',
+            'address_line_1' => 'required|string',
+            'address_line_2' => 'nullable|string',
             'city'       => 'required|string',
             'state'      => 'required|string',
-            'postcode'   => 'required|string',
+            'postal_code' => 'required|string',
             'country'    => 'required|string',
             'phone'      => 'required|string|max:20',
             'email'      => 'required|email'
         ]);
 
-        // Handle default address switching
+        // Handle default address switching for the same type
         if ($request->is_default) {
-            Address::where('user_id', Auth::id())->update(['is_default' => 0]);
+            Address::where('user_id', Auth::id())
+                   ->where('type', $address->type)
+                   ->update(['is_default' => 0]);
             $address->is_default = 1;
-        } else {
-            $address->is_default = 0;
+        } elseif (!$request->is_default && $address->is_default) {
+            // Don't allow unsetting default if it's the only one
+            $count = Address::where('user_id', Auth::id())
+                           ->where('type', $address->type)
+                           ->count();
+            if ($count > 1) {
+                $address->is_default = 0;
+            }
         }
 
         $address->update([
-            'first_name' => $request->first_name,
-            'last_name'  => $request->last_name,
-            'company'    => $request->company,
-            'street'     => $request->street,
-            'city'       => $request->city,
-            'state'      => $request->state,
-            'postcode'   => $request->postcode,
-            'country'    => $request->country,
-            'phone'      => $request->phone,
-            'email'      => $request->email,
-            'is_default' => $address->is_default,
+            'first_name'     => $request->first_name,
+            'last_name'      => $request->last_name,
+            'address_line_1' => $request->address_line_1,
+            'address_line_2' => $request->address_line_2,
+            'city'           => $request->city,
+            'state'          => $request->state,
+            'postal_code'    => $request->postal_code,
+            'country'        => $request->country,
+            'phone'          => $request->phone,
+            'email'          => $request->email,
+            'is_default'     => $address->is_default,
         ]);
 
         return back()->with('success', 'Address updated successfully!');
@@ -171,9 +185,20 @@ class ProfileController extends Controller
 
     public function deleteAddress(Address $address)
     {
-        // Ownership check instead of policy
+        // Ownership check
         if ($address->user_id !== Auth::id()) {
             abort(403, 'You are not allowed to delete this address.');
+        }
+
+        // If deleting a default address, set another one as default
+        if ($address->is_default) {
+            $newDefault = Address::where('user_id', Auth::id())
+                                ->where('type', $address->type)
+                                ->where('id', '!=', $address->id)
+                                ->first();
+            if ($newDefault) {
+                $newDefault->update(['is_default' => true]);
+            }
         }
 
         $address->delete();
@@ -186,44 +211,8 @@ class ProfileController extends Controller
      */
     public function paymentMethods()
     {
-        // You’re using Stripe – cards are stored safely with Stripe, not locally.
+        // You're using Stripe – cards are stored safely with Stripe, not locally.
         return view('profile.editpayment');
-    }
-
-    public function storeCard(Request $request)
-    {
-        $request->validate([
-            'holder_name' => 'required|string|max:150',
-            'number'      => 'required|string|max:20',
-            'expiry'      => 'required|string',
-            'cvv'         => 'required|string|max:4'
-        ]);
-
-        PaymentCard::create([
-            'user_id'     => Auth::id(),
-            'holder_name' => $request->holder_name,
-            'number'      => substr($request->number, -4), // store only last 4
-            'brand'       => $this->detectCardBrand($request->number),
-            'exp_month'   => substr($request->expiry, 0, 2),
-            'exp_year'    => substr($request->expiry, 3, 2),
-        ]);
-
-        return back()->with('success', 'Card added successfully!');
-    }
-
-    public function destroyCard(PaymentCard $card)
-    {
-        $this->authorize('delete', $card);
-        $card->delete();
-
-        return back()->with('success', 'Card removed!');
-    }
-
-    private function detectCardBrand($number)
-    {
-        if (str_starts_with($number, '4')) return 'visa';
-        if (preg_match('/^(5[1-5])/', $number)) return 'mastercard';
-        return 'card';
     }
 
     /**
