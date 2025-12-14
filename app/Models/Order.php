@@ -73,6 +73,17 @@ class Order extends Model
     const STATUS_CANCELLED  = 'cancelled';
 
     /**
+     * Order status progression (lower → earlier, higher → later)
+     */
+    public const STATUS_FLOW = [
+        self::STATUS_PENDING    => 1,
+        self::STATUS_PAID       => 2,
+        self::STATUS_PROCESSING => 3,
+        self::STATUS_SHIPPED    => 4,
+        self::STATUS_CANCELLED  => 99, // terminal state
+    ];
+
+    /**
      * Payment method constants.
      */
     const PAYMENT_METHOD_STRIPE    = 'stripe';
@@ -246,18 +257,32 @@ class Order extends Model
      */
     public function updateStatus(string $status, string $notes = null): void
     {
-        // Validate status
-        if (!in_array($status, [
-            self::STATUS_PENDING,
-            self::STATUS_PAID,
-            self::STATUS_PROCESSING,
-            self::STATUS_SHIPPED,
-            self::STATUS_CANCELLED
-        ])) {
+        if (! array_key_exists($status, self::STATUS_FLOW)) {
             throw new \InvalidArgumentException("Invalid status: {$status}");
         }
 
-        $oldStatus    = $this->status;
+        $oldStatus = $this->status;
+
+        // Prevent backward status transition
+        if (
+            isset(self::STATUS_FLOW[$oldStatus]) &&
+            self::STATUS_FLOW[$status] < self::STATUS_FLOW[$oldStatus]
+        ) {
+            throw new \LogicException(
+                "Order status cannot be reverted from {$oldStatus} to {$status}"
+            );
+        }
+
+        // Prevent any change once shipped
+        if ($oldStatus === self::STATUS_SHIPPED && $status !== self::STATUS_SHIPPED) {
+            throw new \LogicException('Shipped orders cannot be modified.');
+        }
+
+        // Prevent resurrecting cancelled orders
+        if ($oldStatus === self::STATUS_CANCELLED) {
+            throw new \LogicException('Cancelled orders cannot be modified.');
+        }
+
         $this->status = $status;
 
         switch ($status) {
@@ -287,6 +312,7 @@ class Order extends Model
             ]);
         }
     }
+
 
     /**
      * Set tracking number.
