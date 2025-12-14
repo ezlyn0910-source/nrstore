@@ -385,6 +385,8 @@ Route::middleware(['auth'])
             // Toyyibpay server-to-server callback
             Route::post('/toyyibpay/callback', 'toyyibpayCallback')->name('toyyibpay.callback');
 
+            Route::get('/toyyibpay/return/{order}', 'toyyibpayReturn')->name('toyyibpay.return');
+            
             // Optional generic webhook (Stripe, etc.)
             Route::post('/webhook/{gateway}', 'webhook')->name('webhook');
         });

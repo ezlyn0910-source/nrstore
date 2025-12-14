@@ -258,26 +258,34 @@
     }
 
     // Load cart count on page load for ALL pages
-    document.addEventListener('DOMContentLoaded', function() {
-        // Only fetch cart count if user is logged in and header is visible
+    document.addEventListener('DOMContentLoaded', function () {
         const headerExists = document.querySelector('.header-bottom');
-        if (headerExists) {
-            fetch('/cart/count')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    updateHeaderCartCount(data.count);
-                })
-                .catch(error => {
-                    console.error('Error fetching cart count:', error);
-                    // Optional: You can set a default value or hide the badge on error
-                    updateHeaderCartCount(0);
-                });
-        }
+        if (!headerExists) return;
+
+        const url = "{{ route('cart.count') }}"; // ✅ correct absolute URL
+
+        fetch(url, {
+            method: 'GET',
+            credentials: 'same-origin', // ✅ send session cookie
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            cache: 'no-store' // ✅ disable caching
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            updateHeaderCartCount(Number(data.count || 0));
+        })
+        .catch(error => {
+            console.error('Error fetching cart count:', error);
+            updateHeaderCartCount(0);
+        });
     });
 
     // Make the function globally available

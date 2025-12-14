@@ -341,17 +341,13 @@ class CartController extends Controller
      */
     public function getCount()
     {
-        try {
-            $cart = $this->getCart();
-            // Count total quantity in cart, not just distinct lines
-            $count = $cart ? $cart->items()->sum('quantity') : 0;
+        $cart = Cart::where('session_id', session()->getId())->first();
+        $count = $cart ? $cart->items()->sum('quantity') : 0;
 
-            return response()->json(['count' => $count]);
-            
-        } catch (\Exception $e) {
-            Log::error('Cart Count Error: ' . $e->getMessage());
-            return response()->json(['count' => 0]);
-        }
+        return response()->json(['count' => (int) $count])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     /**

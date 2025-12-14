@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Cart;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -17,7 +18,18 @@ class PaymentController extends Controller
      */
     public const METHOD_STRIPE      = 'stripe_card';
     public const METHOD_TOYYIBPAY   = 'fpx_toyyibpay';
-    public const METHOD_BILLPLZ     = 'fpx_billplz';
+
+    /**
+     * Map frontend payment method to internal gateway
+     */
+    private function mapToGateway(string $frontendMethod): string
+    {
+        return match($frontendMethod) {
+            'credit_card', 'debit_card' => self::METHOD_STRIPE, // Both use Stripe
+            'online_banking' => self::METHOD_TOYYIBPAY,         // Online banking uses Toyyibpay
+            default => $frontendMethod
+        };
+    }
 
     /**
      * Main entry: called by Place Order button (POST /payment/process)
@@ -26,61 +38,45 @@ class PaymentController extends Controller
     {
         $user = $request->user();
 
-        // Basic validation
+        // Basic validation - ACCEPT frontend values directly
         $rules = [
-            'payment_method'   => 'required|in:' . implode(',', [
-                self::METHOD_STRIPE,
-                self::METHOD_TOYYIBPAY,
-                self::METHOD_BILLPLZ,
-            ]),
+            'payment_method'   => 'required|in:credit_card,debit_card,online_banking', // Accept frontend values
             'selected_address' => 'required|integer',
             'amount'           => 'required|numeric|min:0.50',
         ];
 
-        $paymentMethod = $request->input('payment_method');
-
-        // For FPX (Toyyibpay/Billplz) we still require bank selection (for UI),
-        // even though gateway itself will show bank list again.
-        if (in_array($paymentMethod, [self::METHOD_TOYYIBPAY, self::METHOD_BILLPLZ], true)) {
-            $rules['online_banking_bank'] = 'required|string';
-        }
-
         $validated = $request->validate($rules);
-
-        // ⚠️ In production you should always re-calculate cart total on the server.
-        // For now we trust the posted amount to keep changes small.
-        $amount   = (float) $validated['amount'];
-        $currency = config('services.stripe.currency', 'myr'); // we use same 3-letter code everywhere
-
-        // Create a new pending order
+        
+        $paymentMethod = $validated['payment_method']; // Use frontend value directly
+        
+        // Create order - store what user selected
         $order = Order::create([
             'user_id'            => $user->id,
             'shipping_address_id'=> $validated['selected_address'],
-            'billing_address_id' => $validated['selected_address'], // simple: use same as shipping
-            'total_amount'       => $amount,
+            'billing_address_id' => $validated['selected_address'],
+            'total_amount'       => (float) $validated['amount'],
             'shipping_cost'      => 0,
             'tax_amount'         => 0,
             'discount_amount'    => 0,
             'status'             => Order::STATUS_PENDING,
-            'payment_method'     => $paymentMethod,
-            'payment_gateway'    => $this->mapGatewayName($paymentMethod),
+            'payment_method'     => $paymentMethod, // Store frontend value: 'credit_card', 'debit_card', 'online_banking'
+            'payment_gateway'    => $this->mapGatewayName($paymentMethod), // Map to gateway name
             'payment_status'     => Order::PAYMENT_STATUS_PENDING,
-            'currency'           => strtoupper($currency),
+            'currency'           => strtoupper(config('services.stripe.currency', 'myr')),
         ]);
 
-        // Decide which gateway flow to use
+        $this->clearUserCart($user);
+
+        // Route to correct gateway
         switch ($paymentMethod) {
-            case self::METHOD_STRIPE:
+            case 'credit_card':
+            case 'debit_card':
                 return $this->redirectToStripeCheckout($order, $request);
 
-            case self::METHOD_TOYYIBPAY:
+            case 'online_banking':
                 return $this->redirectToToyyibpayFPX($order, $request);
 
-            case self::METHOD_BILLPLZ:
-                return $this->redirectToBillplzFPX($order, $request);
-
             default:
-                // should never hit here because of validation
                 return redirect()
                     ->route('checkout.failed')
                     ->with('error', 'Unsupported payment method selected.');
@@ -93,10 +89,9 @@ class PaymentController extends Controller
     protected function mapGatewayName(string $method): string
     {
         return match ($method) {
-            self::METHOD_STRIPE    => 'Stripe',
-            self::METHOD_TOYYIBPAY => 'Toyyibpay',
-            self::METHOD_BILLPLZ   => 'Billplz',
-            default                => 'Unknown',
+            'credit_card', 'debit_card' => 'Stripe',     // Both card types use Stripe
+            'online_banking' => 'Toyyibpay',             // Online banking uses Toyyibpay
+            default => 'Unknown',
         };
     }
 
@@ -229,7 +224,7 @@ class PaymentController extends Controller
 
         $endpoint   = rtrim($config['endpoint'] ?? 'https://toyyibpay.com', '/');
         $callbackUrl= route('payment.toyyibpay.callback');
-        $returnUrl  = route('checkout.success', ['order' => $order->id]);
+        $returnUrl = route('payment.toyyibpay.return', ['order' => $order->id]);
 
         // Toyyibpay amount is also in sen (cents)
         $amountInCents = (int) round($order->total_amount * 100);
@@ -335,129 +330,33 @@ class PaymentController extends Controller
         return response('OK', 200);
     }
 
-    /* ============================================================
-     *  BILLPLZ – FPX
-     * ============================================================
-     */
-
-    protected function redirectToBillplzFPX(Order $order, Request $request)
+    public function toyyibpayReturn(Request $request, Order $order)
     {
-        $config = config('services.billplz', []);
+        // Toyyibpay usually sends one of these (depends on account/version):
+        $statusId = $request->input('status_id'); // e.g. 1=success, 2=pending, 3=failed
+        $status   = $request->input('status');    // e.g. "1" success, "0" failed
+        $billCode = $request->input('billcode') ?? $request->input('refno');
 
-        if (empty($config['key']) || empty($config['collection_id'])) {
-            Log::error('Billplz config missing.');
-            return redirect()
-                ->route('checkout.failed')
-                ->with('error', 'FPX gateway (Billplz) is not configured. Please contact support.');
+        // Optional: ensure it matches this order's bill code if present
+        if ($billCode && $order->payment_reference && $billCode !== $order->payment_reference) {
+            // Mismatch -> don't show success
+            $order->markAsFailed('Toyyibpay return mismatch');
+            return redirect()->route('checkout.failed')->with('error', 'Payment verification failed. Please try again.');
         }
 
-        $endpoint    = rtrim($config['endpoint'] ?? 'https://www.billplz.com', '/');
-        $callbackUrl = route('payment.billplz.callback');
-        $redirectUrl = route('checkout.success', ['order' => $order->id]);
+        // Determine success/fail
+        $isSuccess =
+            ((string)$status === '1') ||
+            ((string)$statusId === '1');
 
-        $amountInCents = (int) round($order->total_amount * 100);
-
-        try {
-            $response = Http::withBasicAuth($config['key'], '')
-                ->asForm()
-                ->post($endpoint . '/api/v3/bills', [
-                    'collection_id'      => $config['collection_id'],
-                    'email'              => $request->user()->email,
-                    'name'               => $request->user()->name,
-                    'amount'             => $amountInCents,
-                    'description'        => 'Order #' . $order->order_number,
-                    'reference_1_label'  => 'Order ID',
-                    'reference_1'        => $order->id,
-                    'callback_url'       => $callbackUrl,
-                    'redirect_url'       => $redirectUrl,
-                ]);
-
-            if (!$response->ok()) {
-                Log::error('Billplz create bill HTTP error', [
-                    'status' => $response->status(),
-                    'body'   => $response->body(),
-                ]);
-
-                $order->markAsFailed('Billplz create bill failed');
-
-                return redirect()
-                    ->route('checkout.failed')
-                    ->with('error', 'Unable to start FPX payment. Please try again later.');
-            }
-
-            $data = $response->json();
-
-            $billId = $data['id']  ?? null;
-            $url    = $data['url'] ?? null;
-
-            if (!$billId || !$url) {
-                Log::error('Billplz response missing id/url', ['response' => $data]);
-
-                $order->markAsFailed('Billplz response invalid');
-
-                return redirect()
-                    ->route('checkout.failed')
-                    ->with('error', 'Unable to start FPX payment. Please try again.');
-            }
-
-            $order->payment_reference = $billId;
-            $order->save();
-
-            return redirect()->away($url);
-        } catch (\Throwable $e) {
-            Log::error('Billplz error', [
-                'order_id' => $order->id,
-                'error'    => $e->getMessage(),
-            ]);
-
-            $order->markAsFailed('Billplz initialisation failed');
-
-            return redirect()
-                ->route('checkout.failed')
-                ->with('error', 'Unable to start FPX payment. Please try again.');
-        }
-    }
-
-    /**
-     * Billplz callback (server-to-server)
-     * Route: POST /payment/billplz/callback
-     *
-     * NOTE: Adjust params (id, paid, reference_1, etc.) based on Billplz docs.
-     */
-    public function billplzCallback(Request $request)
-    {
-        Log::info('Billplz callback received', $request->all());
-
-        $billId   = $request->input('id');          // Bill ID
-        $paidFlag = $request->input('paid');        // "true"/"false" or 1/0
-        $orderId  = $request->input('reference_1'); // we sent this in create bill
-
-        $order = null;
-
-        if ($orderId) {
-            $order = Order::find($orderId);
-        } elseif ($billId) {
-            $order = Order::where('payment_reference', $billId)->first();
+        if ($isSuccess) {
+            $order->markAsPaid('Toyyibpay return success');
+            return redirect()->route('checkout.success', ['order' => $order->id]);
         }
 
-        if (!$order) {
-            Log::warning('Billplz callback: order not found', [
-                'bill_id'  => $billId,
-                'order_id' => $orderId,
-            ]);
-
-            return response('ORDER NOT FOUND', 404);
-        }
-
-        $paid = filter_var($paidFlag, FILTER_VALIDATE_BOOLEAN);
-
-        if ($paid) {
-            $order->markAsPaid('Billplz callback success');
-        } else {
-            $order->markAsFailed('Billplz callback failed/cancelled');
-        }
-
-        return response('OK', 200);
+        // cancelled/failed
+        $order->markAsFailed('Toyyibpay cancelled/failed on return');
+        return redirect()->route('checkout.failed')->with('error', 'Payment was cancelled or failed.');
     }
 
     /* ============================================================
@@ -492,7 +391,28 @@ class PaymentController extends Controller
         Log::info("Payment webhook received from {$gateway}", $request->all());
 
         // For now we just acknowledge; real logic depends on which gateways
-        // you enable webhook for (Stripe, Toyyibpay, Billplz, etc).
+        // you enable webhook for (Stripe, Toyyibpay, etc).
         return response('OK', 200);
+    }
+
+    private function clearUserCart($user): void
+    {
+        // DB cart
+        $cart = Cart::where('user_id', $user->id)->first();
+        if ($cart) {
+            // If you have relationship: $cart->items()
+            if (method_exists($cart, 'items')) {
+                $cart->items()->delete();
+            } else {
+                // fallback if relationship name is cartItems
+                $cart->cartItems()->delete();
+            }
+        }
+
+        // Session "Buy Now" (if you use it)
+        session()->forget('buy_now_order');
+
+        // If you store cart count in session (optional)
+        session()->forget('cart_count');
     }
 }

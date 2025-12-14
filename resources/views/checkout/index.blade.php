@@ -2,10 +2,15 @@
 
 @section('content')
 <div class="checkout-page">
-    <!-- Banner -->
-    <div class="checkout-banner">
-        <div class="banner-content">
-            <h1>CHECKOUT</h1>
+    <!-- Checkout Header with Back -->
+    <div class="checkout-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="{{ route('cart.index') }}" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1>Checkout</h1>
+            </div>
         </div>
     </div>
 
@@ -39,7 +44,7 @@
 
                                             <span class="address-name-line">
                                                 {{ $address->first_name }} {{ $address->last_name }}
-                                                <span class="address-phone">({{ $address->phone}})</span>
+                                                <span class="address-phone">({{ $address->phone }})</span>
                                             </span>
                                         </div>
 
@@ -92,7 +97,7 @@
                         @endif
                     </div>
 
-                    <!-- Add Address Section - Updated to Blue Link -->
+                    <!-- Add Address Section -->
                     <div class="add-address-section">
                         <button type="button" class="add-address-link" id="addAddressLink">
                             <i class="fas fa-plus"></i> Add New Address
@@ -113,10 +118,10 @@
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="phone">Phone Number *</label>
+                                    <label for="edit_phone">Phone Number <span class="required-star">*</span></label>
                                     <div class="phone-input-group">
                                         <div class="country-code-selector">
-                                            <select class="country-code" name="country_code" id="country_code">
+                                            <select class="country-code" name="country_code" id="edit_country_code">
                                                 <option value="60" selected>+60</option>
                                                 <option value="1">+1</option>
                                                 <option value="44">+44</option>
@@ -132,7 +137,7 @@
                                                 <option value="55">+55</option>
                                             </select>
                                         </div>
-                                        <input type="tel" id="phone" name="phone" placeholder="12-3456789" required>
+                                        <input type="tel" id="edit_phone" name="phone" required>
                                     </div>
                                 </div>
                                 
@@ -310,83 +315,31 @@
                 <section class="checkout-section">
                     <h2>Payment Method</h2>
 
-                    <div class="payment-tabs">
-                        <button class="pm-tab active" data-tab="credit">Credit Card</button>
-                        <button class="pm-tab" data-tab="debit">Debit Card</button>
-                        <button class="pm-tab" data-tab="online">Online Banking</button>
-                    </div>
-
-                    <!-- ===== CREDIT + DEBIT CARD PANEL ===== -->
-                    <div class="payment-panel" id="panel-credit" style="display: block;">
-                        <div class="card-grid">
-                            {{-- If user has saved cards, show them --}}
-                            @if(isset($savedCards) && $savedCards->count() > 0)
-                                @foreach($savedCards as $card)
-                                    <div class="saved-card" data-card-id="{{ $card->id }}">
-                                        <div class="card-visual">
-                                            <div class="cv-pattern"></div>
-                                            <div class="cv-number">**** {{ substr($card->last4, -4) }}</div>
-                                            <div class="cv-brand">{{ strtoupper($card->brand) }}</div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            @endif
-
-                            {{-- ADD NEW CARD --}}
-                            <div class="saved-card add-new-card" id="addNewCard">
-                                <div class="card-visual add-card-visual">
-                                    <span class="add-text">+ Add New</span>
+                    <div class="payment-methods-grid">
+                        <!-- Credit/Debit Card Option -->
+                        <div class="payment-method-box" data-method="card">
+                            <div class="payment-method-content">
+                                <div class="payment-method-icon">
+                                    <i class="fas fa-credit-card"></i>
+                                </div>
+                                <div class="payment-method-info">
+                                    <h4>Credit / Debit Card</h4>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- SHOW CARD FORM ONLY IF "ADD NEW CARD" CLICKED --}}
-                        <div class="new-card-form" id="newCardForm" style="display:none;">
-                            <div class="form-group">
-                                <label>Card Number</label>
-                                <input type="text" placeholder="1234 5678 9012 3456">
-                            </div>
-
-                            <div class="form-group">
-                                <label>Name on Card</label>
-                                <input type="text" placeholder="John Doe">
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Expiration Date</label>
-                                    <input type="text" placeholder="MM / YY">
+                        <!-- Online Banking Option -->
+                        <div class="payment-method-box" data-method="online">
+                            <div class="payment-method-content">
+                                <div class="payment-method-icon">
+                                    <i class="fas fa-university"></i>
                                 </div>
-                                <div class="form-group">
-                                    <label>CVV</label>
-                                    <input type="text" placeholder="123">
+                                <div class="payment-method-info">
+                                    <h4>Online Banking</h4>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- ===== DEBIT CARD PANEL ===== -->
-                    <div class="payment-panel" id="panel-debit" style="display: none;">
-                        <!-- Debit card content similar to credit card -->
-                        <p>Debit Card content would go here</p>
-                    </div>
-
-                    <!-- ===== ONLINE BANKING PANEL ===== -->
-                    <div class="payment-panel" id="panel-online" style="display: none;">
-                        <div class="bank-grid">
-                            @foreach($banks as $index => $bank)
-                                <div class="bank-box" data-bank="{{ $bank['name'] }}" data-bank-index="{{ $index }}">
-                                    <img src="{{ asset('/images/banks/'.$bank['img']) }}" class="bank-icon" 
-                                        alt="{{ $bank['name'] }} logo">
-                                    <span class="bank-label">{{ $bank['name'] }}</span>
-                                </div>
-                            @endforeach
-                        </div>
-                        
-                        <!-- Hidden input to store selected bank -->
-                        <input type="hidden" name="selected_bank" id="selectedBank" value="">
-                    </div>
-
                 </section>
             </div>
 
@@ -394,75 +347,88 @@
             <div class="checkout-right">
                 <div class="order-summary">
                     <h3>Order Summary</h3>
+                    
                     <div class="order-items">
-                        @foreach($cartItems as $item)
-                        <div class="order-item">
-                            <div class="item-image">
-                                @php
-                                    $imageUrl = asset('images/default-product.png');
-                                    
-                                    // Check for product images via relationship
-                                    if ($item->product && $item->product->images && $item->product->images->isNotEmpty()) {
-                                        $firstImage = $item->product->images->first();
-                                        if ($firstImage && $firstImage->image_path) {
-                                            // Change from storage/ to proper public path
-                                            $imagePath = $firstImage->image_path;
-                                            // If it's just a filename, prepend the directory
-                                            if (!str_contains($imagePath, '/') && !str_starts_with($imagePath, 'images/')) {
-                                                $imagePath = 'images/products/' . $imagePath;
-                                            }
-                                            // If it doesn't start with 'images/', prepend it
-                                            elseif (!str_starts_with($imagePath, 'images/')) {
-                                                $imagePath = 'images/' . ltrim($imagePath, '/');
-                                            }
-                                            $imageUrl = asset($imagePath);
-                                        }
-                                    } 
-                                    // Check for product's direct image field
-                                    elseif ($item->product && $item->product->image) {
-                                        $imagePath = $item->product->image;
-                                        // If it's just a filename, prepend the directory
-                                        if (!str_contains($imagePath, '/') && !str_starts_with($imagePath, 'images/')) {
-                                            $imagePath = 'images/products/' . $imagePath;
-                                        }
-                                        // If it doesn't start with 'images/', prepend it
-                                        elseif (!str_starts_with($imagePath, 'images/')) {
-                                            $imagePath = 'images/' . ltrim($imagePath, '/');
-                                        }
-                                        $imageUrl = asset($imagePath);
+                        @php
+                            $mainItem = $cartItems->first();
+                            $product = $mainItem->product;
+                        @endphp
+                        
+                        <!-- Product Image - Centered -->
+                        <div class="product-image-center">
+                            @php
+                                $imageUrl = asset('images/default-product.png');
+                                if ($product && $product->images && $product->images->isNotEmpty()) {
+                                    $firstImage = $product->images->first();
+                                    if ($firstImage && $firstImage->image_path) {
+                                        $imageUrl = asset('storage/' . $firstImage->image_path);
                                     }
-                                @endphp
-                                <img src="{{ $imageUrl }}" alt="{{ $item->product->name ?? 'Product' }}" onerror="this.src='{{ asset('images/default-product.png') }}'">
-                            </div>
-                            <div class="item-details">
-                                <h4>{{ $item->product->name ?? 'Product' }}</h4>
-                                <div class="item-meta">
-                                    <span class="item-quantity">Qty: {{ $item->quantity }}</span>
-                                    <span class="item-price">RM{{ number_format($item->price, 2) }}</span>
-                                </div>
-                            </div>
+                                } elseif ($product && $product->image) {
+                                    $imageUrl = asset('storage/' . $product->image);
+                                }
+                            @endphp
+                            <img src="{{ $imageUrl }}" alt="{{ $product->name ?? 'Product' }}">
                         </div>
-                        @endforeach
+                        
+                        <!-- Product Name - Bigger and Bold -->
+                        <div class="product-name-large">
+                            {{ $product->name ?? 'Product Name' }}
+                        </div>
+                        
+                        <!-- Product Specs - Grey text -->
+                        <div class="product-specs-list">
+                            @php
+                                $specs = [];
+                                if (!empty($product->processor)) $specs['Processor'] = $product->processor;
+                                if (!empty($product->ram)) $specs['RAM'] = $product->ram;
+                                if (!empty($product->storage)) $specs['Storage'] = $product->storage;
+                                if (!empty($product->operating_system)) $specs['OS'] = $product->operating_system;
+                                if (!empty($product->screen_size)) $specs['Screen'] = $product->screen_size;
+                            @endphp
+                            
+                            @foreach($specs as $key => $value)
+                                <div class="spec-item">
+                                    <span class="spec-key">{{ $key }}:</span>
+                                    <span class="spec-value">{{ $value }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                        
+                        <!-- Price and Quantity Row -->
+                        <div class="price-quantity-row">
+                            <span class="product-price">RM{{ number_format($mainItem->price, 2) }}</span>
+                            <span class="product-quantity">× {{ $mainItem->quantity }}</span>
+                        </div>
+                        
+                        <!-- Divider -->
+                        <div class="order-divider"></div>
                     </div>
 
+                    <!-- Totals Section -->
                     <div class="summary-totals">
                         <div class="summary-row">
-                            <span>Subtotal</span>
-                            <span>RM{{ number_format($subtotal, 2) }}</span>
+                            <span class="summary-label">SUBTOTAL</span>
+                            <span class="summary-value">RM{{ number_format($subtotal, 2) }}</span>
                         </div>
+                        
                         <div class="summary-row">
-                            <span>Shipping</span>
-                            <span>RM5.99</span>
+                            <span class="summary-label">SHIPPING</span>
+                             <span class="summary-value">RM{{ number_format($shippingFee, 2) }}</span>
                         </div>
+                        
+                        <!-- Divider -->
                         <div class="summary-divider"></div>
-                        <div class="summary-row total">
-                            <span>Total</span>
-                            <span>RM{{ number_format($total, 2) }}</span>
+                        
+                        <!-- Total - Bold and Bigger -->
+                        <div class="summary-total-row">
+                            <span class="total-label">TOTAL</span>
+                            <span class="total-value">RM{{ number_format($subtotal + $shippingFee, 2) }}</span>
                         </div>
                     </div>
 
+                    <!-- Place Order Button -->
                     <div class="checkout-actions">
-                        <button type="button" id="placeOrderBtn" class="btn btn-primary btn-lg">Place Order</button>
+                        <button type="button" id="placeOrderBtn" class="btn-place-order">Place Order</button>
                     </div>
 
                     {{-- Hidden form that actually posts to payment.process --}}
@@ -473,7 +439,6 @@
                         <input type="hidden" name="online_banking_bank" id="po_online_banking_bank">
                         <input type="hidden" name="amount" id="po_amount" value="{{ $total }}">
                     </form>
-
                 </div>
             </div>
         </div>
@@ -632,46 +597,16 @@
     }
 
     window.addEventListener('load', function () {
+        // ===== COMMON ELEMENTS =====
+        const addressForm     = document.getElementById('addressForm');
+        const editAddressModal  = document.getElementById('editAddressModal');
+        const editAddressForm   = document.getElementById('editAddressForm');
+        const editAddressClose  = document.getElementById('editAddressClose');
+        const placeOrderBtn     = document.getElementById('placeOrderBtn');
+
         // ============================
-        // ADDRESS DROPDOWN TOGGLE
+        // FORM HANDLING – ADD ADDRESS
         // ============================
-        const dropdownContent = document.getElementById('addressDropdownContent');
-        const dropdownToggle  = document.getElementById('dropdownToggle');
-        const dropdownHeader  = document.getElementById('addressDropdownHeader');
-
-        function updateToggleState(isShowing) {
-            if (!dropdownToggle || !dropdownHeader || !dropdownContent) return;
-            if (isShowing) {
-                dropdownToggle.innerHTML = '<i class="fas fa-chevron-up"></i>';
-                dropdownHeader.classList.add('active');
-                dropdownContent.style.display = 'block';
-            } else {
-                dropdownToggle.innerHTML = '<i class="fas fa-chevron-down"></i>';
-                dropdownHeader.classList.remove('active');
-                dropdownContent.style.display = 'none';
-            }
-        }
-
-        if (dropdownToggle) {
-            dropdownToggle.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                const isOpen = dropdownContent && dropdownContent.style.display === 'block';
-                updateToggleState(!isOpen);
-            });
-        }
-
-        if (dropdownHeader) {
-            dropdownHeader.addEventListener('click', function (e) {
-                if (e.target === dropdownToggle || (dropdownToggle && dropdownToggle.contains(e.target))) return;
-                const isOpen = dropdownContent && dropdownContent.style.display === 'block';
-                updateToggleState(!isOpen);
-            });
-        }
-
-        // ===============FORM HANDLING – ADD ADDRESS==================
-        const addressForm = document.getElementById('addressForm');
-
         if (addressForm) {
             attachLiveClear(addressForm);
 
@@ -708,6 +643,10 @@
                 }
 
                 const formData = new FormData(this);
+                const isDefaultCheckbox = this.querySelector('#is_default');
+                if (isDefaultCheckbox) {
+                    formData.set('is_default', isDefaultCheckbox.checked ? '1' : '0');
+                }
 
                 fetch(this.action, {
                     method: 'POST',
@@ -724,7 +663,6 @@
 
                     if (res.ok && data && data.success) {
                         alert(data.message || 'Address saved successfully!');
-                        if (typeof updateToggleState === 'function') updateToggleState(false);
                         this.reset();
                         window.location.reload();
                         return;
@@ -747,17 +685,12 @@
                             const field = this.querySelector('[name="' + key + '"]');
                             if (field) {
                                 showFieldError(field, data.errors[key][0]);
-                            } else {
-                                console.warn('Validation error on unknown field:', key, data.errors[key]);
                             }
                         });
-
                         return;
                     }
 
-                    console.error('Address save failed:', data);
                     alert('Failed to save address. Please try again.');
-                    return;
                 })
                 .catch(err => {
                     console.error('Address save error:', err);
@@ -772,81 +705,46 @@
             });
         }
 
-        // ================EDIT ADDRESS POPUP==================
-        const editAddressModal  = document.getElementById('editAddressModal');
-        const editAddressForm   = document.getElementById('editAddressForm');
-        const editAddressCancel = document.getElementById('editAddressCancel');
-        const editAddressClose  = document.getElementById('editAddressClose');
-
+        // ============================
+        // EDIT ADDRESS – OPEN + SUBMIT
+        // ============================
         function openEditAddressModal(trigger) {
             if (!editAddressModal || !editAddressForm) return;
 
-            if (!trigger.classList.contains('address-edit-link')) {
-                trigger = trigger.closest('.address-edit-link');
+            editAddressForm.action = trigger.getAttribute('data-update-url') || '';
+
+            editAddressForm.querySelector('#edit_first_name').value =
+                trigger.dataset.firstName || '';
+            editAddressForm.querySelector('#edit_last_name').value =
+                trigger.dataset.lastName || '';
+            editAddressForm.querySelector('#edit_phone').value =
+                trigger.dataset.phone || '';
+            editAddressForm.querySelector('#edit_address_line_1').value =
+                trigger.dataset.line1 || '';
+            editAddressForm.querySelector('#edit_address_line_2').value =
+                trigger.dataset.line2 || '';
+            editAddressForm.querySelector('#edit_city').value =
+                trigger.dataset.city || '';
+            editAddressForm.querySelector('#edit_postal_code').value =
+                trigger.dataset.postal || '';
+            editAddressForm.querySelector('#edit_country').value =
+                trigger.dataset.country || 'Malaysia';
+
+            const stateSelect = editAddressForm.querySelector('#edit_state');
+            if (stateSelect) {
+                stateSelect.value = trigger.dataset.state || '';
             }
-            if (!trigger) return;
 
-            const updateUrl = trigger.getAttribute('data-update-url') || '';
-            editAddressForm.action = updateUrl;
-
-            const map = {
-                first_name:     'firstName',
-                last_name:      'lastName',
-                phone:          'phone',
-                address_line_1: 'line1',
-                address_line_2: 'line2',
-                city:           'city',
-                state:          'state',
-                postal_code:    'postal',
-                country:        'country'
-            };
-
-            Object.keys(map).forEach(name => {
-                const input = editAddressForm.querySelector('[name="' + name + '"]');
-                if (!input) return;
-                const dataKey = map[name];
-                
-                if (name === 'phone') {
-                    // Parse phone number with country code
-                    const phoneValue = trigger.dataset[dataKey] || '';
-                    let countryCode = '60';
-                    let phoneNumber = phoneValue;
-
-                    // If phone starts with +, parse it
-                    if (phoneValue.startsWith('+')) {
-                        const match = phoneValue.match(/^\+(\d+)(.*)$/);
-                        if (match) {
-                            countryCode = match[1];
-                            phoneNumber = match[2];
-                        }
-                    }
-
-                    // Set country code and phone number
-                    const countryCodeSelect = editAddressForm.querySelector('#edit_country_code');
-                    if (countryCodeSelect) {
-                        countryCodeSelect.value = countryCode;
-                    }
-                    input.value = phoneNumber;
-                } else {
-                    input.value = trigger.dataset[dataKey] || '';
-                }
-            });
-
-            const isDefaultCb  = editAddressForm.querySelector('#edit_is_default');
+            const isDefaultCb = editAddressForm.querySelector('#edit_is_default');
             if (isDefaultCb) {
                 const isDefaultAttr = trigger.getAttribute('data-is-default');
-                const isDefault     = (isDefaultAttr === '1' || isDefaultAttr === 'true');
-
-                isDefaultCb.checked = isDefault;
-                isDefaultCb.setCustomValidity('');
+                isDefaultCb.checked = (isDefaultAttr === '1' || isDefaultAttr === 'true');
             }
 
             SELECTORS.forEach(name => {
                 const el = editAddressForm.querySelector('[name="' + name + '"]');
                 if (el) clearFieldError(el);
             });
-            const globalErr = editAddressForm.querySelector('.form-global-error');
-            if (globalErr) globalErr.remove();
 
             editAddressModal.classList.add('show');
             document.body.style.overflow = 'hidden';
@@ -858,24 +756,13 @@
             document.body.style.overflow = '';
         }
 
-        function bindEditButtons() {
-            const editButtons = document.querySelectorAll('.address-edit-link');
-            editButtons.forEach(btn => {
-                btn.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    openEditAddressModal(this);
-                });
-            });
-        }
-
-        bindEditButtons();
-
-        if (editAddressCancel) {
-            editAddressCancel.addEventListener('click', function (e) {
+        const editButtons = document.querySelectorAll('.address-edit-link');
+        editButtons.forEach(btn => {
+            btn.addEventListener('click', function (e) {
                 e.preventDefault();
-                closeEditAddressModal();
+                openEditAddressModal(this);
             });
-        }
+        });
 
         if (editAddressClose) {
             editAddressClose.addEventListener('click', function (e) {
@@ -886,7 +773,7 @@
 
         if (editAddressModal) {
             editAddressModal.addEventListener('click', function (e) {
-                if (e.target === editAddressModal) {
+                if (e.target.classList.contains('address-edit-modal')) {
                     closeEditAddressModal();
                 }
             });
@@ -901,39 +788,15 @@
                 const saveBtn = this.querySelector('.save-btn');
                 const originalText = saveBtn ? saveBtn.textContent : 'Save';
 
-                const validated = validateFormClient(this);
-
-                SELECTORS.forEach(name => {
-                    const el = this.querySelector('[name="' + name + '"]');
-                    if (el) clearFieldError(el);
-                });
-
-                if (!validated.valid) {
-                    Object.keys(validated.errors).forEach(key => {
-                        const el = this.querySelector('[name="' + key + '"]');
-                        if (el) {
-                            showFieldError(el, validated.errors[key]);
-                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-                    });
-                    return;
-                }
-
                 if (saveBtn) {
                     saveBtn.textContent = 'Saving...';
                     saveBtn.disabled = true;
                 }
 
                 const formData = new FormData(this);
-                
-                // Format phone number with country code
-                const countryCode = getVal('country_code', this);
-                const phoneValue = getVal('phone', this);
-                const fullPhoneNumber = `+${countryCode}${phoneValue.replace(/\D/g, '')}`;
-                formData.set('phone', fullPhoneNumber);
 
                 fetch(this.action, {
-                    method: 'POST',
+                    method: 'POST', // Laravel uses POST + _method=PUT
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': csrfToken
@@ -941,7 +804,41 @@
                     body: formData
                 })
                 .then(async res => {
-                    // ... rest of the code remains the same
+                    const contentType = res.headers.get('content-type') || '';
+                    const isJson = contentType.includes('application/json');
+                    const data = isJson ? await res.json() : null;
+
+                    if (res.ok && data && data.success) {
+                        alert(data.message || 'Address updated successfully!');
+                        closeEditAddressModal();
+                        window.location.reload();
+                        return;
+                    }
+
+                    if (res.status === 422 && data && data.errors) {
+                        Object.keys(data.errors).forEach(key => {
+                            if (key === 'is_default') {
+                                const cb = document.getElementById('edit_is_default');
+                                if (cb) {
+                                    cb.setCustomValidity('Already exist');
+                                    cb.reportValidity();
+                                    cb.addEventListener('input', function () {
+                                        cb.setCustomValidity('');
+                                    }, { once: true });
+                                }
+                                return;
+                            }
+
+                            const field = editAddressForm.querySelector('[name="' + key + '"]');
+                            if (field) {
+                                showFieldError(field, data.errors[key][0]);
+                            }
+                        });
+                        return;
+                    }
+
+                    console.error('Address update failed:', data);
+                    alert('Failed to update address. Please try again.');
                 })
                 .catch(err => {
                     console.error('Address update error:', err);
@@ -956,117 +853,72 @@
             });
         }
 
-        // TAB SWITCHING
-        document.querySelectorAll('.pm-tab').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.pm-tab').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
-                const tab = btn.dataset.tab;
-
-                document.querySelectorAll('.payment-panel').forEach(p => p.style.display = "none");
-                document.getElementById('panel-' + tab).style.display = "block";
-                
-                // Clear bank selection when switching away from online banking
-                if (tab !== 'online') {
-                    document.querySelectorAll('.bank-box').forEach(b => b.classList.remove('selected'));
-                    document.getElementById('selectedBank').value = '';
-                }
+        // ============================
+        // PAYMENT METHOD SELECT (CARD / ONLINE)
+        // ============================
+        const paymentBoxes = document.querySelectorAll('.payment-method-box');
+        paymentBoxes.forEach(box => {
+            box.addEventListener('click', function () {
+                paymentBoxes.forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
             });
         });
 
-        // ADD NEW CARD CLICK
-        const addCardBtn = document.getElementById("addNewCard");
-        const newCardForm = document.getElementById("newCardForm");
-
-        if (addCardBtn && newCardForm) {
-            addCardBtn.addEventListener("click", () => {
-                newCardForm.style.display = "block";
-            });
-        }
-
-        // ONLINE BANK SELECTION
-        document.querySelectorAll('.bank-box').forEach(box => {
-            box.addEventListener('click', () => {
-                // Remove selected class from all banks
-                document.querySelectorAll('.bank-box').forEach(b => b.classList.remove('selected'));
-                
-                // Add selected class to clicked bank
-                box.classList.add('selected');
-                
-                // Get selected bank name
-                const selectedBank = box.getAttribute('data-bank');
-                
-                // Update hidden input
-                document.getElementById('selectedBank').value = selectedBank;
-                
-                console.log('Selected bank:', selectedBank);
-            });
-        });
-
-        // ==================PLACE ORDER → PAYMENT.PROCESS=================
-        const placeOrderBtn = document.getElementById('placeOrderBtn');
-
+        // ============================
+        // PLACE ORDER → PAYMENT.PROCESS
+        // ============================
         if (placeOrderBtn) {
             placeOrderBtn.addEventListener('click', function () {
-                // 1. Check address selected
                 const addressRadio = document.querySelector('input[name="selected_address"]:checked');
                 if (!addressRadio) {
                     alert('Please select a shipping address.');
                     return;
                 }
 
-                // 2. Check payment method
-                const activeTab = document.querySelector('.pm-tab.active');
-                const paymentMethod = activeTab ? activeTab.dataset.tab : '';
-                
-                if (!paymentMethod) {
+                const selectedBox = document.querySelector('.payment-method-box.selected');
+                const paymentMethodKey = selectedBox ? selectedBox.dataset.method : '';
+
+                if (!paymentMethodKey) {
                     alert('Please select a payment method.');
                     return;
                 }
-                
-                // 3. If online banking is selected, check if a bank is chosen
-                if (paymentMethod === 'online') {
-                    const selectedBank = document.getElementById('selectedBank').value;
-                    if (!selectedBank) {
-                        alert('Please select a bank for online banking.');
-                        return;
-                    }
-                    
-                    // Update the hidden form field
-                    const bankInput = document.getElementById('po_online_banking_bank');
-                    if (bankInput) {
-                        bankInput.value = selectedBank;
-                    }
-                }
 
-                // 4. Fill the hidden Laravel form
-                const form = document.getElementById('placeOrderForm');
+                const form      = document.getElementById('placeOrderForm');
                 const addrInput = document.getElementById('po_selected_address');
-                const pmInput = document.getElementById('po_payment_method');
-                
-                if (!form) {
-                    console.error('placeOrderForm not found');
+                const pmInput   = document.getElementById('po_payment_method');
+
+                if (!form || !addrInput || !pmInput) {
                     alert('Something went wrong. Please refresh and try again.');
                     return;
                 }
 
-                // Map tab names to payment method values
+                // Map front-end method to what your backend expects
                 const paymentMethodMap = {
-                    'credit': 'credit_card',
-                    'debit': 'debit_card',
-                    'online': 'online_banking'
+                    card:   'credit_card',     // matches validation + Stripe branch
+                    online: 'online_banking'   // matches validation + Toyyibpay branch
                 };
-                
-                if (addrInput) addrInput.value = addressRadio.value;
-                if (pmInput) pmInput.value = paymentMethodMap[paymentMethod] || paymentMethod;
 
-                // 5. Submit the real form
+                addrInput.value = addressRadio.value;
+                pmInput.value   = paymentMethodMap[paymentMethodKey] || paymentMethodKey;
+
+                // If you later add bank selection for online banking, handle it safely:
+                if (paymentMethodKey === 'online') {
+                    const bankSelectEl = document.getElementById('selectedBank');
+                    if (bankSelectEl) {
+                        const selectedBank = bankSelectEl.value;
+                        if (!selectedBank) {
+                            alert('Please select a bank for online banking.');
+                            return;
+                        }
+                        const bankInput = document.getElementById('po_online_banking_bank');
+                        if (bankInput) bankInput.value = selectedBank;
+                    }
+                }
+
                 form.submit();
             });
         }
-
-    }); // end load
+    });
 })(); // IIFE
 </script>
 @endpush
@@ -1074,25 +926,59 @@
 @section('styles')
 <style>
 .checkout-page {
-    min-height: 70vh;
-    background: white;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #ffffff 0%, #f9fffb 50%, #f0fff8 100%);
     font-family: "Nunito", sans-serif;
+    padding-bottom: 3rem;
 }
 
-/* Banner */
-.checkout-banner {
-    background: #2c3e50;
-    padding: 60px 3rem;
-    text-align: center;
-    margin-bottom: 0;
+/* ===== CHECKOUT HEADER ===== */
+.checkout-header {
+    background: transparent;
+    padding: 5rem 0 0.5rem 0;
+    margin-bottom: 0.5rem;
 }
 
-.banner-content h1 {
-    color: white;
+.checkout-header .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 3rem;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.back-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid #dee2e6;
+    color: #495057;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.back-link:hover {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+    color: #212529;
+}
+
+.back-link i {
+    font-size: 1rem;
+}
+
+.checkout-header h1 {
     font-size: 2.5rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
+    font-weight: 600;
+    color: #212529;
     margin: 0;
 }
 
@@ -1101,33 +987,33 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 3rem;
+    margin-top: 0;
 }
 
 .checkout-right {
     position: relative;
-    height: 100%; /* Add this */
+    height: 100%;
 }
 
-/* Update .checkout-content */
 .checkout-content {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 2rem;
-    margin-top: 2rem;
-    align-items: start; /* Ensure this is set */
-    min-height: 600px; /* Add minimum height */
+    grid-template-columns: 1.5fr 1fr;
+    gap: 3rem;
+    margin-top: 1rem;
+    align-items: start;
+    min-height: 600px; 
 }
 
 /* Section Styles */
 .checkout-section {
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
 .checkout-section h2 {
     font-size: 1.5rem;
     font-weight: 600;
     color: #1f2937;
-    margin: 2.5rem 0 1.5rem 0;
+    margin: 1rem 0 1rem 0;
     padding-bottom: 0.75rem;
 }
 
@@ -1237,6 +1123,81 @@
     margin-top: 1.5rem;
     padding-top: 1.5rem;
     border-top: 1px solid #e5e7eb;
+}
+
+/* ===== EDIT ADDRESS SAVE BUTTON ===== */
+#editAddressSave {
+    width: 100%;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    background: #1f2937;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 1rem;
+}
+
+#editAddressSave:hover {
+    background: #374151;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#editAddressSave:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+#editAddressSave:disabled {
+    background: #9ca3af;
+    color: #6b7280;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Button loading state */
+#editAddressSave.saving {
+    position: relative;
+    color: transparent;
+}
+
+#editAddressSave.saving::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin-left: -10px;
+    margin-top: -10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Edit form actions container */
+.edit-form-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Make sure the button is properly aligned */
+.address-edit-dialog .edit-form-actions {
+    width: 100%;
 }
 
 /* Dropdown content */
@@ -1366,6 +1327,7 @@
 
 .address-item {
     display: flex;
+    background: #ffffff;
     justify-content: space-between; 
     align-items: flex-start;
     padding: 16px;
@@ -1491,7 +1453,7 @@
 }
 
 .address-edit-title {
-    margin: 0 0 1rem 0;
+    margin: 0 0 2rem 0;
     font-size: 1.5rem;
     font-weight: 700;
     text-align: center;
@@ -1676,48 +1638,96 @@
     margin: 35px 0;
 }
 
-/* ===== PAYMENT TABS ===== */
-.payment-tabs {
+/* ===== PAYMENT METHODS GRID ===== */
+.payment-methods-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.payment-method-box {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    width: 50%;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.payment-method-box:hover {
+    border-color: #9ca3af;
+    background-color: #f9fafb;
+}
+
+.payment-method-box.selected {
+    border-color: #6b7280;
+    background-color: #f3f4f6;
+    box-shadow: 0 0 0 1px rgba(107, 114, 128, 0.2);
+}
+
+.payment-method-content {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid #e5e7eb; /* grey divider below all tabs */
-    padding-bottom: 4px;
+    gap: 0.75rem;
 }
 
-.pm-tab {
+.payment-method-icon {
+    width: 36px;
+    height: 36px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    padding: 0.5rem 0;
-    color: #6b7280; /* medium gray for inactive */
-    position: relative;
-    transition: color 0.2s ease;
-    border: none;
-    background: none;
+    color: #374151;
 }
 
-.pm-tab.active {
-    color: #111827; /* nearly black for active */
+.payment-method-box.selected .payment-method-icon {
+    background: #9ca3af;
+    color: white;
+}
+
+.payment-method-info {
+    flex: 1;
+}
+
+.payment-method-info h4 {
+    font-size: 0.95rem;
     font-weight: 600;
+    color: #1f2937;
+    margin: 0;
 }
 
-/* Active underline - appears above the grey divider */
-.pm-tab.active::after {
-    content: "";
-    position: absolute;
-    bottom: -4px; /* positions it right above the grey divider */
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background-color: #111827;
-    border-radius: 2px;
+/* Payment Details (shown when method is selected) */
+.payment-details {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    animation: fadeIn 0.3s ease;
 }
 
-/* Hover effect */
-.pm-tab:hover {
-    color: #374151; /* darker gray on hover */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Card Grid adjustments for new layout */
+.payment-details .card-grid {
+    margin-top: 0;
+}
+
+/* Online Banking Grid adjustments */
+.payment-details .bank-grid {
+    margin-top: 0;
 }
 
 /* ======CARD GRID======= */
@@ -1817,300 +1827,183 @@
     color: #1f2937;
 }
 
-/* ======= ONLINE BANKING – BANK LIST======== */
-
-/* Wrapper panel under Online Banking */
-.online-banking-dropdown {
-    margin-top: 10px; /* already added inline, but safe to keep here */
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb; /* light grey border */
-    background-color: #f9fafb; /* very light background */
-    display: none; /* controlled by JS */
-}
-
-/* Each bank row */
-.bank-option {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 8px;
-    border-radius: 6px;
-    border: 1px solid #e5e7eb;
-    background-color: #ffffff;
-    margin-bottom: 6px;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.bank-option:hover {
-    border-color: #d1d5db;
-    background-color: #f3f4f6;
-    cursor: pointer;
-}
-
-.bank-info {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.bank-logo {
-    height: 40px;
-    width: auto;
-    object-fit: contain;
-    display: block;
-}
-
-.bank-name {
-    font-size: 14px;
-    color: #111827;
-}
-
-.bank-radio {
-    width: 16px;
-    height: 16px;
-    accent-color: #111827;
-    cursor: pointer;
-}
-
-/* Selected bank row */
-.bank-option.bank-selected {
-    border-color: #111827;
-    background-color: #e5e7eb;
-}
-
-/* Hidden banks */
-.bank-option.bank-hidden {
-    display: none;
-}
-
-/* Change bank button */
-.bank-list-toggle {
-    margin-top: 6px;
-    background: transparent;
-    border: none;
-    color: #111827;
-    font-size: 13px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-    padding: 0;
-}
-
-.bank-list-toggle i {
-    font-size: 10px;
-}
-
-/* Card details panel under Credit/Debit Card */
-.card-details {
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    background-color: #f9fafb;
-    margin-top: 10px;
-}
-
-.card-details .form-group label {
-    font-size: 13px;
-    font-weight: 500;
-    display: block;
-    margin-bottom: 4px;
-}
-
-.card-details .form-group input {
-    width: 100%;
-    padding: 8px 10px;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
-    font-size: 14px;
-}
-
-.card-details .form-group input:focus {
-    outline: none;
-    border-color: #111827;
-}
-
-.method-name {
-    font-weight: 600;
-    color: #1f2937;
-    font-size: 0.95rem;
-}
-
-.radio-indicator {
-    width: 18px;
-    height: 18px;
-    border: 2px solid #d1d5db;
-    border-radius: 50%;
-    position: relative;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-}
-
-/* Order Summary */
+/* ===== ORDER SUMMARY REDESIGN ===== */
 .order-summary {
     background: white;
-    border-radius: 0.75rem;
+    border-radius: 12px;
     padding: 1.5rem;
     border: 1px solid #e5e7eb;
-    position: -webkit-sticky; /* For Safari */
+    position: -webkit-sticky;
     position: sticky;
-    top: 20px; /* Changed from 2rem to 20px */
-    align-self: flex-start; /* Important for grid/flex children */
-    margin-top: 50px;
-    margin-bottom: 50px;
-    max-height: calc(100vh - 100px); /* Increased from 4rem to 100px */
+    top: 20px;
+    align-self: flex-start;
+    margin-top: 2rem;
+    max-height: calc(100vh - 100px);
     overflow-y: auto;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    z-index: 10; /* Add z-index */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    z-index: 10;
 }
 
 .order-summary h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-size: 1.15rem;
+    font-weight: 700;
     color: #1f2937;
     margin: 0 0 1.5rem 0;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid #e5e7eb;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
 }
 
-.order-items {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    max-height: 300px;
-    overflow-y: auto;
+.product-image-center {
+    text-align: center;
+    margin: 0 auto 1.5rem;
+    max-width: 180px;
 }
 
-.order-item {
-    display: flex;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    background: #f9fafb;
-    border-radius: 0.5rem;
-}
-
-.item-image {
-    width: 60px;
-    height: 60px;
-    background: white;
-    border-radius: 0.375rem;
-    overflow: hidden;
-    flex-shrink: 0;
+.product-image-center img {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
     border: 1px solid #e5e7eb;
 }
 
-.item-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.product-name-large {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    text-align: left;
+    margin-bottom: 1rem;
+    line-height: 1.3;
 }
 
-.item-details {
+/* Product Specs - Grey text in rows */
+.product-specs-list {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.spec-item {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: flex-start;
+}
+
+.spec-key {
+    font-weight: 500;
+    margin-right: 0.25rem;
+    min-width: 80px;
+}
+
+.spec-value {
+    color: #4b5563;
     flex: 1;
 }
 
-.item-details h4 {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 0 0 0.25rem 0;
-    line-height: 1.2;
-}
-
-.item-meta {
+/* Price and Quantity Row */
+.price-quantity-row {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
-.item-quantity {
-    font-size: 0.75rem;
+.product-price {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.product-quantity {
+    font-size: 0.9rem;
     color: #6b7280;
 }
 
-.item-price {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #1f2937;
+/* Divider */
+.order-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 1rem 0;
 }
 
 .summary-totals {
-    margin-bottom: 1.5rem;
+    margin: 1rem 0;
 }
 
 .summary-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
+    margin-bottom: 0.5rem !important;
+    padding: 0.25rem 0 !important;
+    font-size: 0.75rem;
+    line-height: 1.2;
 }
 
-.summary-row.total {
-    font-weight: 600;
-    font-size: 1.125rem;
+.summary-label {
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.summary-value {
     color: #1f2937;
+    font-weight: 500;
 }
 
+/* Summary Divider */
 .summary-divider {
     height: 1px;
     background: #e5e7eb;
-    margin: 0.75rem 0;
+    margin: 0.5rem 0 !important;
 }
 
-.checkout-actions {
-    text-align: center;
-}
-
-.terms-agreement {
+/* Total Row - Bold and Bigger */
+.summary-total-row {
     display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    text-align: left;
-    font-size: 0.875rem;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem;
+    padding-top: 0.25rem;
 }
 
-.terms-agreement input {
-    margin-top: 0.25rem;
-    flex-shrink: 0;
+.total-label {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
 }
 
-/* Button Styles */
-.btn {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    font-size: 0.875rem;
+.total-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1f2937;
 }
 
-.btn-lg {
-    padding: 1rem 2rem;
+/* Place Order Button */
+.checkout-actions {
+    margin-top: 1.5rem;
+}
+
+.btn-place-order {
+    padding: 1rem;
     font-size: 1.125rem;
     width: 100%;
-}
-
-.btn-primary {
+    font-weight: 600;
     background: #1f2937;
     color: white;
+    border: none;
+    border-radius: 3rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.btn-primary:hover {
+.btn-place-order:hover {
     background: #374151;
-}
-
-.btn-secondary {
-    background: #6b7280;
-    color: white;
-}
-
-.btn-secondary:hover {
-    background: #4b5563;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Responsive Design */
@@ -2118,14 +2011,6 @@
     .checkout-content {
         grid-template-columns: 1fr;
         gap: 1.5rem;
-    }
-
-    .checkout-banner {
-        padding: 40px 1rem;
-    }
-
-    .banner-content h1 {
-        font-size: 2rem;
     }
 
     .checkout-container {
@@ -2137,7 +2022,32 @@
         width: 100%;
         max-height: none;
         margin-top: 2rem;
-        margin-bottom: 2rem;
+    }
+    
+    .product-image-center {
+        max-width: 140px;
+    }
+    
+    .product-image-center img {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .product-name-large {
+        font-size: 1.2rem;
+    }
+    
+    .product-price {
+        font-size: 1.2rem;
+    }
+    
+    .total-value {
+        font-size: 1.3rem;
+    }
+    
+    .product-image {
+        width: 70px;
+        height: 70px;
     }
 
     .dropdown-content .form-row {
@@ -2155,8 +2065,22 @@
         font-size: 1rem;
     }
 
-    .method-name {
+    .payment-method-content {
+        gap: 0.75rem;
+    }
+    
+    .payment-method-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .payment-method-info h4 {
         font-size: 0.9rem;
+    }
+    
+    .payment-method-info p {
+        font-size: 0.8rem;
     }
 
 }
@@ -2184,16 +2108,9 @@
 }
 
 @media (max-width: 480px) {
-    .bank-option {
-        padding: 6px;
-    }
-
-    .bank-name {
-        font-size: 13px;
-    }
-
-    .bank-logo {
-        height: 18px;
+    #editAddressSave {
+        padding: 10px 20px;
+        font-size: 0.9rem;
     }
 }
 </style>
