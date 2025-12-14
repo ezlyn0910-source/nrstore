@@ -2,1021 +2,166 @@
 
 @section('styles')
 <style>
-/* Bid Page Styles */
-:root {
-    --primary-dark: #1a2412;
-    --primary-green: #2d4a35;
-    --accent-green: #2f6032;
-    --rare-green: #357a38;
-    --light-green: #4caf50;
-    --light-bone: #f8f9fa;
-    --dark-text: #1a2412;
-    --light-text: #6b7c72;
-    --white: #ffffff;
-    --border-light: #e9ecef;
-    --shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
-    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
-}
-
-.bid-page {
+/* Add styles for bid detail page */
+.bid-main-content {
     background-color: #f8f9fa;
-    min-height: 100vh;
-}
-
-/* Hero Section */
-.bid-hero-section {
-    position: relative;
-    color: white;
-    overflow: hidden;
-    height: 50vh;
-    min-height: 400px;
-    width: 100%;
-    margin: 0;
-    padding: 0 !important;
-}
-
-.bid-hero-banner {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.hero-overlay-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    color: white;
-    width: 100%;
-}
-
-.hero-overlay-text h1 {
-    font-size: 3rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-}
-
-.hero-overlay-text p {
-    font-size: 1.25rem;
-    opacity: 0.9;
-    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-}
-
-/* Section Base Styles */
-.bid-section {
-    padding: 5rem 0;
-    width: 100%;
-}
-
-.bid-section-light {
-    background-color: #f8f9fa;
-}
-
-.bid-section-dark {
-    background-color: #2d4a35;
-    color: white;
-}
-
-.bid-section-lighter-green {
-    background-color: #3a5a40;
-    color: white;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-}
-
-/* Section Titles */
-.section-title-container {
-    text-align: center;
-    margin-bottom: 3rem;
-}
-
-.section-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.title-part-black {
-    color: #1a2412;
-}
-
-.title-part-white {
-    color: white;
-}
-
-.title-part-green {
-    color: var(--accent-green);
-}
-
-.title-underline {
-    width: 80px;
-    height: 4px;
-    background: var(--accent-green);
-    margin: 0 auto;
-    border-radius: 2px;
-}
-
-.title-underline-white {
-    background: white;
-}
-
-/* Brands Section */
-.brands-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: nowrap;
-    gap: 2rem;
-}
-
-.brand-card {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 1.5rem 1rem;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    text-decoration: none;
-    color: inherit;
-}
-
-.brand-card:hover {
-    transform: translateY(-5px);
-    text-decoration: none;
-    color: inherit;
-}
-
-.brand-logo-circle {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background-color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e9ecef;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-.brand-card:hover .brand-logo-circle {
-    border-color: var(--accent-green);
-    box-shadow: 0 8px 25px rgba(218, 161, 18, 0.15);
-}
-
-.brand-logo-circle img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-}
-
-.brand-name {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #1a2412;
-}
-
-/* Brand Auctions Page Styles */
-.brand-hero-section {
-    position: relative;
-    color: white;
-    overflow: hidden;
-    height: 40vh;
-    min-height: 300px;
-    width: 100%;
-    margin: 0;
-    padding: 0 !important;
-}
-
-.brand-hero-banner {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.brand-hero-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(rgba(26, 36, 18, 0.7), rgba(45, 74, 53, 0.7));
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 2rem;
-}
-
-.brand-hero-title {
-    font-size: 3.5rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-}
-
-.brand-hero-subtitle {
-    font-size: 1.25rem;
-    opacity: 0.9;
-    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-}
-
-.brand-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1rem;
-    margin-top: 1rem;
-    opacity: 0.9;
-}
-
-.brand-breadcrumb a {
-    color: #4caf50;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.brand-breadcrumb a:hover {
-    color: white;
-}
-
-.brand-breadcrumb .separator {
-    margin: 0 0.5rem;
-}
-
-/* Brand Auctions Layout */
-.brand-auctions-layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 2rem;
     padding: 3rem 0;
 }
 
-/* Filters Section */
-.brand-filters {
+.bid-content-box {
     background: white;
     border-radius: 1rem;
-    padding: 1.5rem;
-    box-shadow: var(--shadow);
-    height: fit-content;
-    position: sticky;
-    top: 2rem;
+    padding: 2rem;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
 }
 
-.filter-section {
-    margin-bottom: 2rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border-light);
-}
-
-.filter-section:last-child {
-    margin-bottom: 0;
-    border-bottom: none;
-}
-
-.filter-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--dark-text);
-    margin-bottom: 1rem;
-}
-
-.filter-options {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.filter-option {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-}
-
-.filter-option input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    accent-color: var(--accent-green);
-}
-
-.filter-option label {
-    cursor: pointer;
-    color: var(--light-text);
-    transition: color 0.3s ease;
-}
-
-.filter-option:hover label {
-    color: var(--dark-text);
-}
-
-.price-range {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.price-inputs {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.price-input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.price-label {
-    font-size: 0.875rem;
-    color: var(--light-text);
-    font-weight: 500;
-}
-
-.price-input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border-light);
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    transition: border-color 0.3s ease;
-}
-
-.price-input:focus {
-    outline: none;
-    border-color: var(--accent-gold);
-}
-
-.filter-btn {
-    width: 100%;
-    padding: 0.75rem;
-    background: #2d4a35;
-    color: white;
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 0.5rem;
-}
-
-.filter-btn:hover {
-    background: #2f6032;
-    transform: translateY(-2px);
-}
-
-/* Products Grid */
-.brand-products-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.brand-product-card {
+.bid-detail-section {
     display: grid;
-    grid-template-columns: 200px 1fr auto;
-    gap: 0;
-    background: white;
-    border-radius: 1rem;
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    transition: all 0.3s ease;
-}
-
-.product-image {
-    width: 200px;
-    height: 100%;
-    border-radius: 1rem 0 0 1rem;
-    overflow: hidden;
-    margin: 0;
-}
-
-.product-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.product-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 1.5rem;
-}
-
-.product-name {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--dark-text);
-    margin-bottom: 0.5rem;
-}
-
-.product-specs {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.product-spec {
-    font-size: 0.875rem;
-    color: var(--light-text);
-}
-
-.product-price-info {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 1rem;
-    min-width: 180px;
-    padding: 1.5rem;
-}
-
-/* Countdown Timer Styles */
-.countdown-timer {
-    margin-top: 1rem;
-}
-
-.countdown-label {
-    font-size: 0.875rem;
-    color: var(--light-text);
-    margin-bottom: 0.75rem;
-    font-weight: 600;
-}
-
-.countdown-display {
-    display: flex;
-    gap: 0;
-    flex-wrap: wrap;
-}
-
-.countdown-unit {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 55px;
-}
-
-.countdown-box {
-    width: 40px;
-    height: 40px;
-    background: #1a2412;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    position: relative;
-}
-
-.countdown-value {
-    font-size: 1rem;
-    font-weight: bold;
-    color: white;
-    line-height: 1;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    font-family: "Courier New", monospace;
-}
-
-.countdown-label-small {
-    font-size: 0.65rem;
-    color: var(--light-text);
-    text-transform: uppercase;
-    font-weight: 500;
-}
-
-/* Products Header */
-.brand-products-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding: 0 0.5rem;
-}
-
-.products-count {
-    font-size: 1rem;
-    color: var(--light-text);
-    margin: 0;
-}
-
-.sort-select {
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--border-light);
-    border-radius: 0.5rem;
-    background: white;
-    color: var(--dark-text);
-    margin: 0;
-}
-
-.current-bid {
-    text-align: right;
-}
-
-.bid-label {
-    font-size: 0.875rem;
-    color: var(--light-text);
-    margin-bottom: 0.25rem;
-}
-
-.bid-amount {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--accent-green);
-}
-
-.exclamation-mark {
-    color: #dc2626;
-    font-weight: 900;
-    transform: skewX(10deg) scale(1.1);
-    display: inline-block;
-    margin-right: 0.125rem;
-}
-
-.auction-time {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    color: var(--light-text);
-}
-
-.buy-now-btn {
-    padding: 0.75rem 1.5rem;
-    background: var(--primary-green);
-    color: white;
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    text-align: center;
-    display: block;
-}
-
-.buy-now-btn:hover {
-    background: #253c2a;
-    transform: translateY(-2px);
-    color: white;
-    text-decoration: none;
-}
-
-/* Live Auctions */
-.live-auctions-slider-container {
-    position: relative;
-    overflow: hidden;
-    padding: 1rem 0;
-}
-
-.live-auctions-track {
-    display: flex;
-    gap: 1.5rem;
-    animation: slideInfinite 40s linear infinite;
-    width: max-content;
-}
-
-.live-auctions-track:hover {
-    animation-play-state: paused;
-}
-
-@keyframes slideInfinite {
-    0% {
-        transform: translateX(0);
-    }
-    100% {
-        transform: translateX(calc(-300px * 6 - 1.5rem * 6));
-    }
-}
-
-.live-auction-card {
-    flex: 0 0 300px;
-    background: white;
-    border: 1px solid #e9ecef;
-    border-radius: 1rem;
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative; /* Add this for badge positioning */
-}
-
-.bid-section-light .live-auction-card {
-    background: white;
-    border-color: #e9ecef;
-}
-
-.bid-section-dark .live-auction-card {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: white;
-}
-
-.live-auction-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-}
-
-.live-auction-badge {
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-    background: #dc2626;
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    z-index: 2;
-    /* Ensure it's always visible */
-    opacity: 1;
-    visibility: visible;
-}
-
-.live-auction-image {
-    width: 100%;
-    height: 200px;
-    background: #f8f9fa;
-    overflow: hidden;
-}
-
-.bid-section-dark .live-auction-image {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.live-auction-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.live-auction-card:hover .live-auction-image img {
-    transform: scale(1.05);
-}
-
-.live-auction-content {
-    padding: 1.25rem;
-}
-
-.live-auction-name {
-    font-size: 1.125rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-
-.bid-section-light .live-auction-name {
-    color: #1a2412;
-}
-
-.bid-section-dark .live-auction-name {
-    color: white;
-}
-
-.live-auction-condition {
-    font-size: 0.875rem;
-    margin-bottom: 1rem;
-}
-
-.bid-section-light .live-auction-condition {
-    color: #6b7c72;
-}
-
-.bid-section-dark .live-auction-condition {
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.live-auction-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.live-auction-price {
-    font-size: 1.25rem;
-    font-weight: bold;
-    color: #f8f9fa;
-}
-
-.live-auction-bids {
-    font-size: 0.875rem;
-}
-
-.bid-section-light .live-auction-bids {
-    color: #6b7c72;
-}
-
-.bid-section-dark .live-auction-bids {
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.live-auction-time {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.bid-section-light .live-auction-time {
-    color: #2d4a35;
-}
-
-.bid-section-dark .live-auction-time {
-    color: #dc2626;
-}
-
-/* Featured Auctions */
-.featured-auctions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: 400px 1fr;
     gap: 2rem;
-}
-
-.featured-auction-card {
-    background: white;
-    border-radius: 1rem;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.bid-section-dark .featured-auction-card {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.featured-auction-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-}
-
-.featured-auction-image {
-    width: 100%;
-    height: 200px;
-    background: #f8f9fa;
-    overflow: hidden;
-}
-
-.bid-section-dark .featured-auction-image {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.featured-auction-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.featured-auction-card:hover .featured-auction-image img {
-    transform: scale(1.05);
-}
-
-.featured-auction-content {
-    padding: 1.5rem;
-}
-
-.featured-auction-name {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-
-.bid-section-light .featured-auction-name {
-    color: #1a2412;
-}
-
-.bid-section-dark .featured-auction-name {
-    color: white;
-}
-
-.featured-auction-description {
-    font-size: 0.875rem;
-    margin-bottom: 1rem;
-    line-height: 1.5;
-}
-
-.bid-section-light .featured-auction-description {
-    color: #6b7c72;
-}
-
-.bid-section-dark .featured-auction-description {
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.featured-auction-details {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.featured-auction-price {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--accent-green);
-}
-
-.featured-auction-time {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.bid-section-light .featured-auction-time {
-    color: #2d4a35;
-}
-
-.bid-section-dark .featured-auction-time {
-    color: var(--accent-green);
-}
-
-/* Upcoming Auctions */
-.upcoming-auctions-container {
-    position: relative;
-    overflow: hidden;
-    padding: 1rem 0;
-}
-
-.upcoming-auctions-track {
-    display: flex;
-    gap: 1.5rem;
-    width: max-content;
-}
-
-.upcoming-auction-card {
-    flex: 0 0 320px;
-    background: white;
-    border: 1px solid #e9ecef;
-    border-radius: 1rem;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.bid-section-light .upcoming-auction-card {
-    background: white;
-    border-color: #e9ecef;
-}
-
-.bid-section-dark .upcoming-auction-card {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: white;
-}
-
-.upcoming-auction-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-}
-
-.upcoming-badge {
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-    background: #316534; /* Green accent color */
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    z-index: 2;
-}
-
-.upcoming-auction-image {
-    width: 100%;
-    height: 180px;
-    background: #f8f9fa;
-    overflow: hidden;
-}
-
-.bid-section-dark .upcoming-auction-image {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.upcoming-auction-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.upcoming-auction-card:hover .upcoming-auction-image img {
-    transform: scale(1.05);
-}
-
-.upcoming-auction-content {
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.upcoming-auction-name {
-    font-size: 1.125rem;
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-}
-
-.bid-section-light .upcoming-auction-name {
-    color: #1a2412;
-}
-
-.bid-section-dark .upcoming-auction-name {
-    color: white;
-}
-
-.upcoming-auction-specs {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.upcoming-auction-spec {
-    font-size: 0.875rem;
-    color: #6b7c72;
-}
-
-.bid-section-dark .upcoming-auction-spec {
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.upcoming-auction-price {
-    background: #f8f9fa;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    text-align: center;
-    margin: 0.5rem 0;
-}
-
-.bid-section-dark .upcoming-auction-price {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.price-label {
-    font-size: 0.875rem;
-    color: #6b7c72;
-    margin-bottom: 0.25rem;
-}
-
-.bid-section-dark .price-label {
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.price-tba {
-    font-size: 1.25rem;
-    font-weight: bold;
-    color: #316534;
-}
-
-.upcoming-date {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    color: #316534;
-    font-weight: 500;
-    padding: 0.5rem 0;
-    border-top: 1px solid #e9ecef;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
     border-bottom: 1px solid #e9ecef;
 }
 
-.bid-section-dark .upcoming-date {
-    color: #316534;
-    border-color: rgba(255, 255, 255, 0.2);
+@media (max-width: 768px) {
+    .bid-detail-section {
+        grid-template-columns: 1fr;
+    }
 }
 
-.reminder-btn {
+.bid-detail-image {
+    border-radius: 1rem;
+    overflow: hidden;
+    background: #f8f9fa;
+    height: 300px;
+}
+
+.bid-detail-image img {
     width: 100%;
-    padding: 0.75rem;
-    background: #316534;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bid-detail-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.bid-detail-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a2412;
+    margin-bottom: 0.5rem;
+}
+
+.bid-detail-description {
+    color: #6b7c72;
+    line-height: 1.6;
+}
+
+.bid-detail-specs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.bid-spec-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.bid-spec-label {
+    font-weight: 600;
+    color: #1a2412;
+}
+
+.bid-spec-value {
+    color: #6b7c72;
+}
+
+.bid-action-section {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.bid-current-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.bid-info-card {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    text-align: center;
+}
+
+.bid-info-label {
+    font-size: 0.875rem;
+    color: #6b7c72;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.bid-info-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a2412;
+}
+
+.bid-info-value.highlight {
+    color: #2d4a35;
+}
+
+.bid-form {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 1rem;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.bid-input-group {
+    margin-bottom: 1.5rem;
+}
+
+.bid-input-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #1a2412;
+}
+
+.bid-input {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.bid-input:focus {
+    outline: none;
+    border-color: #2d4a35;
+}
+
+.bid-btn {
+    width: 100%;
+    padding: 1rem;
+    background: #2d4a35;
     color: white;
     border: none;
     border-radius: 0.5rem;
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -1024,214 +169,68 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    margin-top: 0.5rem;
 }
 
-.reminder-btn:hover {
-    background: #2d4a35;
+.bid-btn:hover {
+    background: #253c2a;
     transform: translateY(-2px);
 }
 
-.reminder-btn.reminder-set {
-    background: #6b7c72;
+.bid-history-section {
+    margin-top: 2rem;
 }
 
-.reminder-btn.reminder-set:hover {
-    background: #5a6a60;
+.bid-history-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #1a2412;
 }
 
-/* Responsive adjustments */
-@media (max-width: 968px) {
-    .brand-auctions-layout {
+.bid-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.bid-history-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    align-items: center;
+}
+
+.bid-history-bidder {
+    font-weight: 600;
+    color: #1a2412;
+}
+
+.bid-history-amount {
+    font-weight: 700;
+    color: #2d4a35;
+}
+
+.bid-history-time {
+    color: #6b7c72;
+    font-size: 0.875rem;
+}
+
+@media (max-width: 640px) {
+    .bid-history-item {
         grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-
-    .brand-filters {
-        position: static;
-    }
-
-    .brand-product-card {
-        grid-template-columns: 150px 1fr;
-    }
-
-    .product-price-info {
-        grid-column: 1 / -1;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 1rem;
-    }
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .bid-hero-section {
-        height: 40vh;
-        min-height: 300px;
-    }
-
-    .hero-overlay-text h1 {
-        font-size: 2.5rem;
-    }
-
-    .bid-section {
-        padding: 3rem 0;
-    }
-
-    .section-title {
-        font-size: 2rem;
-    }
-
-    .live-auction-card {
-        flex: 0 0 280px;
-    }
-
-    .featured-auctions-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .brand-hero-title {
-        font-size: 2.5rem;
-    }
-
-    .brand-products-header {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: flex-start;
-    }
-
-    .sort-select {
-        align-self: flex-end;
-    }
-
-    .brand-product-card {
-        grid-template-columns: 1fr;
-    }
-
-    .product-image {
-        width: 100%;
-        height: 200px;
-        border-radius: 1rem 1rem 0 0;
-    }
-
-    .product-price-info {
-        grid-column: 1 / -1;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem 1.5rem;
-        border-radius: 0 0 1rem 1rem;
-    }
-
-    .brands-row {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 1.5rem;
-    }
-
-    .brand-card {
-        flex: 0 0 calc(50% - 1.5rem);
-    }
-
-    .countdown-display {
-        gap: 0.375rem;
-    }
-
-    .countdown-unit {
-        min-width: 50px;
-    }
-
-    .countdown-box {
-        width: 50px;
-        height: 50px;
-    }
-
-    .countdown-value {
-        font-size: 1.125rem;
-    }
-
-    .countdown-label-small {
-        font-size: 0.7rem;
-    }
-
-    .upcoming-auction-card {
-        flex: 0 0 280px;
-    }
-
-    .upcoming-auction-image {
-        height: 160px;
-    }
-}
-
-@media (max-width: 480px) {
-    .bid-hero-section {
-        height: 35vh;
-        min-height: 250px;
-    }
-
-    .hero-overlay-text h1 {
-        font-size: 2rem;
-    }
-
-    .brand-card {
-        flex: 0 0 100%;
-    }
-
-    .brands-row {
-        gap: 1rem;
-    }
-
-    .brand-hero-title {
-        font-size: 2rem;
-    }
-
-    .brand-hero-subtitle {
-        font-size: 1rem;
-    }
-
-    .brand-products-header {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .products-count,
-    .sort-select {
-        width: 100%;
         text-align: center;
+        gap: 0.5rem;
     }
-
-    .sort-select {
-        align-self: stretch;
-    }
-
-    .countdown-display {
-        gap: 0.25rem;
-    }
-
-    .countdown-unit {
-        min-width: 45px;
-    }
-
-    .countdown-box {
-        width: 45px;
-        height: 45px;
-    }
-
-    .countdown-value {
-        font-size: 1rem;
-    }
-
-    .countdown-label-small {
-        font-size: 0.65rem;
-    }
-
-    .upcoming-auction-card {
-        flex: 0 0 260px;
-    }
-
-    .upcoming-auction-image {
-        height: 140px;
+    
+    .bid-history-bidder,
+    .bid-history-amount,
+    .bid-history-time {
+        width: 100%;
     }
 }
 </style>
@@ -1242,7 +241,7 @@
     <!-- Hero Section -->
     <section class="bid-hero-section">
         <div class="bid-hero-title">
-            <h1>Bid</h1>
+            <h1>Auction Details</h1>
         </div>
     </section>
 
@@ -1254,29 +253,75 @@
                 <div class="bid-detail-section">
                     <!-- Product Image -->
                     <div class="bid-detail-image">
-                        <img src="{{ asset('storage/' . $bid->image) }}" alt="{{ $bid->product_name }}">
+                        @if($bid->product)
+                            <img src="{{ $bid->product->main_image_url }}" alt="{{ $bid->product->name }}">
+                        @else
+                            <img src="{{ asset('images/default-product.png') }}" alt="Product Image">
+                        @endif
                     </div>
 
                     <!-- Product Info -->
                     <div class="bid-detail-info">
-                        <h2 class="bid-detail-title">{{ $bid->product_name }}</h2>
-                        <p class="bid-detail-description">{{ $bid->description }}</p>
+                        <h2 class="bid-detail-title">
+                            {{ $bid->product->name ?? 'Unknown Product' }}
+                        </h2>
+                        
+                        @if($bid->product && $bid->product->description)
+                            <p class="bid-detail-description">{{ $bid->product->description }}</p>
+                        @endif
                         
                         <!-- Specifications -->
                         <div class="bid-detail-specs">
-                            <h4 style="margin-bottom: 1rem; color: var(--dark-text);">Specifications</h4>
-                            @foreach($bid->specifications as $key => $value)
-                            <div class="bid-spec-item">
-                                <span class="bid-spec-label">{{ $key }}</span>
-                                <span class="bid-spec-value">{{ $value }}</span>
-                            </div>
-                            @endforeach
+                            <h4 style="margin-bottom: 1rem; color: #1a2412;">Specifications</h4>
+                            
+                            @if($bid->product)
+                                @if($bid->variation && !empty($bid->variation->specifications))
+                                    @foreach($bid->variation->specifications as $key => $value)
+                                        @if(!empty($value))
+                                            <div class="bid-spec-item">
+                                                <span class="bid-spec-label">{{ $key }}:</span>
+                                                <span class="bid-spec-value">{{ $value }}</span>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                @elseif($bid->product)
+                                    <!-- Display product specifications -->
+                                    @php
+                                        $specs = [];
+                                        if($bid->product->processor) $specs['Processor'] = $bid->product->processor;
+                                        if($bid->product->ram) $specs['RAM'] = $bid->product->ram;
+                                        if($bid->product->storage) $specs['Storage'] = $bid->product->storage;
+                                        if($bid->product->graphics_card) $specs['Graphics Card'] = $bid->product->graphics_card;
+                                        if($bid->product->screen_size) $specs['Screen Size'] = $bid->product->screen_size;
+                                        if($bid->product->os) $specs['Operating System'] = $bid->product->os;
+                                        if($bid->product->warranty) $specs['Warranty'] = $bid->product->warranty;
+                                    @endphp
+                                    
+                                    @foreach($specs as $key => $value)
+                                        @if(!empty($value))
+                                            <div class="bid-spec-item">
+                                                <span class="bid-spec-label">{{ $key }}:</span>
+                                                <span class="bid-spec-value">{{ $value }}</span>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                @endif
+                            @endif
                         </div>
 
-                        <!-- Condition -->
-                        <div style="background: var(--light-bone); padding: 1rem; border-radius: 0.5rem; margin-top: 2rem;">
-                            <strong>Condition:</strong> {{ $bid->condition }}
-                        </div>
+                        <!-- Product Type/Variation -->
+                        @if($bid->variation)
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 0.5rem;">
+                                <strong>Variation:</strong> {{ $bid->variation->model ?? $bid->variation->sku }}
+                            </div>
+                        @endif
+
+                        <!-- Brand -->
+                        @if($bid->product && $bid->product->brand)
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 0.5rem;">
+                                <strong>Brand:</strong> {{ ucfirst($bid->product->brand) }}
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -1285,57 +330,133 @@
                     <div class="bid-current-info">
                         <div class="bid-info-card">
                             <div class="bid-info-label">Current Bid</div>
-                            <div class="bid-info-value highlight">RM{{ number_format($bid->current_bid, 2) }}</div>
+                            <div class="bid-info-value highlight">
+                                RM {{ number_format($bid->current_price, 2) }}
+                            </div>
                         </div>
                         <div class="bid-info-card">
                             <div class="bid-info-label">Starting Bid</div>
-                            <div class="bid-info-value">RM{{ number_format($bid->starting_bid, 2) }}</div>
+                            <div class="bid-info-value">
+                                RM {{ number_format($bid->starting_price, 2) }}
+                            </div>
                         </div>
                         <div class="bid-info-card">
                             <div class="bid-info-label">Time Left</div>
-                            <div class="bid-info-value">{{ $bid->time_left }}</div>
+                            <div class="bid-info-value">
+                                @if($bid->is_active)
+                                    @php
+                                        $timeRemaining = $bid->time_remaining;
+                                        if($timeRemaining) {
+                                            if($timeRemaining->d > 0) {
+                                                echo $timeRemaining->d . 'd ' . $timeRemaining->h . 'h';
+                                            } elseif($timeRemaining->h > 0) {
+                                                echo $timeRemaining->h . 'h ' . $timeRemaining->i . 'm';
+                                            } else {
+                                                echo $timeRemaining->i . 'm';
+                                            }
+                                        } else {
+                                            echo 'Ended';
+                                        }
+                                    @endphp
+                                @else
+                                    {{ ucfirst($bid->status) }}
+                                @endif
+                            </div>
                         </div>
+                        @if($bid->reserve_price)
+                            <div class="bid-info-card">
+                                <div class="bid-info-label">Reserve Price</div>
+                                <div class="bid-info-value">
+                                    RM {{ number_format($bid->reserve_price, 2) }}
+                                    @if($bid->reserve_met)
+                                        <span style="color: #2d4a35; font-size: 0.75rem; display: block;">(Met ✓)</span>
+                                    @else
+                                        <span style="color: #dc2626; font-size: 0.75rem; display: block;">(Not Met)</span>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Bid Form -->
-                    <form class="bid-form" id="bidForm">
-                        @csrf
-                        <div class="bid-input-group">
-                            <label class="bid-input-label" for="bidAmount">Your Bid Amount</label>
-                            <input 
-                                type="number" 
-                                id="bidAmount" 
-                                name="amount"
-                                class="bid-input"
-                                min="{{ $bid->current_bid + $bid->bid_increment }}"
-                                step="{{ $bid->bid_increment }}"
-                                placeholder="Enter your bid..."
-                                required
-                            >
-                            <small style="color: var(--light-text); margin-top: 0.5rem; display: block;">
-                                Minimum bid: RM{{ number_format($bid->current_bid + $bid->bid_increment, 2) }}
-                            </small>
+                    @auth
+                        @if($bid->is_active)
+                            <form class="bid-form" id="bidForm" method="POST" action="{{ route('bid.place', $bid->id) }}">
+                                @csrf
+                                <div class="bid-input-group">
+                                    <label class="bid-input-label" for="bidAmount">Your Bid Amount</label>
+                                    <input 
+                                        type="number" 
+                                        id="bidAmount" 
+                                        name="amount"
+                                        class="bid-input"
+                                        min="{{ number_format($bid->current_price + $bid->bid_increment, 2, '.', '') }}"
+                                        step="{{ number_format($bid->bid_increment, 2, '.', '') }}"
+                                        placeholder="Enter your bid..."
+                                        required
+                                    >
+                                    <small style="color: #6b7c72; margin-top: 0.5rem; display: block;">
+                                        Minimum bid: RM{{ number_format($bid->current_price + $bid->bid_increment, 2) }}
+                                    </small>
+                                </div>
+                                <button type="submit" class="bid-btn">
+                                    <i class="fas fa-gavel"></i>
+                                    Place Bid
+                                </button>
+                            </form>
+                        @else
+                            <div style="text-align: center; padding: 2rem; background: #f8f9fa; border-radius: 1rem;">
+                                <h3 style="color: #dc2626; margin-bottom: 1rem;">
+                                    @if($bid->has_ended)
+                                        Auction Has Ended
+                                    @elseif($bid->status == 'upcoming')
+                                        Auction Starts Soon
+                                    @else
+                                        Auction is {{ ucfirst($bid->status) }}
+                                    @endif
+                                </h3>
+                                @if($bid->winner && $bid->status == 'completed')
+                                    <p>Winner: {{ $bid->winner->name ?? 'Unknown' }}</p>
+                                    <p>Winning Bid: RM{{ number_format($bid->winning_bid_amount ?? $bid->current_price, 2) }}</p>
+                                @endif
+                            </div>
+                        @endif
+                    @else
+                        <div style="text-align: center; padding: 2rem; background: #f8f9fa; border-radius: 1rem;">
+                            <h3 style="color: #2d4a35; margin-bottom: 1rem;">Login to Place a Bid</h3>
+                            <a href="{{ route('login') }}" class="bid-btn" style="width: auto; display: inline-flex;">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Login to Bid
+                            </a>
                         </div>
-                        <button type="submit" class="bid-btn">
-                            <i class="fas fa-gavel"></i>
-                            Place Bid
-                        </button>
-                    </form>
+                    @endauth
                 </div>
 
                 <!-- Bid History -->
                 <div class="bid-history-section">
                     <h3 class="bid-history-title">Bid History</h3>
                     <div class="bid-history-list">
-                        @foreach($bid->bid_history as $history)
-                        <div class="bid-history-item">
-                            <span class="bid-history-bidder">{{ $history->bidder }}</span>
-                            <span class="bid-history-amount">RM{{ number_format($history->amount, 2) }}</span>
-                            <span class="bid-history-time">{{ $history->time }}</span>
-                        </div>
-                        @endforeach
+                        @forelse($bid->bids ?? [] as $bidHistory)
+                            <div class="bid-history-item">
+                                <span class="bid-history-bidder">
+                                    {{ $bidHistory->user->name ?? 'Anonymous' }}
+                                    @if($bidHistory->is_auto_bid)
+                                        <span style="color: #2d4a35; font-size: 0.75rem;">(Auto)</span>
+                                    @endif
+                                </span>
+                                <span class="bid-history-amount">
+                                    RM{{ number_format($bidHistory->amount, 2) }}
+                                </span>
+                                <span class="bid-history-time">
+                                    {{ $bidHistory->created_at->format('d M Y H:i') }}
+                                </span>
+                            </div>
+                        @empty
+                            <p style="text-align: center; color: #6b7c72; padding: 2rem;">No bids placed yet.</p>
+                        @endforelse
                     </div>
                 </div>
+
             </div>
         </div>
     </section>
@@ -1347,40 +468,44 @@
 document.addEventListener('DOMContentLoaded', function() {
     const bidForm = document.getElementById('bidForm');
     
-    bidForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        const bidAmount = document.getElementById('bidAmount').value;
-        
-        // Simple validation
-        if (!bidAmount || bidAmount < {{ $bid->current_bid + $bid->bid_increment }}) {
-            alert('Please enter a valid bid amount. Minimum bid is RM{{ number_format($bid->current_bid + $bid->bid_increment, 2) }}');
-            return;
-        }
-        
-        // Simulate bid placement
-        fetch('{{ route("bid.place", $bid->id) }}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+    if (bidForm) {
+        bidForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const bidAmount = document.getElementById('bidAmount').value;
+            const minBid = {{ number_format($bid->current_price + $bid->bid_increment, 2, '.', '') }};
+            
+            // Simple validation
+            if (!bidAmount || parseFloat(bidAmount) < minBid) {
+                alert('Please enter a valid bid amount. Minimum bid is RM' + minBid.toFixed(2));
+                return;
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Bid placed successfully!');
-                // In a real app, you'd update the UI with the new bid
-                location.reload();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error placing bid. Please try again.');
+            
+            // Submit the form
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Bid placed successfully!');
+                    location.reload();
+                } else if (data.error) {
+                    alert(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error placing bid. Please try again.');
+            });
         });
-    });
+    }
 });
 </script>
 @endsection
