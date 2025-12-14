@@ -592,16 +592,6 @@
                 <p class="stat-label">Total Orders</p>
             </div>
         </div>
-
-        <div class="stat-card">
-            <div class="stat-icon pending">
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="stat-content">
-                <h3 class="stat-number">{{ $stats['pending'] }}</h3>
-                <p class="stat-label">Pending</p>
-            </div>
-        </div>
         
         <div class="stat-card">
             <div class="stat-icon paid">
@@ -727,7 +717,6 @@
                 <label>Status</label>
                 <select id="statusFilter">
                     <option value="">All Status</option>
-                    <option value="pending">Pending</option>
                     <option value="paid">Paid</option>
                     <option value="processing">Processing</option>
                     <option value="shipped">Shipped</option>
