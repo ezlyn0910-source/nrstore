@@ -375,10 +375,11 @@
                                     @endif
                                 </div>
                                 <div style="font-size:0.9rem; color:var(--text-muted);">
-                                    {{ $address->street }}, {{ $address->city }}, {{ $address->state }} {{ $address->postcode }}, {{ $address->country }}
-                                </div>
-                                <div style="font-size:0.9rem; color:var(--text-muted); margin-top:4px;">
-                                    Phone: {{ $address->phone }}
+                                    {{ $address->address_line_1 }}
+                                    @if($address->address_line_2)
+                                        , {{ $address->address_line_2 }}
+                                    @endif
+                                    , {{ $address->city }}, {{ $address->state }} {{ $address->postal_code }}, {{ $address->country }}
                                 </div>
                             </div>
 
@@ -514,6 +515,15 @@
                 <form method="POST" action="{{ route('profile.addresses.store') }}">
                     @csrf
 
+                    <div class="account-form-group" style="grid-column: span 2;">
+                        <label>Address Type <span class="required">*</span></label>
+                        <select name="type" class="account-form-select" required>
+                            <option value="">Select Type</option>
+                            <option value="shipping">Shipping Address</option>
+                            <option value="billing">Billing Address</option>
+                        </select>
+                    </div>
+
                     <div class="account-form-grid">
                         <div class="account-form-group">
                             <label>First Name <span class="required">*</span></label>
@@ -524,19 +534,20 @@
                             <input type="text" name="last_name" class="account-form-control" required>
                         </div>
                         <div class="account-form-group">
-                            <label>Company Name (Optional)</label>
-                            <input type="text" name="company" class="account-form-control">
-                        </div>
-                        <div class="account-form-group">
                             <label>Country <span class="required">*</span></label>
                             <select name="country" class="account-form-select" required>
                                 <option value="">Select Country</option>
                                 <option value="Malaysia">Malaysia</option>
                             </select>
                         </div>
-                        <div class="account-form-group">
-                            <label>Street Address <span class="required">*</span></label>
-                            <input type="text" name="street" class="account-form-control" required>
+                        <div class="account-form-group" style="grid-column: span 2;">
+                            <label>Address Line 1 <span class="required">*</span></label>
+                            <input type="text" name="address_line_1" class="account-form-control" required placeholder="Street address, P.O. box, company name">
+                        </div>
+                        
+                        <div class="account-form-group" style="grid-column: span 2;">
+                            <label>Address Line 2 (Optional)</label>
+                            <input type="text" name="address_line_2" class="account-form-control" placeholder="Apartment, suite, unit, building, floor, etc.">
                         </div>
                         <div class="account-form-group">
                             <label>City <span class="required">*</span></label>
@@ -547,8 +558,8 @@
                             <input type="text" name="state" class="account-form-control" required>
                         </div>
                         <div class="account-form-group">
-                            <label>Zip Code <span class="required">*</span></label>
-                            <input type="text" name="postcode" class="account-form-control" required>
+                            <label>Postal Code <span class="required">*</span></label>
+                            <input type="text" name="postal_code" class="account-form-control" required>
                         </div>
                         <div class="account-form-group">
                             <label>Phone <span class="required">*</span></label>
