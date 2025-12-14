@@ -400,16 +400,39 @@
                             <div class="item-image">
                                 @php
                                     $imageUrl = asset('images/default-product.png');
+                                    
+                                    // Check for product images via relationship
                                     if ($item->product && $item->product->images && $item->product->images->isNotEmpty()) {
                                         $firstImage = $item->product->images->first();
                                         if ($firstImage && $firstImage->image_path) {
-                                            $imageUrl = asset('storage/' . $firstImage->image_path);
+                                            // Change from storage/ to proper public path
+                                            $imagePath = $firstImage->image_path;
+                                            // If it's just a filename, prepend the directory
+                                            if (!str_contains($imagePath, '/') && !str_starts_with($imagePath, 'images/')) {
+                                                $imagePath = 'images/products/' . $imagePath;
+                                            }
+                                            // If it doesn't start with 'images/', prepend it
+                                            elseif (!str_starts_with($imagePath, 'images/')) {
+                                                $imagePath = 'images/' . ltrim($imagePath, '/');
+                                            }
+                                            $imageUrl = asset($imagePath);
                                         }
-                                    } elseif ($item->product && $item->product->image) {
-                                        $imageUrl = asset('storage/' . $item->product->image);
+                                    } 
+                                    // Check for product's direct image field
+                                    elseif ($item->product && $item->product->image) {
+                                        $imagePath = $item->product->image;
+                                        // If it's just a filename, prepend the directory
+                                        if (!str_contains($imagePath, '/') && !str_starts_with($imagePath, 'images/')) {
+                                            $imagePath = 'images/products/' . $imagePath;
+                                        }
+                                        // If it doesn't start with 'images/', prepend it
+                                        elseif (!str_starts_with($imagePath, 'images/')) {
+                                            $imagePath = 'images/' . ltrim($imagePath, '/');
+                                        }
+                                        $imageUrl = asset($imagePath);
                                     }
                                 @endphp
-                                <img src="{{ $imageUrl }}" alt="{{ $item->product->name ?? 'Product' }}">
+                                <img src="{{ $imageUrl }}" alt="{{ $item->product->name ?? 'Product' }}" onerror="this.src='{{ asset('images/default-product.png') }}'">
                             </div>
                             <div class="item-details">
                                 <h4>{{ $item->product->name ?? 'Product' }}</h4>
