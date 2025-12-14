@@ -215,10 +215,6 @@
                class="account-nav-item">
                 Personal Information
             </a>
-            <a href="{{ route('profile.orders.index') }}"
-               class="account-nav-item active">
-                My Orders
-            </a>
             <a href="{{ route('profile.addresses.index') }}"
                class="account-nav-item">
                 Manage Address

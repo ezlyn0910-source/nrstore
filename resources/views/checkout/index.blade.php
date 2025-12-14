@@ -383,10 +383,10 @@
                                 if ($product && $product->images && $product->images->isNotEmpty()) {
                                     $firstImage = $product->images->first();
                                     if ($firstImage && $firstImage->image_path) {
-                                        $imageUrl = asset('storage/' . $firstImage->image_path);
+                                        $imageUrl = asset('/' . $firstImage->image_path);
                                     }
                                 } elseif ($product && $product->image) {
-                                    $imageUrl = asset('storage/' . $product->image);
+                                    $imageUrl = asset('/' . $product->image);
                                 }
 
                                 // Build short specs like your screenshot
