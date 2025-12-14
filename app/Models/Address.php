@@ -22,6 +22,7 @@ class Address extends Model
         'state',
         'postal_code',
         'country',
+        'country_code',
         'is_default',
     ];
 
@@ -239,7 +240,6 @@ class Address extends Model
             'id' => $this->id,
             'user_id' => $this->user_id,
             'type' => $this->type,
-            'full_name' => $this->full_name,
             'phone' => $this->phone,
             'address_line_1' => $this->address_line_1,
             'address_line_2' => $this->address_line_2,

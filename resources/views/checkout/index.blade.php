@@ -44,7 +44,7 @@
 
                                             <span class="address-name-line">
                                                 {{ $address->first_name }} {{ $address->last_name }}
-                                                <span class="address-phone">({{ $address->phone }})</span>
+                                                <span class="address-phone">({{ $address->country_code }}{{ $address->phone }})</span>
                                             </span>
                                         </div>
 
@@ -72,6 +72,7 @@
                                             data-state="{{ e($address->state) }}"
                                             data-postal="{{ e($address->postal_code) }}"
                                             data-country="{{ e($address->country ?? 'Malaysia') }}"
+                                            data-country-code="{{ $address->country_code }}"
                                             data-is-default="{{ $address->is_default ? '1' : '0' }}"
                                             data-update-url="{{ route('checkout.address.update', $address->id) }}"
                                         >
@@ -108,11 +109,11 @@
                                 @csrf
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="first_name">First Name *</label>
+                                        <label for="first_name">First Name <span class="required-star">*</span></label>
                                         <input type="text" id="first_name" name="first_name" placeholder="John" required>
                                     </div>
                                     <div class="form-group">
-                                        <label for="last_name">Last Name *</label>
+                                        <label for="last_name">Last Name <span class="required-star">*</span></label>
                                         <input type="text" id="last_name" name="last_name" placeholder="Doe" required>
                                     </div>
                                 </div>
@@ -142,7 +143,7 @@
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="address_line_1">Address Line 1 *</label>
+                                    <label for="address_line_1">Address Line 1 <span class="required-star">*</span></label>
                                     <input type="text" id="address_line_1" name="address_line_1" placeholder="House no, Street name" required>
                                 </div>
                                 
@@ -153,11 +154,11 @@
                                 
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="city">City *</label>
+                                        <label for="city">City <span class="required-star">*</span></label>
                                         <input type="text" id="city" name="city" placeholder="Kuala Lumpur" required>
                                     </div>
                                     <div class="form-group">
-                                        <label for="state">State *</label>
+                                        <label for="state">State <span class="required-star">*</span></label>
                                         <select id="state" name="state" required>
                                             <option value="">Select State</option>
                                             <option value="Johor">Johor</option>
@@ -182,11 +183,11 @@
                                 
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="postal_code">Postal Code *</label>
+                                        <label for="postal_code">Postal Code <span class="required-star">*</span></label>
                                         <input type="text" id="postal_code" name="postal_code" placeholder="50000" required>
                                     </div>
                                     <div class="form-group">
-                                        <label for="country">Country</label>
+                                        <label for="country">Country <span class="required-star">*</span></label>
                                         <input type="text" id="country" name="country" value="Malaysia" readonly>
                                     </div>
                                 </div>
@@ -237,7 +238,28 @@
 
                             <div class="form-group">
                                 <label for="edit_phone">Phone Number <span class="required-star">*</span></label>
-                                <input type="tel" id="edit_phone" name="phone" required>
+                                <div class="phone-input-group">
+                                    <div class="country-code-selector">
+                                        <select class="country-code" name="country_code" id="edit_country_code">
+                                            <option value="60">+60</option>
+                                            <option value="1">+1</option>
+                                            <option value="44">+44</option>
+                                            <option value="61">+61</option>
+                                            <option value="65">+65</option>
+                                            <option value="86">+86</option>
+                                            <option value="81">+81</option>
+                                            <option value="82">+82</option>
+                                            <option value="91">+91</option>
+                                        </select>
+                                    </div>
+
+                                    <input
+                                        type="tel"
+                                        id="edit_phone"
+                                        name="phone"
+                                        required
+                                    >
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -345,18 +367,18 @@
 
             <!-- Right Column - Order Summary -->
             <div class="checkout-right">
+                @php
+                    $discountAmount = $discount ?? 0;
+                @endphp
+
                 <div class="order-summary">
-                    <h3>Order Summary</h3>
-                    
-                    <div class="order-items">
-                        @php
-                            $mainItem = $cartItems->first();
-                            $product = $mainItem->product;
-                        @endphp
-                        
-                        <!-- Product Image - Centered -->
-                        <div class="product-image-center">
+                    <h3>ORDER SUMMARY</h3>
+
+                    <div class="order-items-scroll">
+                        @foreach($cartItems as $item)
                             @php
+                                $product = $item->product;
+
                                 $imageUrl = asset('images/default-product.png');
                                 if ($product && $product->images && $product->images->isNotEmpty()) {
                                     $firstImage = $product->images->first();
@@ -366,72 +388,73 @@
                                 } elseif ($product && $product->image) {
                                     $imageUrl = asset('storage/' . $product->image);
                                 }
+
+                                // Build short specs like your screenshot
+                                $specParts = [];
+                                if (!empty($product->processor)) $specParts[] = $product->processor;
+                                if (!empty($product->ram)) $specParts[] = $product->ram;
+                                if (!empty($product->storage)) $specParts[] = $product->storage;
+                                $specText = implode(' • ', $specParts);
                             @endphp
-                            <img src="{{ $imageUrl }}" alt="{{ $product->name ?? 'Product' }}">
-                        </div>
-                        
-                        <!-- Product Name - Bigger and Bold -->
-                        <div class="product-name-large">
-                            {{ $product->name ?? 'Product Name' }}
-                        </div>
-                        
-                        <!-- Product Specs - Grey text -->
-                        <div class="product-specs-list">
-                            @php
-                                $specs = [];
-                                if (!empty($product->processor)) $specs['Processor'] = $product->processor;
-                                if (!empty($product->ram)) $specs['RAM'] = $product->ram;
-                                if (!empty($product->storage)) $specs['Storage'] = $product->storage;
-                                if (!empty($product->operating_system)) $specs['OS'] = $product->operating_system;
-                                if (!empty($product->screen_size)) $specs['Screen'] = $product->screen_size;
-                            @endphp
-                            
-                            @foreach($specs as $key => $value)
-                                <div class="spec-item">
-                                    <span class="spec-key">{{ $key }}:</span>
-                                    <span class="spec-value">{{ $value }}</span>
+
+                            <div class="os-item">
+                                <div class="os-img">
+                                    <img src="{{ $imageUrl }}" alt="{{ $product->name ?? 'Product' }}">
                                 </div>
-                            @endforeach
-                        </div>
-                        
-                        <!-- Price and Quantity Row -->
-                        <div class="price-quantity-row">
-                            <span class="product-price">RM{{ number_format($mainItem->price, 2) }}</span>
-                            <span class="product-quantity">× {{ $mainItem->quantity }}</span>
-                        </div>
-                        
-                        <!-- Divider -->
-                        <div class="order-divider"></div>
+
+                                <div class="os-info">
+                                    <div class="os-title">{{ $product->name ?? 'Product' }}</div>
+                                    @if(!empty($specText))
+                                        <div class="os-spec">{{ $specText }}</div>
+                                    @endif
+
+                                    <div class="os-price-row">
+                                        <div class="os-price">RM{{ number_format($item->price, 2) }}</div>
+                                        <div class="os-qty">× {{ $item->quantity }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="os-item-divider"></div>
+                        @endforeach
                     </div>
 
-                    <!-- Totals Section -->
-                    <div class="summary-totals">
-                        <div class="summary-row">
-                            <span class="summary-label">SUBTOTAL</span>
-                            <span class="summary-value">RM{{ number_format($subtotal, 2) }}</span>
+                    <div class="os-voucher">
+                        <input type="text" placeholder="Enter you voucher code here" aria-label="voucher">
+                        <button type="button">Apply</button>
+                    </div>
+
+                    <div class="os-totals">
+                        <div class="os-row">
+                            <span class="os-label">SUBTOTAL</span>
+                            <span class="os-value">RM{{ number_format($subtotal, 2) }}</span>
                         </div>
-                        
-                        <div class="summary-row">
-                            <span class="summary-label">SHIPPING</span>
-                             <span class="summary-value">RM{{ number_format($shippingFee, 2) }}</span>
+
+                        @if($discountAmount > 0)
+                            <div class="os-row os-row-discount">
+                                <span class="os-label">DISCOUNT</span>
+                                <span class="os-value">- RM{{ number_format($discountAmount, 2) }}</span>
+                            </div>
+                        @endif
+
+                        <div class="os-row">
+                            <span class="os-label">SHIPPING</span>
+                            <span class="os-value">RM{{ number_format($shippingFee, 2) }}</span>
                         </div>
-                        
-                        <!-- Divider -->
-                        <div class="summary-divider"></div>
-                        
-                        <!-- Total - Bold and Bigger -->
-                        <div class="summary-total-row">
-                            <span class="total-label">TOTAL</span>
-                            <span class="total-value">RM{{ number_format($subtotal + $shippingFee, 2) }}</span>
+
+                        <div class="os-total">
+                            <span class="os-total-label">TOTAL</span>
+                            <span class="os-total-value">
+                                RM{{ number_format(($subtotal - $discountAmount) + $shippingFee, 2) }}
+                            </span>
                         </div>
                     </div>
 
-                    <!-- Place Order Button -->
-                    <div class="checkout-actions">
+                    <div class="os-footer">
                         <button type="button" id="placeOrderBtn" class="btn-place-order">Place Order</button>
                     </div>
 
-                    {{-- Hidden form that actually posts to payment.process --}}
+                    {{-- Hidden payment form stays the same --}}
                     <form id="placeOrderForm" method="POST" action="{{ route('payment.process') }}" style="display:none;">
                         @csrf
                         <input type="hidden" name="selected_address" id="po_selected_address">
@@ -440,6 +463,7 @@
                         <input type="hidden" name="amount" id="po_amount" value="{{ $total }}">
                     </form>
                 </div>
+
             </div>
         </div>
     </div>
@@ -652,14 +676,24 @@
                     method: 'POST',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
                     },
                     body: formData
                 })
                 .then(async res => {
                     const contentType = res.headers.get('content-type') || '';
                     const isJson = contentType.includes('application/json');
-                    const data = isJson ? await res.json() : null;
+                    
+                    let data = null;
+                        let rawText = null;
+
+                        if (isJson) {
+                            data = await res.json();
+                        } else {
+                            rawText = await res.text();
+                            console.error('Non-JSON response:', rawText);
+                        }
 
                     if (res.ok && data && data.success) {
                         alert(data.message || 'Address saved successfully!');
@@ -690,7 +724,8 @@
                         return;
                     }
 
-                    alert('Failed to save address. Please try again.');
+                    alert((data && data.message) ? data.message : 'Failed to save address. Please try again.');
+
                 })
                 .catch(err => {
                     console.error('Address save error:', err);
@@ -729,6 +764,8 @@
                 trigger.dataset.postal || '';
             editAddressForm.querySelector('#edit_country').value =
                 trigger.dataset.country || 'Malaysia';
+            editAddressForm.querySelector('#edit_country_code').value =
+                trigger.dataset.countryCode || '60';
 
             const stateSelect = editAddressForm.querySelector('#edit_state');
             if (stateSelect) {
@@ -799,7 +836,8 @@
                     method: 'POST', // Laravel uses POST + _method=PUT
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
                     },
                     body: formData
                 })
@@ -838,7 +876,8 @@
                     }
 
                     console.error('Address update failed:', data);
-                    alert('Failed to update address. Please try again.');
+                    alert((data && data.message) ? data.message : 'Failed to save address. Please try again.');
+
                 })
                 .catch(err => {
                     console.error('Address update error:', err);
@@ -1123,6 +1162,37 @@
     margin-top: 1.5rem;
     padding-top: 1.5rem;
     border-top: 1px solid #e5e7eb;
+}
+
+.add-address-form .btn{
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.add-address-form .btn-primary{
+    background: #1f2937;
+    color: #fff;
+}
+
+.add-address-form .btn-primary:hover{
+    background: #374151;
+    transform: translateY(-1px);
+}
+
+.add-address-form .btn-secondary{
+    background: #fff;
+    color: #1f2937;
+    border-color: #d1d5db;
+}
+
+.add-address-form .btn-secondary:hover{
+    background: #f9fafb;
+    border-color: #9ca3af;
 }
 
 /* ===== EDIT ADDRESS SAVE BUTTON ===== */
@@ -1555,6 +1625,26 @@
     box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.1);
 }
 
+/* Make country code box match other edit modal inputs */
+.address-edit-dialog .country-code-selector {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    height: auto;
+}
+
+.address-edit-dialog .country-code {
+    width: 80px;
+    height: auto;           /* match select default height */
+    padding: 10px 12px;     /* match .address-edit-dialog select padding */
+    font-size: 0.9rem;      /* match .address-edit-dialog select font-size */
+}
+
+/* Optional: make focus same as other edit modal fields */
+.address-edit-dialog .phone-input-group:focus-within .country-code-selector {
+    border-color: #1f2937;
+    box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.1);
+}
+
 .required-star {
     color: #dc2626;
     font-weight: 700;
@@ -1827,171 +1917,199 @@
     color: #1f2937;
 }
 
-/* ===== ORDER SUMMARY REDESIGN ===== */
-.order-summary {
-    background: white;
+/* ===== ORDER SUMMARY (Redesign like screenshot) ===== */
+.order-summary{
+    background: #fff;
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 1.75rem;
     border: 1px solid #e5e7eb;
-    position: -webkit-sticky;
     position: sticky;
     top: 20px;
-    align-self: flex-start;
     margin-top: 2rem;
-    max-height: calc(100vh - 100px);
-    overflow-y: auto;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    height: calc(100vh - 40px);
+    max-height: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     z-index: 10;
+
+    /* ✅ make internal sections layout properly */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-.order-summary h3 {
-    font-size: 1.15rem;
-    font-weight: 700;
+.order-summary h3{
+    font-size: 1.25rem;
+    font-weight: 800;
     color: #1f2937;
-    margin: 0 0 1.5rem 0;
-    padding-bottom: 0.75rem;
-    text-transform: uppercase;
+    margin: 0 0 2rem 0;
+    text-align: center;
     letter-spacing: 0.5px;
-    text-align: center;
 }
 
-.product-image-center {
-    text-align: center;
-    margin: 0 auto 1.5rem;
-    max-width: 180px;
+/* ✅ Scroll area for products only */
+.order-items-scroll{
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 6px; /* space for scrollbar */
 }
 
-.product-image-center img {
-    width: 150px;
-    height: 150px;
+/* Product rows */
+.os-item{
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 8px 0;
+}
+
+.os-img img{
+    width: 64px;
+    height: 44px;
     object-fit: cover;
     border-radius: 8px;
     border: 1px solid #e5e7eb;
+    background: #fff;
 }
 
-.product-name-large {
-    font-size: 1.5rem;
+.os-title{
     font-weight: 700;
     color: #1f2937;
-    text-align: left;
-    margin-bottom: 1rem;
-    line-height: 1.3;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* Product Specs - Grey text in rows */
-.product-specs-list {
-    margin-bottom: 1.5rem;
-    text-align: left;
-}
-
-.spec-item {
-    font-size: 0.9rem;
+.os-spec{
+    margin-top: 4px;
+    font-size: 0.82rem;
     color: #6b7280;
-    margin-bottom: 0.25rem;
-    display: flex;
-    align-items: flex-start;
-}
-
-.spec-key {
-    font-weight: 500;
-    margin-right: 0.25rem;
-    min-width: 80px;
-}
-
-.spec-value {
-    color: #4b5563;
-    flex: 1;
-}
-
-/* Price and Quantity Row */
-.price-quantity-row {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.product-price {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1f2937;
-}
-
-.product-quantity {
-    font-size: 0.9rem;
-    color: #6b7280;
-}
-
-/* Divider */
-.order-divider {
-    height: 1px;
-    background: #e5e7eb;
-    margin: 1rem 0;
-}
-
-.summary-totals {
-    margin: 1rem 0;
-}
-
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem !important;
-    padding: 0.25rem 0 !important;
-    font-size: 0.75rem;
     line-height: 1.2;
 }
 
-.summary-label {
+.os-price-row{
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.os-price{
+    font-weight: 800;
+    color: #111827;
+    font-size: 0.95rem;
+}
+
+.os-qty{
+    font-size: 0.85rem;
     color: #6b7280;
-    font-weight: 500;
 }
 
-.summary-value {
-    color: #1f2937;
-    font-weight: 500;
-}
-
-/* Summary Divider */
-.summary-divider {
+.os-item-divider{
     height: 1px;
     background: #e5e7eb;
-    margin: 0.5rem 0 !important;
+    margin: 10px 0;
 }
 
-/* Total Row - Bold and Bigger */
-.summary-total-row {
+/* Voucher */
+.os-voucher{
+    display: flex;
+    gap: 10px;
+    padding: 14px 0 10px;
+}
+
+.os-voucher input{
+    flex: 1;
+    height: 44px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 0 12px;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.os-voucher input:focus{
+    border-color: #1f2937;
+    box-shadow: 0 0 0 3px rgba(31,41,55,0.1);
+}
+
+.os-voucher button{
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.os-voucher button:hover{
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+/* Totals */
+.os-totals{
+    padding-top: 6px;
+}
+
+.os-row{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 0.75rem;
-    padding-top: 0.25rem;
+    padding: 6px 0;
+    font-size: 0.9rem;
 }
 
-.total-label {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #1f2937;
-}
-
-.total-value {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #1f2937;
-}
-
-/* Place Order Button */
-.checkout-actions {
-    margin-top: 1.5rem;
-}
-
-.btn-place-order {
-    padding: 1rem;
-    font-size: 1.125rem;
-    width: 100%;
+.os-label{
+    color: #6b7280;
     font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.os-value{
+    color: #111827;
+    font-weight: 700;
+}
+
+.os-row-discount .os-value{
+    color: #111827;
+}
+
+/* Total row */
+.os-total{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-top: 14px;
+}
+
+.os-total-label{
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #111827;
+}
+
+.os-total-value{
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #111827;
+}
+
+/* ✅ Footer pinned bottom inside the box (no divider above button) */
+.os-footer{
+    margin-top: 0.65rem;
+    padding-top: 14px;
+}
+
+/* Keep your existing button style */
+.btn-place-order{
+    padding: 1rem;
+    font-size: 1.05rem;
+    width: 100%;
+    font-weight: 700;
     background: #1f2937;
     color: white;
     border: none;
@@ -2000,10 +2118,10 @@
     transition: all 0.2s ease;
 }
 
-.btn-place-order:hover {
+.btn-place-order:hover{
     background: #374151;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 /* Responsive Design */
@@ -2022,6 +2140,8 @@
         width: 100%;
         max-height: none;
         margin-top: 2rem;
+        height: auto;
+        overflow: visible;
     }
     
     .product-image-center {

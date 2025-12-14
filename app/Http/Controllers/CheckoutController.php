@@ -203,6 +203,7 @@ class CheckoutController extends Controller
                 'state'           => 'required|string|max:100',
                 'postal_code'     => 'required|string|max:10',
                 'country'         => 'required|string|max:100',
+                'country_code' => 'nullable|string|max:5',
                 'is_default'      => 'nullable|in:0,1,on,off,true,false'
             ]);
 
@@ -296,6 +297,7 @@ class CheckoutController extends Controller
                 'state' => 'required|string|max:100',
                 'postal_code' => 'required|string|max:10',
                 'country' => 'required|string|max:100',
+                'country_code' => 'nullable|string|max:5',
                 'is_default' => 'nullable|in:0,1,on,off,true,false'
             ]);
 
@@ -325,6 +327,7 @@ class CheckoutController extends Controller
                 'state' => $request->state,
                 'postal_code' => $request->postal_code,
                 'country' => $request->country ?? 'Malaysia',
+                'country_code' => $request->country_code,
                 'is_default' => $isFirstAddress || in_array($request->is_default, ['1', 'on', 'true', true], true)
             ]);
 
