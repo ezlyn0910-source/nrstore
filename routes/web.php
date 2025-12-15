@@ -84,14 +84,20 @@ Route::controller(CartController::class)
         Route::get('/validate-quantities', 'validateQuantities')->name('validate.quantities');
     });
 
-// Bid Routes (View only - Public)
+// Bid Routes (Combined - Public and Authenticated)
 Route::controller(BidController::class)
     ->prefix('bid')
     ->name('bid.')
     ->group(function () {
+        // Public routes
         Route::get('/', 'index')->name('index');
         Route::get('/{id}', 'show')->name('show');
-        Route::get('/{id}/checkout', 'processBidCheckout')->name('checkout');
+        
+        // Authenticated routes only
+        Route::middleware(['auth'])->group(function () {
+            Route::post('/{id}/place', 'placeBid')->name('place');
+            Route::get('/{id}/checkout', 'processBidCheckout')->name('checkout');
+        });
     });
 
 // Brand auction pages (Public)
@@ -204,14 +210,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/process-checkout', 'processCheckout')->name('process-checkout');
     });
 
-    /*Bid Routes – actions that require login*/
-    Route::controller(BidController::class)
-        ->prefix('bid')
-        ->name('bid.')
-        ->group(function () {
-            Route::post('/{id}/place', 'placeBid')->name('place');
-        });
-
     /*Profile Routes (My Account area)*/
     Route::prefix('profile')
         ->name('profile.')
@@ -248,14 +246,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/add', 'add')->name('add');
         Route::post('/remove', 'remove')->name('remove');
-    });
-    
-    /*Wishlist Routes*/
-    Route::prefix('wishlist')->name('wishlist.')->controller(WishlistController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::post('/add/{product}', 'add')->name('add');
-        Route::delete('/remove/{wishlistItem}', 'remove')->name('remove');
-        Route::delete('/clear', 'clear')->name('clear');
     });
     
     /*Review Routes*/

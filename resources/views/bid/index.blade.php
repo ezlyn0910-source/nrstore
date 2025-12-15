@@ -106,15 +106,17 @@
     @if(auth()->check() && $winnerAuctions->count())
     <section class="bid-section bid-section-light">
         <div class="container">
-
-            <h2 class="section-title">
-                🏆 Your Winning Bids
-            </h2>
+            <div class="section-title-container">
+                <h2 class="section-title">
+                    <span class="title-part-black">Your</span>
+                    <span class="title-part-green">Winning Bids</span>
+                </h2>
+                <div class="title-underline"></div>
+            </div>
 
             <div class="featured-auctions-grid">
                 @foreach($winnerAuctions as $bid)
                 <div class="featured-auction-card">
-
                     <div class="featured-auction-image">
                         <img src="{{ asset($bid->product->main_image_url ?? 'storage/images/placeholder.jpg') }}"
                             alt="{{ $bid->product->name }}">
@@ -128,16 +130,23 @@
                             <strong>{{ $bid->formatted_winning_bid_amount }}</strong>
                         </p>
 
-                        <a href="{{ route('buy-now', $bid->id) }}"
-                        class="buy-now-btn">
-                            Pay Now
-                        </a>
-                    </div>
+                        <p>
+                            Status: 
+                            <span class="badge bg-success">Completed</span>
+                        </p>
 
+                        @if($bid->winner_id == auth()->id() && $bid->winning_bid_amount > 0)
+                            <a href="{{ route('bid.checkout', $bid->id) }}"
+                            class="btn btn-success mt-2">
+                                <i class="fas fa-credit-card"></i> Pay Now
+                            </a>
+                        @else
+                            <p class="text-muted mt-2">Payment not required</p>
+                        @endif
+                    </div>
                 </div>
                 @endforeach
             </div>
-
         </div>
     </section>
     @endif
