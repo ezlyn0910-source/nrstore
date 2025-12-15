@@ -192,4 +192,40 @@ class BidController extends Controller
             return $timeRemaining->i . 'm';
         }
     }
+
+    public function processBidCheckout($id)
+    {
+        $bid = Bid::with(['product', 'variation'])
+            ->where('status', 'completed')
+            ->where('winner_id', Auth::id())
+            ->findOrFail($id);
+
+        // Safety check
+        if (!$bid->winning_bid_amount) {
+            return redirect()->back()->with('error', 'Winning bid amount not found.');
+        }
+
+        // Build Buy Now session (auction-based)
+        session([
+            'buy_now_order' => [
+                'is_buy_now' => true,
+                'source' => 'auction',
+                'bid_id' => $bid->id,
+                'items' => [
+                    [
+                        'product_id'   => $bid->product->id,
+                        'variation_id' => $bid->variation_id,
+                        'name'         => $bid->product->name,
+                        'price'        => $bid->winning_bid_amount,
+                        'quantity'     => 1,
+                        'image'        => $bid->product->main_image_url,
+                    ]
+                ],
+                'total' => $bid->winning_bid_amount,
+            ]
+        ]);
+
+        return redirect()->route('checkout.index');
+    }
+
 }

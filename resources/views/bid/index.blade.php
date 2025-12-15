@@ -128,12 +128,13 @@
                             <strong>{{ $bid->formatted_winning_bid_amount }}</strong>
                         </p>
 
-                        <a href="{{ route('buy-now', $bid->id) }}"
-                        class="buy-now-btn">
-                            Pay Now
-                        </a>
+                        @if($bid->status === 'completed' && $bid->winner_id === auth()->id())
+                            <a href="{{ route('bid.checkout', $bid->id) }}"
+                            class="btn btn-success">
+                                Pay Now
+                            </a>
+                        @endif
                     </div>
-
                 </div>
                 @endforeach
             </div>
