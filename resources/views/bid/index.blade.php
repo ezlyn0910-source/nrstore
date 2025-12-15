@@ -103,6 +103,46 @@
         </div>
     </section>
 
+    @if(auth()->check() && $winnerAuctions->count())
+    <section class="bid-section bid-section-light">
+        <div class="container">
+
+            <h2 class="section-title">
+                🏆 Your Winning Bids
+            </h2>
+
+            <div class="featured-auctions-grid">
+                @foreach($winnerAuctions as $bid)
+                <div class="featured-auction-card">
+
+                    <div class="featured-auction-image">
+                        <img src="{{ asset($bid->product->main_image_url ?? 'storage/images/placeholder.jpg') }}"
+                            alt="{{ $bid->product->name }}">
+                    </div>
+
+                    <div class="featured-auction-content">
+                        <h3>{{ $bid->product->name }}</h3>
+
+                        <p>
+                            Winning Bid:
+                            <strong>{{ $bid->formatted_winning_bid_amount }}</strong>
+                        </p>
+
+                        <a href="{{ route('buy-now', $bid->id) }}"
+                        class="buy-now-btn">
+                            Pay Now
+                        </a>
+                    </div>
+
+                </div>
+                @endforeach
+            </div>
+
+        </div>
+    </section>
+    @endif
+
+
     <!-- Upcoming Auctions - LIGHT -->
     <section class="bid-section bid-section-light">
         <div class="container">

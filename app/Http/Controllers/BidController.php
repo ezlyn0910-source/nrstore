@@ -42,8 +42,24 @@ class BidController extends Controller
             })
             ->get();
 
-        return view('bid.index', compact('liveAuctions', 'upcomingAuctions'));
+        
+        $winnerAuctions = collect();
+
+        if (Auth::check()) {
+            $winnerAuctions = Bid::with('product')
+                ->where('status', 'completed')
+                ->where('winner_id', Auth::id())
+                ->get();
+        }
+
+        return view('bid.index', compact(
+            'liveAuctions',
+            'upcomingAuctions',
+            'winnerAuctions'
+        ));
     }
+
+
 
     public function brandAuctions($brand)
     {
@@ -157,7 +173,7 @@ class BidController extends Controller
         // Handle auto-extension if enabled
         if ($bid->auto_extend && $bid->end_time->diffInMinutes(now()) < 5) {
             $bid->update([
-                'end_time' => $bid->end_time->addMinutes($bid->extension_minutes)
+                'end_time' => $bid->end_time->addMinutes((int) $bid->extension_minutes)
             ]);
         }
 
