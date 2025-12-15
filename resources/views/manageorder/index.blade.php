@@ -645,6 +645,7 @@
                 <thead>
                     <tr>
                         <th>Order ID</th>
+                        <th>Products</th>
                         <th>Customer</th>
                         <th>Date</th>
                         <th>Amount</th>
@@ -656,6 +657,21 @@
                     @forelse($orders as $order)
                     <tr class="order-row" data-status="{{ $order->status }}">
                         <td class="order-id">#{{ $order->id }}</td>
+                        <td class="order-products">
+                            @foreach($order->orderItems as $item)
+                                <div class="product-item" style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+                                    <img src="{{ $item->product->main_image_url ?? '/placeholder.png' }}" 
+                                        alt="{{ $item->product_name ?? $item->product->name }}" 
+                                        style="width:40px; height:40px; object-fit:cover; border-radius:6px;">
+                                    <div>
+                                        <div style="font-weight:600;">{{ $item->product_name ?? $item->product->name }}</div>
+                                        @if($item->variation_name)
+                                            <div style="font-size:0.8rem; color:#6b7c72;">{{ $item->variation_name }}</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </td>
                         <td class="customer-info">
                             <div class="customer-name">{{ $order->user->name ?? 'Guest' }}</div>
                             <div class="customer-email">{{ $order->user->email ?? 'N/A' }}</div>

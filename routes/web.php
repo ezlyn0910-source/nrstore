@@ -94,6 +94,7 @@ Route::controller(BidController::class)
     ->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/{id}', 'show')->name('show');
+        Route::get('/{id}/checkout', 'processBidCheckout')->name('checkout');
     });
 
 // Brand auction pages (Public)

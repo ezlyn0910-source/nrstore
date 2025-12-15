@@ -51,6 +51,7 @@ class Bid extends Model
         'formatted_winning_bid_amount'
     ];
 
+
     // Relationships
     public function product(): BelongsTo
     {

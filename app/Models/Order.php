@@ -29,10 +29,10 @@ class Order extends Model
         'notes',
         'shipped_at',
         'cancelled_at',
+        'payment_status',
 
         // Payment-related
         'payment_gateway',
-        'payment_status',
         'gateway_transaction_id',
         'gateway_meta',
         'paid_at',
