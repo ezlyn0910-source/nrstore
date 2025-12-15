@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Address;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\Variation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
@@ -22,24 +25,83 @@ class CheckoutController extends Controller
             return redirect()->route('login')->with('error', 'Please log in to checkout.');
         }
 
+        $referer = request()->headers->get('referer');
+        $isFromCart = $referer && str_contains($referer, route('cart.index'));
+
+        if ($isFromCart) {
+            session()->forget('buy_now_order');
+        }
+
         // 1. Initialize variables
         $cartItems = collect([]);
         $subtotal = 0;
         $total = 0;
         $tax = 0;
         $discount = 0;
+        $shippingFee = 10.99;
 
         // 2. Check for Buy Now Session Data first
         $buyNowOrder = session('buy_now_order');
         
+        // FIX: Only use buy_now_order if it was JUST set (like from a Buy Now button)
+        // Otherwise, use the user's cart
+        $shouldUseBuyNow = false;
+        
         if ($buyNowOrder && isset($buyNowOrder['is_buy_now']) && $buyNowOrder['is_buy_now']) {
-            // LOAD BUY NOW DATA
-            $cartItems = collect($buyNowOrder['items']);
-            $subtotal = $buyNowOrder['total'];
+            // Check if this is a fresh buy now (less than 5 minutes ago)
+            $buyNowTime = $buyNowOrder['timestamp'] ?? 0;
+            $currentTime = now()->timestamp;
+            
+            // Only use buy now if it's recent (5 minutes)
+            if (($currentTime - $buyNowTime) < 300) { // 300 seconds = 5 minutes
+                $shouldUseBuyNow = true;
+            } else {
+                // Clear stale buy now session
+                session()->forget('buy_now_order');
+                $shouldUseBuyNow = false;
+            }
+        }
+
+        if ($shouldUseBuyNow) {
+            $rawItems = collect($buyNowOrder['items'] ?? []);
+
+            $cartItems = $rawItems->map(function ($item) {
+                $productId   = data_get($item, 'product_id');
+                $variationId = data_get($item, 'variation_id');
+                $qty         = (int) (data_get($item, 'quantity', 1));
+
+                $product = \App\Models\Product::with('images')->find($productId);
+                if (!$product) return null;
+
+                $variation = null;
+                if ($variationId) {
+                    $variation = \App\Models\Variation::where('id', $variationId)
+                        ->where('product_id', $product->id)
+                        ->first();
+                }
+
+                $unitPrice = $variation?->price ?? $product->price;
+
+                return (object)[
+                    'product_id'      => $product->id,
+                    'variation_id'    => $variation?->id,
+                    'product'         => $product,
+                    'variation'       => $variation,
+                    'name'            => $product->name,
+                    'variation_name'  => $variation ? $this->getVariationName($variation) : null,
+                    'price'           => $unitPrice,
+                    'quantity'        => $qty,
+                    'image'           => $product->image ?? null,
+                    'total'           => $unitPrice * $qty,
+                ];
+            })->filter()->values();
+
+            $subtotal = $cartItems->sum('total');
             $shippingFee = 10.99;
             $total = $subtotal + $shippingFee;
+
         } else {
-            // 3. Fallback to Database Cart
+            // 3. ALWAYS use Database Cart when coming from cart page
             $cart = $this->getOrCreateCart();
             
             if (!$cart || $cart->items->isEmpty()) {
@@ -89,6 +151,132 @@ class CheckoutController extends Controller
     }
 
     /**
+     * Route: POST /buy-now  -> CheckoutController@buyNow
+     */
+    public function buyNow(Request $request)
+    {
+        try {
+            $request->validate([
+                'product_id'   => 'required|integer|exists:products,id',
+                'quantity'     => 'nullable|integer|min:1',
+                'variation_id' => 'nullable|integer',
+            ]);
+
+            $qty = (int) ($request->quantity ?? 1);
+
+            $product = Product::with('images')->findOrFail((int) $request->product_id);
+
+            $variation = null;
+
+            // If product has variations, variation_id MUST be provided and valid
+            if ((bool) $product->has_variations) {
+                $variationId = (int) ($request->variation_id ?? 0);
+
+                if ($variationId <= 0) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Please select a variation.',
+                    ], 422);
+                }
+
+                $variation = Variation::where('product_id', $product->id)
+                    ->where('id', $variationId)
+                    ->first();
+
+                if (!$variation) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid variation selected.',
+                    ], 422);
+                }
+
+                if ((int) $variation->stock < $qty) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Not enough stock for this variation.',
+                    ], 422);
+                }
+            } else {
+                if ((int) $product->stock < $qty) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Not enough stock for this product.',
+                    ], 422);
+                }
+            }
+
+            session()->forget('buy_now_order');
+
+            $unitPrice = $variation ? (float) $variation->price : (float) $product->price;
+
+            // Optional: for checkout display
+            $variationName = $variation
+                ? trim(implode(' • ', array_filter([
+                    $variation->model ?? null,
+                    $variation->processor ?? null,
+                    $variation->ram ?? null,
+                    $variation->storage ?? null,
+                ])))
+                : null;
+
+            $item = [
+                'product_id'     => (int) $product->id,
+                'variation_id'   => $variation ? (int) $variation->id : null,
+                'quantity'       => $qty,
+                'price'          => $unitPrice,
+                'product_name'   => (string) $product->name,
+                'variation_name' => $variationName,
+                'image'          => data_get($product, 'image')
+                    ?? optional($product->images->first())->image_path
+                    ?? null,
+            ];
+
+            session()->put('buy_now_order', [
+                'is_buy_now' => true,
+                'items'      => [$item],
+                'total'      => $unitPrice * $qty,
+                'timestamp'  => now()->timestamp, // ADD THIS
+            ]);
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success'      => true,
+                    'redirect_url' => route('checkout.index'),
+                ]);
+            }
+
+            return redirect()->route('checkout.index');
+
+        } catch (\Throwable $e) {
+            \Log::error('Buy Now error: ' . $e->getMessage(), [
+                'payload' => $request->all(),
+                'user_id' => optional(Auth::user())->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error processing buy now. Please try again.',
+            ], 500);
+        }
+    }
+
+    public function clearBuyNow()
+    {
+        session()->forget('buy_now_order');
+        return response()->json(['success' => true]);
+    }
+
+    private function getVariationName(Variation $variation): string
+    {
+        return trim(implode(' • ', array_filter([
+            $variation->model ?? null,
+            $variation->processor ?? null,
+            $variation->ram ?? null,
+            $variation->storage ?? null,
+        ])));
+    }
+
+    /**
      * Get or create cart for authenticated user
      */
     private function getOrCreateCart()
@@ -115,41 +303,27 @@ class CheckoutController extends Controller
         }
     }
 
-    /**
-     * Display checkout review page
-     */
+    // ✅ everything below remains unchanged (your existing functions)
     public function review()
     {
         return view('checkout.review');
     }
     
-    /**
-     * Validate checkout data
-     */
     public function validateCheckout(Request $request)
     {
         return response()->json(['valid' => true]);
     }
     
-    /**
-     * Calculate shipping
-     */
     public function calculateShipping(Request $request)
     {
         return response()->json(['shipping' => 5.99]);
     }
     
-    /**
-     * Remove promo code
-     */
     public function removePromoCode(Request $request)
     {
         return response()->json(['success' => true]);
     }
     
-    /**
-     * Get shipping methods
-     */
     public function getShippingMethods()
     {
         return response()->json([
@@ -158,9 +332,6 @@ class CheckoutController extends Controller
         ]);
     }
     
-    /**
-     * Get payment methods
-     */
     public function getPaymentMethods()
     {
         return response()->json([
@@ -170,29 +341,21 @@ class CheckoutController extends Controller
         ]);
     }
     
-    /**
-     * Verify stock
-     */
     public function verifyStock()
     {
         return response()->json(['in_stock' => true]);
     }
     
-    /**
-     * Update shipping address
-     */
     public function updateAddress(Request $request, $id)
     {
         try {
             $user = Auth::user();
 
-            // Make sure the address belongs to this user and is a shipping address
             $address = Address::where('id', $id)
                 ->where('user_id', $user->id)
                 ->where('type', 'shipping')
                 ->firstOrFail();
 
-            // Same validation rules as storeAddress
             $request->validate([
                 'first_name'       => 'required|string|max:100',
                 'last_name'        => 'required|string|max:100',
@@ -212,14 +375,12 @@ class CheckoutController extends Controller
             \DB::beginTransaction();
 
             if ($makeDefault) {
-                // Clear default on all other shipping addresses for this user
                 Address::where('user_id', $user->id)
                     ->where('type', 'shipping')
                     ->where('id', '!=', $address->id)
                     ->update(['is_default' => false]);
             }
 
-            // Update basic fields
             $address->first_name      = $request->first_name;
             $address->last_name       = $request->last_name;
             $address->phone           = $request->phone;
@@ -230,9 +391,6 @@ class CheckoutController extends Controller
             $address->postal_code     = $request->postal_code;
             $address->country         = $request->country ?? 'Malaysia';
 
-            // Default logic:
-            // - If user ticked the box, make this the default
-            // - If they didn't tick it, keep whatever it was before (so you don't accidentally end up with no default)
             if ($makeDefault) {
                 $address->is_default = true;
             }
@@ -248,7 +406,6 @@ class CheckoutController extends Controller
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // Let Laravel handle and return proper 422 JSON
             throw $e;
         } catch (\Exception $e) {
             \DB::rollBack();
@@ -264,18 +421,11 @@ class CheckoutController extends Controller
         }
     }
     
-    /**
-     * Delete address
-     */
     public function deleteAddress($id)
     {
-        // Implementation
         return response()->json(['success' => true]);
     }
 
-    /**
-     * Store a new address
-     */
     public function storeAddress(Request $request)
     {
         try {
@@ -303,14 +453,12 @@ class CheckoutController extends Controller
 
             \Log::info('Validation passed');
             
-            // If setting as default, update other addresses
             if ($request->boolean('is_default')) {
                 Address::where('user_id', $user->id)
                     ->where('type', 'shipping')
                     ->update(['is_default' => false]);
             }
             
-            // Check if this is the first address
             $isFirstAddress = !Address::where('user_id', $user->id)
                 ->where('type', 'shipping')
                 ->exists();
@@ -350,9 +498,6 @@ class CheckoutController extends Controller
         }
     }
 
-    /**
-     * Get user addresses
-     */
     public function getAddresses()
     {
         try {
@@ -376,17 +521,11 @@ class CheckoutController extends Controller
         }
     }
 
-    /**
-     * Save address (alias for storeAddress for backward compatibility)
-     */
     public function saveAddress(Request $request)
     {
         return $this->storeAddress($request);
     }
 
-    /**
-     * Display success page
-     */
     public function success(Order $order)
     {
         if ($order->payment_status !== Order::PAYMENT_STATUS_PAID) {
@@ -398,17 +537,11 @@ class CheckoutController extends Controller
         return view('checkout.success', compact('order'));
     }
 
-    /**
-     * Display failed order page
-     */
     public function failed()
     {
         return view('checkout.failed');
     }
 
-    /**
-     * Place order
-     */
     public function placeOrder(Request $request)
     {
         $request->validate([
@@ -419,7 +552,6 @@ class CheckoutController extends Controller
         try {
             $user = Auth::user();
             
-            // Verify the address belongs to the user
             $address = Address::where('id', $request->address_id)
                 ->where('user_id', $user->id)
                 ->firstOrFail();
@@ -439,9 +571,6 @@ class CheckoutController extends Controller
         }
     }
 
-    /**
-     * Apply promo code
-     */
     public function applyPromo(Request $request)
     {
         $request->validate([

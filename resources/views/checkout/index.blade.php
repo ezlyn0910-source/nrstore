@@ -377,8 +377,9 @@
                     <div class="order-items-scroll">
                         @foreach($cartItems as $item)
                             @php
-                                $product = $item->product;
-
+                                // Handle both object and array access
+                                $product = is_array($item) ? ($item['product'] ?? null) : $item->product;
+                                
                                 $imageUrl = asset('images/default-product.png');
                                 if ($product && $product->images && $product->images->isNotEmpty()) {
                                     $firstImage = $product->images->first();
@@ -395,6 +396,11 @@
                                 if (!empty($product->ram)) $specParts[] = $product->ram;
                                 if (!empty($product->storage)) $specParts[] = $product->storage;
                                 $specText = implode(' • ', $specParts);
+                                
+                                // Handle both object and array access for other properties
+                                $itemName = is_array($item) ? ($item['name'] ?? 'Product') : ($item->name ?? 'Product');
+                                $itemPrice = is_array($item) ? ($item['price'] ?? 0) : ($item->price ?? 0);
+                                $itemQuantity = is_array($item) ? ($item['quantity'] ?? 1) : ($item->quantity ?? 1);
                             @endphp
 
                             <div class="os-item">
@@ -409,8 +415,8 @@
                                     @endif
 
                                     <div class="os-price-row">
-                                        <div class="os-price">RM{{ number_format($item->price, 2) }}</div>
-                                        <div class="os-qty">× {{ $item->quantity }}</div>
+                                        <div class="os-price">RM{{ number_format($itemPrice, 2) }}</div>
+                                        <div class="os-qty">× {{ $itemQuantity }}</div>
                                     </div>
                                 </div>
                             </div>

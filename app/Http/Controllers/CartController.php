@@ -18,6 +18,9 @@ class CartController extends Controller
     public function index()
     {
         try {
+
+            session()->forget('buy_now_order');
+
             $cart = $this->getOrCreateCart();
             
             if (!$cart) {
@@ -47,6 +50,9 @@ class CartController extends Controller
         Log::info('Cart Add Request:', $request->all());
         
         try {
+
+            session()->forget('buy_now_order');
+
             $request->validate([
                 'product_id' => 'required|exists:products,id',
                 'quantity' => 'required|integer|min:1|max:99',
@@ -176,6 +182,8 @@ class CartController extends Controller
     {
         try {
 
+            session()->forget('buy_now_order');
+
             // If quantity is 0, remove item instead of validating
             if ((int) $request->quantity === 0) {
                 $cart = $this->getCart();
@@ -272,6 +280,9 @@ class CartController extends Controller
     public function remove($id)
     {
         try {
+
+            session()->forget('buy_now_order');
+            
             $cart = $this->getCart();
             
             if (!$cart) {

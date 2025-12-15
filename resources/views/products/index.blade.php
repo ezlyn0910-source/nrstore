@@ -922,7 +922,7 @@
             padding: 1.5rem;
             border-bottom: 1px solid #e5e7eb;
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
         }
 
@@ -1210,6 +1210,9 @@
                                         <div style="display: flex; gap: 0.5rem;">
                                             <button class="add-to-cart-btn" 
                                                 data-product-id="{{ $product->id }}"
+                                                data-product-slug="{{ $product->slug }}"
+                                                data-product-url="{{ route('products.show', $product->slug) }}"
+                                                data-variations-url="{{ route('products.variations', $product->id) }}"
                                                 data-product-name="{{ $product->name }}"
                                                 data-product-price="{{ $product->price }}"
                                                 data-product-image="{{ asset($product->image ?? 'images/default-product.png') }}"
@@ -1222,6 +1225,9 @@
 
                                             <button class="buy-now-btn"
                                                 data-product-id="{{ $product->id }}"
+                                                data-product-slug="{{ $product->slug }}"
+                                                data-product-url="{{ route('products.show', $product->slug) }}"
+                                                data-variations-url="{{ route('products.variations', $product->id) }}"
                                                 data-product-name="{{ $product->name }}"
                                                 data-product-price="{{ $product->price }}"
                                                 data-product-image="{{ asset($product->image ?? 'images/default-product.png') }}"
@@ -1333,6 +1339,9 @@
                                             <!-- Add to Cart + Buy Now buttons (unchanged) -->
                                             <button class="add-to-cart-btn" 
                                                     data-product-id="{{ $product->id }}"
+                                                    data-product-slug="{{ $product->slug }}"
+                                                    data-product-url="{{ route('products.show', $product->slug) }}"
+                                                    data-variations-url="{{ route('products.variations', $product->id) }}"
                                                     data-product-name="{{ $product->name }}"
                                                     data-product-price="{{ $product->price }}"
                                                     data-product-image="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"
@@ -1344,6 +1353,9 @@
                                             </button>
                                             <button class="buy-now-btn"
                                                     data-product-id="{{ $product->id }}"
+                                                    data-product-slug="{{ $product->slug }}"
+                                                    data-product-url="{{ route('products.show', $product->slug) }}"
+                                                    data-variations-url="{{ route('products.variations', $product->id) }}"
                                                     data-product-name="{{ $product->name }}"
                                                     data-product-price="{{ $product->price }}"
                                                     data-product-image="{{ asset(str_replace('storage/app/public/', 'storage/', $product->image)) }}"
@@ -1523,18 +1535,32 @@ function showVariationModal(productData, isBuyNowAction = false) {
     modalBody.innerHTML = '<div class="variation-loading">Loading variations...</div>';
     modal.style.display = 'block';
 
-    fetch(`/products/${productData.id}/variations`)
-        .then(r => r.json())
-        .then(data => {
-            if (data.success && data.variations && data.variations.length > 0) {
-                renderVariationOptions(data.variations, modalBody);
-            } else {
-                modalBody.innerHTML = '<div class="no-variations">No variations available for this product.</div>';
-            }
-        })
-        .catch(() => {
-            modalBody.innerHTML = '<div class="no-variations">Error loading variations. Please try again.</div>';
-        });
+    fetch(productData.variationsUrl || `/products/${productData.id}/variations`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(async (r) => {
+        // If server redirects (login / error page)
+        if (r.redirected) throw new Error('Redirected');
+
+        const ct = (r.headers.get('content-type') || '').toLowerCase();
+        if (!ct.includes('application/json')) throw new Error('Not JSON');
+
+        return r.json();
+    })
+    .then(data => {
+        if (data.success && data.variations && data.variations.length > 0) {
+            renderVariationOptions(data.variations, modalBody);
+        } else {
+            modalBody.innerHTML = '<div class="no-variations">No variations available for this product.</div>';
+        }
+    })
+    .catch(() => {
+        modalBody.innerHTML = '<div class="no-variations">Failed to load variations. Please try again.</div>';
+    });
+
 }
 
 function renderVariationOptions(variations, container) {
@@ -1585,6 +1611,52 @@ function renderVariationOptions(variations, container) {
     });
 }
 
+// Variations cache (instant after first fetch)
+const variationsCache = new Map(); // key: productId -> { ts, data }
+const VAR_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getCachedVariations(productId) {
+    const cached = variationsCache.get(String(productId));
+    if (!cached) return null;
+    if (Date.now() - cached.ts > VAR_CACHE_TTL) {
+        variationsCache.delete(String(productId));
+        return null;
+    }
+    return cached.data;
+}
+
+function setCachedVariations(productId, data) {
+    variationsCache.set(String(productId), { ts: Date.now(), data });
+}
+
+async function fetchVariationsFast(productData) {
+    // 1) cache first
+    const cached = getCachedVariations(productData.id);
+    if (cached) return cached;
+
+    // 2) fetch
+    const r = await fetch(productData.variationsUrl, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        cache: 'force-cache' // browser-level caching hint
+    });
+
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+
+    const ct = (r.headers.get('content-type') || '').toLowerCase();
+    if (!ct.includes('application/json')) throw new Error('Not JSON');
+
+    const data = await r.json();
+
+    // Your controller returns {success:true, variations:[...]}
+    const variations = (data && data.success && Array.isArray(data.variations)) ? data.variations : [];
+    setCachedVariations(productData.id, variations);
+
+    return variations;
+}
+
 function processVariationAction() {
     if (!selectedVariation || !currentProductData) {
         showNotification('Please select a variation', 'error');
@@ -1608,22 +1680,52 @@ function processVariationAction() {
         sku:           selectedVariation.sku
     };
 
-    fetch("{{ route('buy-now') }}", {
+    // If you ever use this modal for Add-to-Cart in future:
+    const targetUrl = isBuyNow ? "{{ route('buy-now') }}" : "/cart/add";
+
+    fetch(targetUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify(requestData)
     })
-    .then(r => r.json())
+    .then(async (r) => {
+        if (r.redirected) {
+            window.location.href = r.url; // login / checkout
+            return null;
+        }
+
+        const ct = (r.headers.get('content-type') || '').toLowerCase();
+        if (!ct.includes('application/json')) throw new Error('Not JSON');
+
+        return r.json();
+    })
     .then(data => {
+        if (!data) return;
+
+        // Buy Now flow
+        if (isBuyNow) {
+            if (data.success && data.redirect_url) {
+                showNotification('Redirecting to checkout...', 'success');
+                closeVariationModal();
+                setTimeout(() => { window.location.href = data.redirect_url; }, 300);
+            } else {
+                showNotification(data.message || 'Failed to process product.', 'error');
+            }
+            return;
+        }
+
+        // Add to Cart flow (if you ever use it)
         if (data.success) {
-            showNotification('Redirecting to checkout...', 'success');
-            setTimeout(() => { window.location.href = data.redirect_url; }, 500);
+            showNotification('Product added to cart successfully!');
+            updateHeaderCartCount(data.cart_count || 0);
+            closeVariationModal();
         } else {
-            showNotification(data.message || 'Failed to process product.', 'error');
+            showNotification(data.message || 'Failed to add product to cart.', 'error');
         }
     })
     .catch(() => {
@@ -1739,59 +1841,145 @@ let popupHasVariations = false;
 let popupSelectedVariation = null;
 
 function openProductPopup(productData, hasVariations, isBuyNowAction) {
-    currentProductData   = productData;
-    popupHasVariations   = hasVariations;
+    currentProductData = productData;
+    popupHasVariations = hasVariations;
     popupSelectedVariation = null;
-    popupAction          = isBuyNowAction ? 'buy' : 'cart';
+    popupAction = isBuyNowAction ? 'buy' : 'cart';
 
-    const overlay   = document.getElementById('product-popup');
-    const imgEl     = document.getElementById('popup-product-image');
-    const nameEl    = document.getElementById('popup-product-name');
-    const descEl    = document.getElementById('popup-product-description');
-    const priceEl   = document.getElementById('popup-product-price');
-    const stockEl   = document.getElementById('popup-product-stock');
-    const qtyInput  = document.getElementById('popup-quantity-input');
-    const confirm   = document.getElementById('popup-confirm-btn');
-    const varSec    = document.getElementById('popup-variations-section');
-    const varList   = document.getElementById('popup-variations-list');
+    const overlay  = document.getElementById('product-popup');
+    const imgEl    = document.getElementById('popup-product-image');
+    const nameEl   = document.getElementById('popup-product-name');
+    const descEl   = document.getElementById('popup-product-description');
+    const priceEl  = document.getElementById('popup-product-price');
+    const stockEl  = document.getElementById('popup-product-stock');
+    const qtyInput = document.getElementById('popup-quantity-input');
+    const confirm  = document.getElementById('popup-confirm-btn');
+    const varSec   = document.getElementById('popup-variations-section');
+    const varList  = document.getElementById('popup-variations-list');
 
     if (!overlay || !imgEl || !nameEl || !priceEl || !stockEl || !qtyInput || !confirm || !varSec || !varList) return;
 
-    imgEl.src       = productData.image || '';
-    nameEl.textContent  = productData.name || '';
-    descEl.textContent  = productData.description || '';
+    imgEl.src = productData.image || '';
+    nameEl.textContent = productData.name || '';
+    descEl.textContent = productData.description || '';
     priceEl.textContent = productData.price ? `RM${parseFloat(productData.price).toFixed(2)}` : '';
     stockEl.textContent = productData.stock ? `Stock: ${productData.stock}` : '';
 
     qtyInput.value = 1;
 
     confirm.textContent = popupAction === 'buy' ? 'Buy Now' : 'Add to Cart';
-    confirm.disabled    = hasVariations; // enable only after variation selected when needed
+    confirm.disabled = hasVariations; // enabled only after variation selected
 
-    // reset variations
     varList.innerHTML = '';
     varSec.style.display = 'none';
 
-    if (hasVariations) {
-        varSec.style.display = 'block';
-        confirm.disabled = true;
-        fetch(`/products/${productData.id}/variations`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.success && data.variations && data.variations.length) {
-                    renderPopupVariations(data.variations);
-                } else {
-                    varList.innerHTML = '<span style="font-size:0.8rem;color:#6b7280;">No variations available.</span>';
-                    confirm.disabled = false;
-                }
-            })
-            .catch(() => {
-                varList.innerHTML = '<span style="font-size:0.8rem;color:#ef4444;">Failed to load variations.</span>';
-            });
+    overlay.style.display = 'flex';
+
+    // No variations -> enable immediately
+    if (!hasVariations) {
+        confirm.disabled = false;
+        return;
     }
 
-    overlay.style.display = 'flex';
+    // Variations needed
+    varSec.style.display = 'block';
+    confirm.disabled = true;
+
+    const cached = getCachedVariations(productData.id);
+    if (cached) {
+        renderPopupVariations(cached);
+        return;
+    }
+
+    varList.innerHTML = `
+        <div style="text-align:center; padding:1rem; color:#6b7280; font-size:0.9rem;">
+            Loading variations...
+        </div>
+    `;
+
+    fetchVariationsFast(productData)
+    .then(variations => {
+        if (variations.length > 0) {
+            renderPopupVariations(variations);
+        } else {
+            varList.innerHTML = `
+                <div style="text-align:center; padding:1rem; color:#6b7280; font-size:0.9rem;">
+                    No variations available for this product.
+                </div>
+            `;
+            confirm.disabled = false;
+        }
+    })
+    .catch(() => {
+        varList.innerHTML = `
+            <div style="text-align:center; padding:1rem; color:#ef4444; font-size:0.9rem;">
+                Failed to load variations. Please try again.
+            </div>
+        `;
+        confirm.disabled = true;
+    });
+
+    const variationsUrl = productData.variationsUrl; // ✅ ALWAYS use route() URL from dataset
+    if (!variationsUrl) {
+        varList.innerHTML = `
+            <div style="text-align:center; padding:1rem; color:#ef4444; font-size:0.9rem;">
+                Missing variations URL.
+            </div>
+        `;
+        confirm.disabled = false;
+        return;
+    }
+
+    fetch(variationsUrl, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(async (r) => {
+        // If not OK, try show readable error
+        if (!r.ok) {
+            const t = await r.text();
+            throw new Error(`HTTP ${r.status}: ${t.substring(0, 120)}`);
+        }
+
+        // Must be JSON (avoid "Unexpected token <")
+        const ct = (r.headers.get('content-type') || '').toLowerCase();
+        if (!ct.includes('application/json')) {
+            const t = await r.text();
+            throw new Error(`Not JSON response: ${t.substring(0, 120)}`);
+        }
+
+        return r.json();
+    })
+    .then((data) => {
+        // Your controller returns: { success:true, variations:[...] }
+        const variations = (data && data.success && Array.isArray(data.variations)) ? data.variations : [];
+
+        if (variations.length > 0) {
+            renderPopupVariations(variations);
+        } else {
+            varList.innerHTML = `
+                <div style="text-align:center; padding:1rem; color:#6b7280; font-size:0.9rem;">
+                    No variations available for this product.
+                </div>
+            `;
+            // If no variations returned, allow user to continue
+            confirm.disabled = false;
+        }
+    })
+    .catch((err) => {
+        console.error('Variation fetch error:', err);
+        varList.innerHTML = `
+            <div style="text-align:center; padding:1rem; color:#ef4444; font-size:0.9rem;">
+                Failed to load variations. Please try again.
+            </div>
+        `;
+        // Let user close or try again (confirm stays disabled because variation needed)
+        confirm.disabled = true;
+    });
 }
+
 
 function renderPopupVariations(variations) {
     const varList = document.getElementById('popup-variations-list');
@@ -1799,47 +1987,56 @@ function renderPopupVariations(variations) {
     const priceEl = document.getElementById('popup-product-price');
     const stockEl = document.getElementById('popup-product-stock');
 
+    if (!varList) return;
+
     varList.innerHTML = '';
     popupSelectedVariation = null;
     if (confirm) confirm.disabled = true;
 
     variations.forEach(v => {
         const specs = [];
+        if (v.model) specs.push(v.model);
         if (v.processor) specs.push(v.processor);
-        if (v.ram)       specs.push(v.ram);
-        if (v.storage)   specs.push(v.storage);
-        if (v.model)     specs.push(v.model);
+        if (v.ram) specs.push(v.ram);
+        if (v.storage) specs.push(v.storage);
+
+        const stock = Number(v.stock ?? 0);
+        const price = Number(v.effective_price ?? v.price ?? 0);
 
         const pill = document.createElement('button');
-        pill.type  = 'button';
+        pill.type = 'button';
         pill.className = 'popup-variation-pill';
-        if (v.stock <= 0) {
+        pill.textContent = specs.length ? specs.join(' / ') : (v.name || 'Variation');
+
+        if (stock <= 0) {
             pill.classList.add('disabled');
         }
 
-        pill.textContent = specs.length ? specs.join(' / ') : (v.name || 'Variation');
-
         pill.addEventListener('click', () => {
-            if (v.stock <= 0) return;
+            if (stock <= 0) return;
+
             varList.querySelectorAll('.popup-variation-pill').forEach(p => p.classList.remove('selected'));
             pill.classList.add('selected');
 
             popupSelectedVariation = {
-                id:    v.id,
-                price: v.price,
-                sku:   v.sku || '',
-                stock: v.stock,
+                id: v.id,
+                price: price,
+                sku: v.sku || '',
+                stock: stock,
                 specs: specs.join(' / ')
             };
 
-            if (priceEl) priceEl.textContent = `RM${parseFloat(v.price).toFixed(2)}`;
-            if (stockEl) stockEl.textContent = `Stock: ${v.stock}`;
-
+            if (priceEl) priceEl.textContent = `RM${price.toFixed(2)}`;
+            if (stockEl) stockEl.textContent = `Stock: ${stock}`;
             if (confirm) confirm.disabled = false;
         });
 
         varList.appendChild(pill);
     });
+
+    // Auto select first available if only one
+    const firstEnabled = varList.querySelector('.popup-variation-pill:not(.disabled)');
+    if (variations.length === 1 && firstEnabled) firstEnabled.click();
 }
 
 function closeProductPopup() {
@@ -1849,6 +2046,50 @@ function closeProductPopup() {
     popupSelectedVariation = null;
     popupHasVariations   = false;
     popupAction          = 'cart';
+}
+
+function submitBuyNowForm(productId, variationId, quantity) {
+    // prevent double submit
+    if (window.__buyNowSubmitting) return;
+    window.__buyNowSubmitting = true;
+
+    // safety unlock (in case server responds with JSON/error and page doesn't redirect)
+    setTimeout(() => { window.__buyNowSubmitting = false; }, 3000);
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = "{{ route('buy-now') }}";
+
+    // CSRF token
+    const csrf = document.createElement('input');
+    csrf.type = 'hidden';
+    csrf.name = '_token';
+    csrf.value = "{{ csrf_token() }}";
+    form.appendChild(csrf);
+
+    // product_id
+    const pid = document.createElement('input');
+    pid.type = 'hidden';
+    pid.name = 'product_id';
+    pid.value = productId;
+    form.appendChild(pid);
+
+    // variation_id (send empty if none)
+    const vid = document.createElement('input');
+    vid.type = 'hidden';
+    vid.name = 'variation_id';
+    vid.value = variationId ? variationId : '';
+    form.appendChild(vid);
+
+    // quantity
+    const qty = document.createElement('input');
+    qty.type = 'hidden';
+    qty.name = 'quantity';
+    qty.value = quantity && quantity > 0 ? quantity : 1;
+    form.appendChild(qty);
+
+    document.body.appendChild(form);
+    form.submit();
 }
 
 function handlePopupConfirm() {
@@ -1867,7 +2108,11 @@ function handlePopupConfirm() {
         // FIXED PARAMETER ORDER
         addToCartFromPopup(currentProductData, popupSelectedVariation, confirm, originalText, quantity);
     } else {
-        buyNowFromPopup(currentProductData, popupSelectedVariation, quantity, confirm, originalText);
+        submitBuyNowForm(
+            currentProductData.id,
+            popupSelectedVariation ? popupSelectedVariation.id : null,
+            quantity
+        );
     }
 }
 
@@ -1926,47 +2171,65 @@ function addToCartFromPopup(productData, variation, button, originalText, quanti
     });
 }
 
-function buyNowFromPopup(productData, variation, quantity, button, originalText) {
-    const requestData = {
-        product_id:   productData.id,
-        product_name: productData.name,
-        price:        parseFloat(variation ? variation.price : productData.price),
-        quantity:     quantity,
-        image:        productData.image
-    };
+async function buyNowFromPopup(productData, variation, quantity, button, originalText) {
+    try {
+        const authRes = await fetch('/api/check-auth', { headers: { 'Accept': 'application/json' } });
+        const authData = await authRes.json();
+        if (!authData.authenticated) {
+            window.location.href = "{{ route('login') }}";
+            return;
+        }
 
-    if (variation) {
-        requestData.variation_id = variation.id;
-        requestData.specs        = variation.specs;
-        requestData.sku          = variation.sku;
-    }
+        const requestData = {
+            product_id: productData.id,
+            quantity: quantity
+        };
 
-    fetch('/buy-now', {
+        if (variation) {
+            requestData.variation_id = variation.id;
+        }
+
+        const r = await fetch("{{ route('buy-now') }}", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify(requestData)
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
+    });
+
+    if (r.redirected) {
+        window.location.href = r.url; // usually login
+        return;
+    }
+
+    const ct = (r.headers.get('content-type') || '').toLowerCase();
+    if (!ct.includes('application/json')) {
+        const text = await r.text();
+        console.log('Buy Now non-JSON response:', text.substring(0, 200));
+        showNotification('Session expired. Please login again.', 'error');
+        window.location.href = "{{ route('login') }}";
+        return;
+    }
+
+    const data = await r.json();
+
+        if (data.success && data.redirect_url) {
             showNotification('Redirecting to checkout...', 'success');
             closeProductPopup();
-            setTimeout(() => { window.location.href = data.redirect_url; }, 500);
+            setTimeout(() => window.location.href = data.redirect_url, 300);
         } else {
             showNotification(data.message || 'Failed to process product.', 'error');
         }
-    })
-    .catch(() => {
+
+    } catch (e) {
         showNotification('Network error. Please try again.', 'error');
-    })
-    .finally(() => {
+    } finally {
         button.textContent = originalText;
-        button.disabled    = false;
-    });
+        button.disabled = false;
+    }
 }
 
 // ----------------------
@@ -1975,41 +2238,54 @@ function buyNowFromPopup(productData, variation, quantity, button, originalText)
 document.addEventListener('DOMContentLoaded', function () {
     initRecommendationSlider();
 
+    // helper to build productData from a button
+    function buildProductDataFromBtn(btn) {
+        return {
+            id:           btn.dataset.productId,
+            slug:         btn.dataset.productSlug,
+            url:          btn.dataset.productUrl,
+            variationsUrl: btn.dataset.variationsUrl,
+            name:         btn.dataset.productName,
+            price:        btn.dataset.productPrice,
+            image:        btn.dataset.productImage,
+            description:  btn.dataset.productDescription || '',
+            stock:        btn.dataset.productStock || ''
+        };
+    }
+
     // Add to Cart buttons
     document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        const productData = buildProductDataFromBtn(btn);
+        const hasVariations = btn.dataset.hasVariations === '1';
+
+        // ✅ Preload BEFORE click (hover / touch)
+        btn.addEventListener('mouseenter', () => preloadVariations(productData, hasVariations), { passive: true });
+        btn.addEventListener('touchstart', () => preloadVariations(productData, hasVariations), { passive: true });
+
+        // ✅ Click opens popup
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            const productData = {
-                id:          this.dataset.productId,
-                name:        this.dataset.productName,
-                price:       this.dataset.productPrice,
-                image:       this.dataset.productImage,
-                description: this.dataset.productDescription || '',
-                stock:       this.dataset.productStock || ''
-            };
-            const hasVariations = this.dataset.hasVariations === '1';
             openProductPopup(productData, hasVariations, false);
         });
     });
 
     // Buy Now buttons
     document.querySelectorAll('.buy-now-btn').forEach(btn => {
+        const productData = buildProductDataFromBtn(btn);
+        const hasVariations = btn.dataset.hasVariations === '1';
+
+        // ✅ Preload variations BEFORE click (desktop + mobile)
+        btn.addEventListener('mouseenter', () => preloadVariations(productData, hasVariations), { passive: true });
+        btn.addEventListener('touchstart', () => preloadVariations(productData, hasVariations), { passive: true });
+
+        // ✅ Click → open popup (Buy Now mode)
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            const productData = {
-                id:          this.dataset.productId,
-                name:        this.dataset.productName,
-                price:       this.dataset.productPrice,
-                image:       this.dataset.productImage,
-                description: this.dataset.productDescription || '',
-                stock:       this.dataset.productStock || ''
-            };
-            const hasVariations = this.dataset.hasVariations === '1';
             openProductPopup(productData, hasVariations, true);
         });
     });
 
-        // Popup close + background click
+    // Popup close + background click
     const popupOverlay = document.getElementById('product-popup');
     const popupClose   = document.querySelector('#product-popup .popup-close');
     if (popupClose) {

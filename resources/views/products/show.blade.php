@@ -112,20 +112,19 @@
                 </h1>
 
                 {{-- Price Display --}}
-                @if($product->has_variations && $product->variations->count() > 0)
-                    {{-- Show price range if there are variations --}}
+                @if($product->variations->count() > 0)
                     @php
                         $minPrice = $product->variations->min('price') ?? $product->price;
                         $maxPrice = $product->variations->max('price') ?? $product->price;
                     @endphp
+
                     <p style="font-size: 1.8rem; font-weight: 700; color: #5FBF87; margin-bottom: 0rem;">
-                        RM {{ number_format($minPrice, 2) }} 
+                        RM {{ number_format($minPrice, 2) }}
                         @if($minPrice != $maxPrice)
                             - RM {{ number_format($maxPrice, 2) }}
                         @endif
                     </p>
                 @else
-                    {{-- Show single price for simple product --}}
                     <p style="font-size: 1.8rem; font-weight: 700; color: #5FBF87; margin-bottom: 0rem;">
                         {{ $product->formatted_price }}
                     </p>
@@ -148,127 +147,70 @@
             <div style="margin-top: auto;">
                 <hr style="margin: 1.5rem 0 1.5rem 0; border: none; border-top: 1.5px solid #ddd;">
 
-                {{-- Product Variations --}}
+                {{-- Variations (Processor + Memory/Storage) --}}
                 @if($product->has_variations && $product->variations->count() > 0)
-                    <div style="margin-bottom: 1.5rem;">
-                        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: #333;">
-                            Select Model:
-                        </h3>
-                        <div id="variations-container" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                            @foreach($product->variations as $variation)
-                                <div class="variation-option {{ $loop->first ? 'selected' : '' }}"
-                                    data-variation-id="{{ $variation->id }}"
-                                    data-price="{{ $variation->price ?? $product->price }}"
-                                    data-stock="{{ $variation->stock }}"
-                                    data-sku="{{ $variation->sku }}"
-                                    data-model="{{ $variation->model }}"
-                                    data-processor="{{ $variation->processor }}"
-                                    data-ram="{{ $variation->ram }}"
-                                    data-storage="{{ $variation->storage }}"
-                                    style="
-                                        padding: 0.4rem 0.8rem;
-                                        border: 1.5px solid {{ $loop->first ? '#2d4a35' : '#ccc' }};
-                                        border-radius: 6px;
-                                        background: {{ $loop->first ? '#f8f9f8' : '#fff' }};
-                                        cursor: pointer;
-                                        transition: all 0.2s;
-                                        font-size: 0.9rem;
-                                        min-width: 60px;
-                                        text-align: center;
-                                        white-space: nowrap;
-                                    "
-                                    onclick="selectVariation(this)">
-                                    <div style="font-weight: 500; color: #333;">
-                                        {{ $variation->model ?: 'Model ' . $loop->iteration }}
-                                    </div>
-                                    <div style="font-size: 0.8rem; color: #5FBF87; margin-top: 0.1rem; font-weight: 600;">
-                                        RM {{ number_format($variation->price ?? $product->price, 2) }}
-                                    </div>
+                    @php
+                        // Use only active variations (controller already loads active, but safe)
+                        $activeVars = $product->variations;
+
+                        $defaultVar = $activeVars->first();
+                        $defaultProcessor = $defaultVar->processor ?? 'Default';
+
+                        // Unique processors
+                        $processors = $activeVars->pluck('processor')->filter()->unique()->values();
+
+                        // If processor is empty for all, fall back to model (still shown under "Processor")
+                        if ($processors->count() === 0) {
+                            $processors = $activeVars->pluck('model')->filter()->unique()->values();
+                            $defaultProcessor = $defaultVar->model ?? 'Default';
+                        }
+                    @endphp
+
+                    <div style="margin-bottom: 1.25rem;">
+                        <div style="display:flex; flex-direction:column; gap:0.9rem;">
+
+                            {{-- Row 1: Processor --}}
+                            <div style="display:grid; grid-template-columns: 140px 1fr; gap: 1rem; align-items:start;">
+                                <div style="color:#6b7c72; font-size:0.95rem; padding-top:0.35rem;">
+                                    Processor
                                 </div>
-                            @endforeach
-                        </div>
-                        {{-- Variation Details --}}
-                        <div id="variation-details" style="margin-top: 0.75rem; font-size: 0.85rem; color: #555;">
-                            @if($product->variations->first())
-                                @php $firstVar = $product->variations->first(); @endphp
-                                <div style="margin-bottom: 0.25rem;">
-                                    <strong>Model:</strong> <span id="model-display">{{ $firstVar->model ?: 'Model 1' }}</span>
+
+                                <div id="processorOptions" style="display:flex; flex-wrap:wrap; gap:0.6rem;">
+                                    @foreach($processors as $p)
+                                        <button type="button"
+                                            class="var-chip processor-chip"
+                                            data-processor="{{ $p }}"
+                                            style="
+                                                border:1.5px solid #e5e7eb;
+                                                background:#fff;
+                                                color:#1a2412;
+                                                padding:0.55rem 0.9rem;
+                                                border-radius:8px;
+                                                cursor:pointer;
+                                                font-size:0.9rem;
+                                                display:flex;
+                                                align-items:center;
+                                                gap:0.55rem;
+                                                transition:all .15s;
+                                            "
+                                        >
+                                            <span>{{ $p }}</span>
+                                        </button>
+                                    @endforeach
                                 </div>
-                                <div style="margin-bottom: 0.25rem;">
-                                    <strong>SKU:</strong> <span id="sku-display">{{ $firstVar->sku }}</span>
+                            </div>
+
+                            {{-- Row 2: Memory/Storage --}}
+                            <div style="display:grid; grid-template-columns: 140px 1fr; gap: 1rem; align-items:start;">
+                                <div style="color:#6b7c72; font-size:0.95rem; padding-top:0.35rem;">
+                                    Memory/Storage
                                 </div>
-                                <div>
-                                    <strong>Specifications:</strong> 
-                                    <span id="specs-display">
-                                        @if($firstVar->processor)
-                                            {{ $firstVar->processor }}
-                                            @if($firstVar->ram) • @endif
-                                        @endif
-                                        @if($firstVar->ram)
-                                            {{ $firstVar->ram }}
-                                            @if($firstVar->storage) • @endif
-                                        @endif
-                                        @if($firstVar->storage)
-                                            {{ $firstVar->storage }}
-                                        @endif
-                                        @if(!$firstVar->processor && !$firstVar->ram && !$firstVar->storage)
-                                            Standard configuration
-                                        @endif
-                                    </span>
-                                </div>
-                            @endif
+
+                                <div id="memoryOptions" style="display:flex; flex-wrap:wrap; gap:0.6rem;"></div>
+                            </div>
                         </div>
                     </div>
                 @endif
-
-                {{-- Product Specifications --}}
-                <div style="margin-bottom: 1.5rem; font-size: 0.9rem; color: #555;">
-                    @if($product->processor)
-                        <div><strong>Processor:</strong> {{ $product->processor }}</div>
-                    @endif
-
-                    @if($product->ram)
-                        <div><strong>RAM:</strong> {{ $product->ram }}</div>
-                    @endif
-
-                    @if($product->storage)
-                        <div><strong>Storage:</strong> {{ $product->storage }}</div>
-                    @endif
-
-                    @if($product->graphics_card)
-                        <div><strong>Graphics:</strong> {{ $product->graphics_card }}</div>
-                    @endif
-
-                    @if($product->operating_system)
-                        <div><strong>Operating System:</strong> {{ $product->operating_system }}</div>
-                    @endif
-
-                    @if($product->screen_size)
-                        <div><strong>Screen Size:</strong> {{ $product->screen_size }}</div>
-                    @endif
-
-                    @if(!$product->has_variations && $product->sku)
-                        <div><strong>SKU:</strong> {{ $product->sku }}</div>
-                    @endif
-                </div>
-
-                {{-- Stock Status --}}
-                <div id="stock-status" style="margin-bottom: 1rem; padding: 0.5rem 0.75rem; border-radius: 0.5rem; 
-                     background-color: {{ $product->has_variations && $product->variations->first()->stock > 0 ? '#d1fae5' : '#fee2e2' }}; 
-                     color: {{ $product->has_variations && $product->variations->first()->stock > 0 ? '#065f46' : '#b91c1c' }};
-                     font-size: 0.9rem;">
-                    @if($product->has_variations && $product->variations->count() > 0)
-                        <strong>Availability:</strong> 
-                        <span id="stock-display">
-                            {{ $product->variations->first()->stock > 0 ? $product->variations->first()->stock . ' items available' : 'Out of stock' }}
-                        </span>
-                    @else
-                        <strong>Availability:</strong> 
-                        <span>
-                            {{ $product->stock_quantity > 0 ? $product->stock_quantity . ' items available' : 'Out of stock' }}
-                        </span>
-                    @endif
-                </div>
 
                 {{-- Quantity + Buttons --}}
                 <div style="
@@ -326,7 +268,7 @@
                     </div>
 
                     {{-- Buttons --}}
-                    <div style="display: flex; gap: 0.6rem;">
+                    <div style="display: flex; gap: 0.6rem; align-items:center;">
                         <button type="button" 
                             id="btnAddToCart"
                             style="
@@ -338,9 +280,7 @@
                                 font-weight:600; 
                                 cursor:pointer;
                                 white-space: nowrap;
-                                {{ ($product->has_variations && $product->variations->first()->stock <= 0) || (!$product->has_variations && $product->stock_quantity <= 0) ? 'opacity: 0.5; cursor: not-allowed;' : '' }}
-                            "
-                            {{ ($product->has_variations && $product->variations->first()->stock <= 0) || (!$product->has_variations && $product->stock_quantity <= 0) ? 'disabled' : '' }}>
+                            ">
                             Add to Cart
                         </button>
 
@@ -355,11 +295,19 @@
                                 font-weight:600; 
                                 cursor:pointer;
                                 white-space: nowrap;
-                                {{ ($product->has_variations && $product->variations->first()->stock <= 0) || (!$product->has_variations && $product->stock_quantity <= 0) ? 'opacity: 0.5; cursor: not-allowed;' : '' }}
-                            "
-                            {{ ($product->has_variations && $product->variations->first()->stock <= 0) || (!$product->has_variations && $product->stock_quantity <= 0) ? 'disabled' : '' }}>
+                            ">
                             Buy Now
                         </button>
+
+                        <span id="variationError"
+                            style="
+                                font-size:0.85rem;
+                                color:#b91c1c;
+                                margin-left:0.5rem;
+                                display:none;
+                            ">
+                        </span>
+
                     </div>
 
                 </div>
@@ -481,132 +429,192 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Current selected variation
+    // ===== Variation Selection (2-way compatible variants) =====
+    let selectedProcessor = null;
+    let selectedMemLabel = null;      // e.g. "8GB/128GB"
     let selectedVariationId = null;
-    @if($product->has_variations && $product->variations->count() > 0)
-        selectedVariationId = {{ $product->variations->first()->id }};
-    @endif
 
-    // Function to select variation
-    window.selectVariation = function(element) {
-        // Update UI
-        document.querySelectorAll('.variation-option').forEach(opt => {
-            opt.style.borderColor = '#ccc';
-            opt.style.background = '#fff';
-            opt.classList.remove('selected');
+    const hasVariations = @json($product->variations->count() > 0);
+
+    @php
+        $allVariationsData = $product->variations->map(function($v){
+            return [
+                'id'        => $v->id,
+                'processor' => $v->processor ?: ($v->model ?: 'Default'),
+                'ram'       => $v->ram,
+                'storage'   => $v->storage,
+            ];
+        })->values();
+    @endphp
+
+    const allVariations = @json($allVariationsData);
+
+    const errorEl = document.getElementById('variationError');
+
+    function clearError() {
+        if (errorEl) errorEl.style.display = 'none';
+    }
+    function showError(msg) {
+        if (!errorEl) return;
+        errorEl.textContent = msg;
+        errorEl.style.display = 'inline';
+    }
+
+    // Build a clean label for Memory/Storage (safe if null)
+    function memLabelOf(v) {
+        const ram = (v.ram ?? '').toString().trim();
+        const st  = (v.storage ?? '').toString().trim();
+        if (ram && st) return `${ram}/${st}`;   // ✅
+        if (ram) return ram;
+        if (st) return st;
+        return 'Standard';
+    }
+
+    // Check if a combination exists
+    function hasCombo(proc, memLabel) {
+        return allVariations.some(v => v.processor === proc && memLabelOf(v) === memLabel);
+    }
+
+    // Find the exact variation id for selected combo
+    function findVariationId(proc, memLabel) {
+        const found = allVariations.find(v => v.processor === proc && memLabelOf(v) === memLabel);
+        return found ? found.id : null;
+    }
+
+    // Helpers to set chip UI
+    function setSelectedChip(btn, selector) {
+        document.querySelectorAll(selector).forEach(b => {
+            b.classList.remove('selected');
+            b.style.borderColor = '#e5e7eb';
+            b.style.background = '#fff';
         });
-        
-        element.style.borderColor = '#2d4a35';
-        element.style.background = '#f8f9f8';
-        element.classList.add('selected');
-        
-        // Update selected variation
-        selectedVariationId = element.dataset.variationId;
-        
-        // Update model, SKU and specs display
-        const modelDisplay = document.getElementById('model-display');
-        const skuDisplay = document.getElementById('sku-display');
-        const specsDisplay = document.getElementById('specs-display');
-        
-        if (modelDisplay) {
-            modelDisplay.textContent = element.dataset.model || 'Standard Model';
-        }
-        
-        if (skuDisplay) {
-            skuDisplay.textContent = element.dataset.sku;
-        }
-        
-        if (specsDisplay) {
-            let specs = [];
-            if (element.dataset.processor) specs.push(element.dataset.processor);
-            if (element.dataset.ram) specs.push(element.dataset.ram);
-            if (element.dataset.storage) specs.push(element.dataset.storage);
-            
-            if (specs.length > 0) {
-                specsDisplay.textContent = specs.join(' • ');
-            } else {
-                specsDisplay.textContent = 'Standard configuration';
-            }
-        }
-        
-        // Update stock status
-        const stockStatus = document.getElementById('stock-status');
-        const stockDisplay = document.getElementById('stock-display');
-        const stock = parseInt(element.dataset.stock);
-        
-        if (stockStatus && stockDisplay) {
-            if (stock > 0) {
-                stockStatus.style.backgroundColor = '#d1fae5';
-                stockStatus.style.color = '#065f46';
-                stockDisplay.textContent = stock + ' items available';
-            } else {
-                stockStatus.style.backgroundColor = '#fee2e2';
-                stockStatus.style.color = '#b91c1c';
-                stockDisplay.textContent = 'Out of stock';
-            }
-        }
-        
-        // Enable/disable buttons based on stock
-        const btnAddToCart = document.getElementById('btnAddToCart');
-        const btnBuyNow = document.getElementById('btnBuyNow');
-        
-        if (btnAddToCart && btnBuyNow) {
-            if (stock <= 0) {
-                btnAddToCart.style.opacity = '0.5';
-                btnAddToCart.style.cursor = 'not-allowed';
-                btnAddToCart.disabled = true;
-                
-                btnBuyNow.style.opacity = '0.5';
-                btnBuyNow.style.cursor = 'not-allowed';
-                btnBuyNow.disabled = true;
-            } else {
-                btnAddToCart.style.opacity = '';
-                btnAddToCart.style.cursor = '';
-                btnAddToCart.disabled = false;
-                
-                btnBuyNow.style.opacity = '';
-                btnBuyNow.style.cursor = '';
-                btnBuyNow.disabled = false;
-            }
-        }
-    };
+        btn.classList.add('selected');
+        btn.style.borderColor = '#2d4a35';
+        btn.style.background = '#f3f6f4';
+    }
 
-    // Quantity controller
-    const qtyInput = document.getElementById('qtyInput');
-    const btnMinus = document.getElementById('qtyMinus');
-    const btnPlus  = document.getElementById('qtyPlus');
+    function setDisabledChip(btn, disabled) {
+        if (disabled) btn.classList.add('disabled');
+        else btn.classList.remove('disabled');
+    }
 
-    if (qtyInput && btnMinus && btnPlus) {
-        btnMinus.addEventListener('click', function () {
-            let current = parseInt(qtyInput.value || '1', 10);
-            if (isNaN(current) || current <= 1) {
-                qtyInput.value = 1;
-            } else {
-                qtyInput.value = current - 1;
-            }
+    // Render unique memory/storage chips (ALWAYS visible)
+    const memoryWrap = document.getElementById('memoryOptions');
+    if (memoryWrap) {
+        memoryWrap.innerHTML = '';
+
+        const uniqueMemLabels = [];
+        allVariations.forEach(v => {
+            const label = memLabelOf(v);
+            if (!uniqueMemLabels.includes(label)) uniqueMemLabels.push(label);
         });
 
-        btnPlus.addEventListener('click', function () {
-            let current = parseInt(qtyInput.value || '1', 10);
-            if (isNaN(current) || current < 1) {
-                qtyInput.value = 1;
-            } else {
-                qtyInput.value = current + 1;
-            }
-        });
+        uniqueMemLabels.forEach(label => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'var-chip memory-chip';
+            btn.textContent = label;
+            btn.dataset.memLabel = label;
 
-        qtyInput.addEventListener('input', function () {
-            let current = parseInt(qtyInput.value || '1', 10);
-            if (isNaN(current) || current < 1) {
-                qtyInput.value = 1;
-            }
+            btn.style.border = '1.5px solid #e5e7eb';
+            btn.style.background = '#fff';
+            btn.style.color = '#1a2412';
+            btn.style.padding = '0.55rem 0.9rem';
+            btn.style.borderRadius = '8px';
+            btn.style.cursor = 'pointer';
+            btn.style.fontSize = '0.9rem';
+            btn.style.transition = 'all .15s';
+
+            btn.addEventListener('click', () => {
+                if (btn.classList.contains('disabled')) return;
+
+                setSelectedChip(btn, '.memory-chip');
+                selectedMemLabel = btn.dataset.memLabel;
+
+                clearError();
+                refreshCompatibility();  // grey out processors based on memory
+                updateSelectedVariation();
+            });
+
+            memoryWrap.appendChild(btn);
         });
     }
+
+    // Processor chip click binding
+    document.querySelectorAll('.processor-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+            setSelectedChip(btn, '.processor-chip');
+            selectedProcessor = btn.dataset.processor;
+
+            if (selectedMemLabel && !hasCombo(selectedProcessor, selectedMemLabel)) {
+                document.querySelectorAll('.memory-chip').forEach(m => {
+                    m.classList.remove('selected');
+                    m.style.borderColor = '#e5e7eb';
+                    m.style.background = '#fff';
+                });
+                selectedMemLabel = null;
+                selectedVariationId = null;
+            }
+
+            clearError();
+            refreshCompatibility();
+            updateSelectedVariation();
+        });
+    });
+
+    // Only set variationId when BOTH selected & combo exists
+    function updateSelectedVariation() {
+        if (selectedProcessor && selectedMemLabel) {
+            selectedVariationId = findVariationId(selectedProcessor, selectedMemLabel);
+        } else {
+            selectedVariationId = null;
+        }
+    }
+
+    // Core function: disable incompatible chips on both sides
+    function refreshCompatibility() {
+        document.querySelectorAll('.processor-chip').forEach(procBtn => {
+            procBtn.classList.remove('disabled');
+            procBtn.style.opacity = '';
+            procBtn.style.pointerEvents = '';
+            procBtn.style.background = '#fff';
+            procBtn.style.borderColor = '#e5e7eb';
+            procBtn.style.color = '#1a2412';
+
+            // keep selected styling if selected
+            if (procBtn.classList.contains('selected')) {
+                procBtn.style.borderColor = '#2d4a35';
+                procBtn.style.background = '#f3f6f4';
+            }
+        });
+
+        // ✅ ONLY control memory/storage based on selected processor
+        document.querySelectorAll('.memory-chip').forEach(memBtn => {
+            const label = memBtn.dataset.memLabel;
+
+            // if no processor selected, keep all memory enabled
+            const disable = selectedProcessor ? !hasCombo(selectedProcessor, label) : false;
+
+            setDisabledChip(memBtn, disable);
+
+            // ✅ If current selected memory becomes invalid after processor change → auto deselect it
+            if (disable && memBtn.classList.contains('selected')) {
+                memBtn.classList.remove('selected');
+                memBtn.style.borderColor = '#e5e7eb';
+                memBtn.style.background = '#fff';
+                selectedMemLabel = null;
+            }
+        });
+
+        updateSelectedVariation();
+    }
+
+    // Initial state
+    refreshCompatibility();
 
     // ===== Add to Cart / Buy Now actions =====
     const isLoggedIn      = @json(auth()->check());
     const loginUrl        = "{{ route('login') }}";
-    const hasVariations   = @json($product->has_variations && $product->variations->count() > 0);
 
     const btnAddToCart    = document.getElementById('btnAddToCart');
     const btnBuyNow       = document.getElementById('btnBuyNow');
@@ -620,6 +628,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const csrfToken       = document.querySelector('meta[name="csrf-token"]')
                                 ? document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                                 : '';
+    const qtyInput = document.getElementById('qtyInput');
 
     function getQuantity() {
         let q = parseInt(qtyInput ? qtyInput.value : '1', 10);
@@ -650,12 +659,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateCartBadge(count) {
         if (typeof count === 'undefined' || count === null) return;
-
-        // Try a few common selectors; adjust if your header uses a specific one
         const elements = document.querySelectorAll('[data-cart-count], .cart-count, #cart-count');
-        elements.forEach(el => {
-            el.textContent = count;
-        });
+        elements.forEach(el => el.textContent = count);
+    }
+
+    function validateVariationsOrShowError() {
+        if (!hasVariations) return true;
+
+        if (!selectedProcessor && !selectedMemLabel) {
+            showError('Please select the variations');
+            return false;
+        }
+        if (!selectedProcessor) {
+            showError('Please select processor');
+            return false;
+        }
+        if (!selectedMemLabel) {
+            showError('Please select memory/storage');
+            return false;
+        }
+        if (!selectedVariationId) {
+            showError('This variation is not available');
+            return false;
+        }
+        clearError();
+        return true;
     }
 
     if (btnAddToCart) {
@@ -665,26 +693,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Check if variation selection is required
-            if (hasVariations && !selectedVariationId) {
-                showCartAlert('Please select a model before adding to cart.', true);
-                return;
-            }
+            if (!validateVariationsOrShowError()) return;
 
             if (!addToCartForm || !cartQtyInput) return;
 
-            // Set quantity and variation before sending
             cartQtyInput.value = getQuantity();
             if (hasVariations && cartVariationId) {
                 cartVariationId.value = selectedVariationId;
             }
 
-            const formData = new FormData(addToCartForm);
-            const quantity = getQuantity();
-
             const requestData = {
                 product_id: {{ $product->id }},
-                quantity: quantity,
+                quantity: getQuantity(),
+                variation_id: hasVariations ? selectedVariationId : null,
                 source: 'product_show'
             };
 
@@ -699,30 +720,18 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(async (response) => {
                 let data = null;
+                try { data = await response.json(); } catch (e) {}
 
-                // Try to parse JSON; if it fails but response is OK, treat as success
-                try {
-                    data = await response.json();
-                } catch (e) {
-                    if (response.ok) {
-                        showCartAlert('The item has successfully added to cart', false);
-                        return;
-                    }
-                }
-
-                if (data && data.success) {
+                if (response.ok && data && data.success) {
                     showCartAlert('The item has successfully added to cart', false);
                     updateCartBadge(data.cart_count || data.cart_total_items);
+                } else if (response.ok && !data) {
+                    showCartAlert('The item has successfully added to cart', false);
                 } else {
-                    showCartAlert(
-                        (data && data.message) || 'Error adding item to cart.',
-                        true
-                    );
+                    showCartAlert((data && data.message) || 'Error adding item to cart.', true);
                 }
             })
-            .catch(() => {
-                showCartAlert('Error adding item to cart. Please try again.', true);
-            });
+            .catch(() => showCartAlert('Error adding item to cart. Please try again.', true));
         });
     }
 
@@ -733,11 +742,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Check if variation selection is required
-            if (hasVariations && !selectedVariationId) {
-                showCartAlert('Please select a model before buying.', true);
-                return;
-            }
+            // ✅ FIXED: use same validation (processor + memLabel + variationId)
+            if (!validateVariationsOrShowError()) return;
 
             if (!buyNowForm || !buyNowQtyInput) return;
 
@@ -757,18 +763,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(async (r) => {
+                if (r.redirected) {
+                    window.location.href = r.url; // usually login or checkout
+                    return;
+                }
+
+                const ct = r.headers.get('content-type') || '';
+                if (!ct.includes('application/json')) {
+                    showCartAlert('Session expired. Please login again.', true);
+                    window.location.href = "{{ route('login') }}";
+                    return;
+                }
+
+                const data = await r.json();
+
                 if (data.success && data.redirect_url) {
-                    // Buy now: go straight to checkout
                     window.location.href = data.redirect_url;
                 } else {
                     showCartAlert(data.message || 'Error processing buy now.', true);
                 }
             })
-            .catch(() => {
-                showCartAlert('Error processing buy now. Please try again.', true);
-            });
+            .catch(() => showCartAlert('Error processing buy now. Please try again.', true));
         });
     }
 });
@@ -811,19 +827,23 @@ document.addEventListener('DOMContentLoaded', function () {
         display: block;
     }
 
-    /* Variation selection styles - Compact horizontal boxes */
-    .variation-option {
-        transition: all 0.2s;
+    .var-chip:hover {
+        border-color: #2d4a35 !important;
+        background: #f3f6f4 !important;
     }
 
-    .variation-option:hover {
+    .var-chip.selected {
         border-color: #2d4a35 !important;
-        background-color: #f8f9f8 !important;
+        background: #f3f6f4 !important;
     }
 
-    .variation-option.selected {
-        border-color: #2d4a35 !important;
-        background-color: #f8f9f8 !important;
+    .var-chip.disabled {
+        opacity: 0.45;
+        cursor: not-allowed !important;
+        pointer-events: none;
+        background: #f3f4f6 !important;
+        border-color: #e5e7eb !important;
+        color: #9ca3af !important;
     }
 
     @media (max-width: 480px) {
@@ -831,11 +851,6 @@ document.addEventListener('DOMContentLoaded', function () {
             max-width: 60px;
         }
         
-        .variation-option {
-            padding: 0.3rem 0.5rem !important;
-            font-size: 0.8rem !important;
-            min-width: 50px !important;
-        }
     }
 </style>
 @endsection

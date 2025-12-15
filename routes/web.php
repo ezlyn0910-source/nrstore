@@ -57,13 +57,17 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // Product Routes (Public)
 Route::controller(ProductController::class)->group(function () {
     Route::get('/products', 'index')->name('products.index');
-    Route::post('/buy-now', 'buyNow')->name('buy-now');
+    Route::post('/buy-now', [ProductController::class, 'buyNow'])
+    ->middleware('auth')
+    ->name('buy-now');
+    Route::get('/products/{productId}/variations', 'getVariations')
+        ->whereNumber('productId')
+        ->name('products.variations');
     Route::get('/products/featured', 'featured')->name('products.featured');
     Route::get('/products/recommended', 'recommended')->name('products.recommended');
     Route::get('/products/category/{slug}', 'category')->name('products.category');
     Route::get('/products/{slug}', 'show')->name('products.show');
     Route::get('/product/search', 'quickSearch')->name('products.quick-search');
-    Route::get('/products/{product}/variations', 'getVariations')->name('products.variations');
 });
 
 // Cart Routes (Public)
@@ -140,6 +144,11 @@ Route::get('/terms-conditions', function () {
 
 // API Routes for AJAX calls (Public)
 Route::prefix('api')->name('api.')->group(function () {
+
+    Route::get('/products/{productId}/variations', [ProductController::class, 'getVariations'])
+        ->whereNumber('productId')
+        ->name('products.variations');
+
     Route::get('/check-auth', function () {
         return response()->json([
             'authenticated' => auth()->check(),
@@ -186,6 +195,9 @@ Route::middleware(['auth'])->group(function () {
         // Checkout results
         Route::get('/success/{order}', [CheckoutController::class, 'success'])->name('success');
         Route::get('/failed', [CheckoutController::class, 'failed'])->name('failed');
+
+        // Clear buy now session route
+        Route::post('/clear-buy-now', [CheckoutController::class, 'clearBuyNow'])->name('clear-buy-now');
     });
 
     /*Order Routes (Customer side)*/
