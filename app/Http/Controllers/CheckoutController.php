@@ -189,6 +189,22 @@ class CheckoutController extends Controller
                         'message' => 'Invalid variation selected.',
                     ], 422);
                 }
+
+                if ((int) $variation->stock < $qty) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Not enough stock for this variation.',
+                    ], 422);
+                }
+            } else {
+                if ((int) $product->stock < $qty) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Not enough stock for this product.',
+                    ], 422);
+                }
+            }
+
             } 
 
             session()->forget('buy_now_order');
@@ -537,11 +553,75 @@ class CheckoutController extends Controller
 
         try {
             $user = Auth::user();
-            
-            // Get address
+
             $address = Address::where('id', $request->address_id)
                 ->where('user_id', $user->id)
                 ->firstOrFail();
+
+            \DB::beginTransaction();
+
+            // 1. Create Order
+            $order = Order::create([
+                'user_id' => $user->id,
+                'address_id' => $address->id,
+                'payment_method' => $request->payment_method,
+                'status' => 'pending',
+                'total_amount' => 0, // we'll calculate after items
+            ]);
+
+            $totalAmount = 0;
+
+            // 2. Determine items source
+            $buyNowOrder = session('buy_now_order');
+            if ($buyNowOrder && ($buyNowOrder['is_buy_now'] ?? false)) {
+                $items = collect($buyNowOrder['items']);
+            } else {
+                // Use cart items
+                $cart = $this->getOrCreateCart();
+                $items = $cart->items()->with(['product', 'variation'])->get()->map(function($item) {
+                    return [
+                        'product_id' => $item->product_id,
+                        'variation_id' => $item->variation_id,
+                        'quantity' => $item->quantity,
+                        'price' => $item->price,
+                        'product_name' => $item->product->name,
+                        'variation_name' => $item->variation?->name ?? null,
+                    ];
+                });
+            }
+
+            // 3. Create Order Items
+            foreach ($items as $item) {
+                $productId = is_array($item) ? $item['product_id'] : $item->product_id;
+                $variationId = is_array($item) ? $item['variation_id'] : $item->variation_id;
+                $quantity = is_array($item) ? $item['quantity'] : $item->quantity;
+                $price = is_array($item) ? $item['price'] : $item->price;
+
+                $order->items()->create([
+                    'product_id' => $productId,
+                    'variation_id' => $variationId,
+                    'quantity' => $quantity,
+                    'price' => $price,
+                ]);
+
+                $totalAmount += $price * $quantity;
+            }
+
+            // 4. Update order total
+            $order->total_amount = $totalAmount;
+            $order->save();
+
+            // 5. Clear Buy Now session if exists
+            if ($buyNowOrder) {
+                session()->forget('buy_now_order');
+            }
+
+            // 6. Optional: Clear cart if you want
+            if (!($buyNowOrder)) {
+                $cart->items()->delete();
+            }
+
+            \DB::commit();
 
             // Get cart items or buy now items
             $cartItems = collect([]);
@@ -631,18 +711,22 @@ class CheckoutController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Order placed successfully!',
-                'redirect_url' => route('checkout.success', $order) // Use checkout.success route
+                'redirect_url' => route('order.confirmation', $order->id)
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Order placement error: ' . $e->getMessage());
-            \Log::error('Error trace: ' . $e->getTraceAsString());
+            \DB::rollBack();
+            \Log::error('Order placement error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to place order. Please try again. Error: ' . $e->getMessage()
             ], 500);
         }
     }
+
 
     public function applyPromo(Request $request)
     {

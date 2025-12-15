@@ -66,6 +66,6 @@ class AdminController extends Controller
             'uncomplete_orders'=> Order::where('status', '!=','shipped')->count(),
         ];
 
-        return view('admin.dashboard', compact('stats', 'users', 'recentOrders', 'ordersByStatus', 'statusCounts', 'status'));
+        return view('admin.dashboard', compact('stats', 'users', 'recentOrders', 'ordersByStatus', 'statusCounts', 'status', 'ordersQuery'));
     }
 }
