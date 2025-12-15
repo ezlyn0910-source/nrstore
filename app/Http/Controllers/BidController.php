@@ -216,16 +216,17 @@ class BidController extends Controller
                         'product_id'   => $bid->product->id,
                         'variation_id' => $bid->variation_id,
                         'name'         => $bid->product->name,
-                        'price'        => $bid->winning_bid_amount,
                         'quantity'     => 1,
+                        'price'        => $bid->winning_bid_amount,
                         'image'        => $bid->product->main_image_url,
                     ]
                 ],
                 'total' => $bid->winning_bid_amount,
+                'timestamp' => now()->timestamp,
             ]
         ]);
 
         return redirect()->route('checkout.index');
     }
 
-}
+} 

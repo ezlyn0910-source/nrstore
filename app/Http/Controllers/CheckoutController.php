@@ -80,7 +80,7 @@ class CheckoutController extends Controller
                         ->first();
                 }
 
-                $unitPrice = $variation?->price ?? $product->price;
+                $unitPrice = data_get($item, 'price');
 
                 return (object)[
                     'product_id'      => $product->id,
