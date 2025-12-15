@@ -548,6 +548,29 @@
     .item-details {
         gap: 1rem;
     }
+
+    .product-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .product-name,
+    .product-specs,
+    .product-price-qty {
+        width: 100%;
+    }
+    
+    .order-footer {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .order-actions {
+        display: flex;
+        justify-content: center;
+    }
 }
 
 @media (max-width: 576px) {
@@ -649,97 +672,99 @@
                         @elseif($orders->count() > 0)
                             @foreach($orders as $order)
                             <div class="order-card" data-status="{{ $order->status }}">
+                                {{-- Row 1: Order ID + Status Badge --}}
                                 <div class="order-header">
                                     <div class="order-id-section">
                                         <div class="order-id-label">Order ID</div>
                                         <div class="order-id-value">#{{ $order->order_number }}</div>
-                                        <div class="order-date">
-                                            Ordered on: {{ $order->created_at->format('M d, Y') }}
-                                        </div>
-                                        <div class="shipping-address">
-                                            Deliver to: 
-                                            @if($order->shippingAddress)
-                                                @php
-                                                    $addressParts = [
-                                                        $order->shippingAddress->full_name,
-                                                        $order->shippingAddress->address_line_1,
-                                                        $order->shippingAddress->address_line_2,
-                                                        $order->shippingAddress->city,
-                                                        $order->shippingAddress->state,
-                                                        $order->shippingAddress->postal_code,
-                                                        $order->shippingAddress->country
-                                                    ];
-                                                    $addressLine = implode(', ', array_filter($addressParts, function($part) {
-                                                        return !empty($part);
-                                                    }));
-                                                @endphp
-                                                {{ $addressLine }}
-                                                @if($order->shippingAddress->phone)
-                                                    <br><small>Phone: {{ $order->shippingAddress->phone }}</small>
-                                                @endif
-                                            @else
-                                                Address not available
-                                            @endif
-                                        </div>
                                     </div>
                                     <div class="order-status-badge {{ $order->status }}">
                                         {{ ucfirst($order->status) }}
                                     </div>
                                 </div>
 
-                                <div class="order-items">
-                                    @foreach($order->orderItems as $item)
-                                    <div class="order-item">
-                                        <div class="item-image">
-                                            @if($item->product && $item->product->main_image_url)
-                                                <img src="{{ $item->product->main_image_url }}" alt="{{ $item->product->name }}">
-                                            @else
-                                                <img src="{{ asset('images/default-product.png') }}" alt="Product Image">
+                                {{-- Row 2: Ordered Date --}}
+                                <div class="order-date-row">
+                                    <span class="order-label">Ordered on:</span>
+                                    <span class="order-value">{{ $order->created_at->format('l, M d, Y') }}</span>
+                                </div>
+
+                                {{-- Row 3: Shipping Address --}}
+                                <div class="shipping-address-row">
+                                    <span class="order-label">Deliver to:</span>
+                                    <span class="order-value">
+                                        @if($order->shippingAddress)
+                                            {{ $order->shippingAddress->full_name }},
+                                            {{ $order->shippingAddress->address_line_1 }},
+                                            @if($order->shippingAddress->address_line_2)
+                                                {{ $order->shippingAddress->address_line_2 }},
                                             @endif
-                                        </div>
-                                        <div class="item-details">
-                                            <div class="item-top-row">
-                                                <div class="item-name-specs">
-                                                    <span class="item-name">{{ $item->product->name ?? 'Product Not Available' }}</span>
-                                                    <span class="item-specs">
-                                                        @if($item->variation)
-                                                            @php
-                                                                $specs = [];
-                                                                if ($item->variation->processor) $specs[] = $item->variation->processor;
-                                                                if ($item->variation->ram) $specs[] = $item->variation->ram;
-                                                                if ($item->variation->storage) $specs[] = $item->variation->storage;
-                                                                if (!empty($specs)) {
-                                                                    echo '('.implode(' | ', $specs).')';
-                                                                }
-                                                            @endphp
-                                                        @elseif($item->product)
-                                                            @if($item->product->processor || $item->product->ram || $item->product->storage)
-                                                                @php
-                                                                    $specs = [];
-                                                                    if ($item->product->processor) $specs[] = $item->product->processor;
-                                                                    if ($item->product->ram) $specs[] = $item->product->ram;
-                                                                    if ($item->product->storage) $specs[] = $item->product->storage;
-                                                                    if (!empty($specs)) {
-                                                                        echo '('.implode(' | ', $specs).')';
-                                                                    }
-                                                                @endphp
-                                                            @elseif($item->product->specifications)
-                                                                ({{ $item->product->specifications }})
-                                                            @endif
-                                                        @endif
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div class="item-bottom-row">
-                                                <div class="item-price">RM{{ number_format($item->price, 2) }}</div>
-                                                <div class="item-quantity">Qty: {{ $item->quantity }}</div>
-                                                <div class="item-total">RM{{ number_format($item->price * $item->quantity, 2) }}</div>
-                                            </div>
-                                        </div>
+                                            {{ $order->shippingAddress->city }},
+                                            {{ $order->shippingAddress->state }},
+                                            {{ $order->shippingAddress->postal_code }},
+                                            {{ $order->shippingAddress->country }}
+                                        @else
+                                            Address not available
+                                        @endif
+                                    </span>
+                                </div>
+
+                                {{-- Row 4: Phone Number --}}
+                                <div class="phone-row">
+                                    <span class="order-label">Phone:</span>
+                                    <span class="order-value">
+                                        @if($order->shippingAddress && $order->shippingAddress->phone)
+                                            {{ $order->shippingAddress->phone }}
+                                        @else
+                                            Not provided
+                                        @endif
+                                    </span>
+                                </div>
+
+                                {{-- Row 5: Divider --}}
+                                <div class="order-divider"></div>
+
+                                {{-- Row 6: Product Details List --}}
+                                <div class="product-details-list">
+                                    <div class="order-label" style="margin-bottom: 0.5rem;">Items:</div>
+                                    @foreach($order->orderItems as $item)
+                                    <div class="product-item">
+                                        <span class="product-name">{{ $item->product->name ?? 'Product Not Available' }}</span>
+                                        <span class="product-specs">
+                                            @if($item->variation)
+                                                @php
+                                                    $specs = [];
+                                                    if ($item->variation->processor) $specs[] = $item->variation->processor;
+                                                    if ($item->variation->ram) $specs[] = $item->variation->ram;
+                                                    if ($item->variation->storage) $specs[] = $item->variation->storage;
+                                                    if (!empty($specs)) {
+                                                        echo '- '.implode(' | ', $specs);
+                                                    }
+                                                @endphp
+                                            @elseif($item->product)
+                                                @if($item->product->processor || $item->product->ram || $item->product->storage)
+                                                    @php
+                                                        $specs = [];
+                                                        if ($item->product->processor) $specs[] = $item->product->processor;
+                                                        if ($item->product->ram) $specs[] = $item->product->ram;
+                                                        if ($item->product->storage) $specs[] = $item->product->storage;
+                                                        if (!empty($specs)) {
+                                                            echo '- '.implode(' | ', $specs);
+                                                        }
+                                                    @endphp
+                                                @elseif($item->product->specifications)
+                                                    - {{ $item->product->specifications }}
+                                                @endif
+                                            @endif
+                                        </span>
+                                        <span class="product-price-qty">
+                                            RM{{ number_format($item->price, 2) }} x {{ $item->quantity }}
+                                        </span>
                                     </div>
                                     @endforeach
                                 </div>
 
+                                {{-- Row 7: Order Footer --}}
                                 <div class="order-footer">
                                     <div class="order-total-section">
                                         <div class="order-total">
@@ -754,11 +779,6 @@
                                                 )
                                             </span>
                                         </div>
-                                        @if($order->payment_status)
-                                        <div class="payment-status">
-                                            Payment: <span class="payment-status-badge {{ $order->payment_status }}">{{ ucfirst($order->payment_status) }}</span>
-                                        </div>
-                                        @endif
                                     </div>
                                     <div class="order-actions">
                                         @if(in_array($order->status, ['pending', 'processing']))
@@ -771,6 +791,7 @@
                             </div>
                             @endforeach
                         @else
+                            {{-- Empty state remains the same --}}
                             <div class="empty-state">
                                 <div class="empty-icon">📦</div>
                                 <h3>No Orders Yet</h3>
@@ -905,6 +926,102 @@ function showNotification(message, type = 'info') {
 </script>
 
 <style>
+    /* Order card rows styling */
+.order-date-row,
+.shipping-address-row,
+.phone-row {
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.order-label {
+    font-weight: 600;
+    color: #2d4a35; /* Changed from white to dark green for better readability */
+    margin-right: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.order-value {
+    color: #1a2412; /* Dark text for values */
+    font-size: 0.9rem;
+}
+
+/* Divider */
+.order-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e9ecef, transparent);
+    margin: 1rem 0;
+}
+
+/* Product details list */
+.product-details-list {
+    margin: 1rem 0 1.5rem 0;
+}
+
+.product-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed #e9ecef;
+}
+
+.product-item:last-child {
+    border-bottom: none;
+}
+
+.product-name {
+    font-weight: 600;
+    color: #1a2412;
+    margin-right: 0.5rem;
+    flex: 1;
+    min-width: 200px;
+}
+
+.product-specs {
+    color: #6b7280;
+    font-size: 0.85rem;
+    margin-right: 1rem;
+    flex: 1;
+}
+
+.product-price-qty {
+    font-weight: 600;
+    color: #2d4a35;
+    white-space: nowrap;
+    font-size: 0.9rem;
+}
+
+/* Order footer adjustments */
+.order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: #f5f5f5; /* Light grey background */
+    border-radius: 0 0 0.75rem 0.75rem;
+    margin: 0 -1.5rem -1.5rem -1.5rem;
+    margin-top: 1.5rem;
+}
+
+.order-total-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.order-total {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a2412;
+}
+
+.item-count {
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
 /* Payment status badges */
 .payment-status-badge.paid { 
     background: #d1fae5; 

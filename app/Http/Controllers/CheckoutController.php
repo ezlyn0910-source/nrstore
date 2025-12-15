@@ -190,7 +190,7 @@ class CheckoutController extends Controller
                     ], 422);
                 }
             } 
-            
+
             session()->forget('buy_now_order');
 
             $unitPrice = $variation ? (float) $variation->price : (float) $product->price;
@@ -514,10 +514,10 @@ class CheckoutController extends Controller
 
     public function success(Order $order)
     {
-        if ($order->payment_status !== Order::PAYMENT_STATUS_PAID) {
-            return redirect()
-                ->route('checkout.failed')
-                ->with('error', 'Payment was not completed.');
+        // Add check to ensure user owns this order
+        $user = Auth::user();
+        if ($order->user_id !== $user->id) {
+            abort(403);
         }
 
         return view('checkout.success', compact('order'));
@@ -538,21 +538,108 @@ class CheckoutController extends Controller
         try {
             $user = Auth::user();
             
+            // Get address
             $address = Address::where('id', $request->address_id)
                 ->where('user_id', $user->id)
                 ->firstOrFail();
 
+            // Get cart items or buy now items
+            $cartItems = collect([]);
+            $subtotal = 0;
+            $shippingFee = 10.99;
+
+            // Check if using buy now or cart
+            $buyNowOrder = session('buy_now_order');
+            $shouldUseBuyNow = false;
+
+            if ($buyNowOrder && isset($buyNowOrder['is_buy_now']) && $buyNowOrder['is_buy_now']) {
+                $buyNowTime = $buyNowOrder['timestamp'] ?? 0;
+                $currentTime = now()->timestamp;
+                
+                if (($currentTime - $buyNowTime) < 300) {
+                    $shouldUseBuyNow = true;
+                }
+            }
+
+            if ($shouldUseBuyNow) {
+                // Use buy now items
+                $cartItems = collect($buyNowOrder['items'] ?? []);
+                $subtotal = $buyNowOrder['total'] ?? 0;
+            } else {
+                // Use cart items
+                $cart = $this->getOrCreateCart();
+                if (!$cart || $cart->items->isEmpty()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Your cart is empty.'
+                    ], 400);
+                }
+                
+                $cartItems = $cart->items;
+                $subtotal = $cart->total_amount;
+            }
+
+            // Calculate totals
+            $total = $subtotal + $shippingFee;
+
+            // Generate order number
+            $orderNumber = 'ORD' . date('Y') . strtoupper(uniqid());
+
+            // Create the order
+            $order = Order::create([
+                'order_number' => $orderNumber,
+                'user_id' => $user->id,
+                'shipping_address_id' => $address->id,
+                'billing_address_id' => $address->id,
+                'subtotal_amount' => $subtotal,
+                'shipping_amount' => $shippingFee,
+                'total_amount' => $total,
+                'payment_method' => $request->payment_method,
+                'payment_status' => Order::PAYMENT_STATUS_PENDING,
+                'status' => Order::STATUS_PENDING,
+            ]);
+
+            // Create order items
+            foreach ($cartItems as $item) {
+                $product = Product::find($item->product_id ?? $item['product_id']);
+                $variation = null;
+                
+                if ($item->variation_id ?? $item['variation_id']) {
+                    $variation = Variation::find($item->variation_id ?? $item['variation_id']);
+                }
+
+                $order->orderItems()->create([
+                    'product_id' => $item->product_id ?? $item['product_id'],
+                    'variation_id' => $item->variation_id ?? $item['variation_id'] ?? null,
+                    'product_name' => $product->name,
+                    'variation_name' => $variation ? $this->getVariationName($variation) : null,
+                    'quantity' => $item->quantity ?? $item['quantity'],
+                    'unit_price' => $item->price ?? $item['price'],
+                    'total_price' => ($item->price ?? $item['price']) * ($item->quantity ?? $item['quantity']),
+                ]);
+            }
+
+            // Clear session data
+            session()->forget('buy_now_order');
+            
+            // If using cart, clear cart
+            if (!$shouldUseBuyNow) {
+                $cart->items()->delete();
+                $cart->delete();
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Order placed successfully!',
-                'redirect_url' => route('order.confirmation')
+                'redirect_url' => route('checkout.success', $order) // Use checkout.success route
             ]);
 
         } catch (\Exception $e) {
             \Log::error('Order placement error: ' . $e->getMessage());
+            \Log::error('Error trace: ' . $e->getTraceAsString());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to place order. Please try again.'
+                'message' => 'Failed to place order. Please try again. Error: ' . $e->getMessage()
             ], 500);
         }
     }
