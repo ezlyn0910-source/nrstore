@@ -212,7 +212,7 @@ class ProductController extends Controller
         ]);
 
         try {
-            $product = Product::active()->findOrFail($request->product_id);
+            $product = Product::with('images')->findOrFail($request->product_id);
             
             // Check if product has variations and no variation is selected
             if ($product->has_variations && !$request->variation_id) {
@@ -226,7 +226,9 @@ class ProductController extends Controller
             // Get variation if selected
             $variation = null;
             if ($request->variation_id) {
-                $variation = Variation::active()->find($request->variation_id);
+                $variation = Variation::where('id', $request->variation_id)
+                    ->where('product_id', $product->id)
+                    ->first();
                 
                 if (!$variation) {
                     return response()->json([
@@ -237,37 +239,53 @@ class ProductController extends Controller
             }
 
             // Determine unit price
-            $unitPrice = $variation ? ($variation->effective_price ?? $variation->price) : $product->price;
+            $unitPrice = $variation ? ($variation->price) : $product->price;
             
             // Calculate total
             $totalAmount = $unitPrice * $request->quantity;
 
+            // Clear any existing buy now session
+            session()->forget('buy_now_order');
+
+            // Get image URL
+            $imageUrl = null;
+            if ($product->images && $product->images->isNotEmpty()) {
+                $firstImage = $product->images->first();
+                $imageUrl = $firstImage->image_path;
+            } elseif ($product->image) {
+                $imageUrl = $product->image;
+            }
+
+            // Get variation name
+            $variationName = null;
+            if ($variation) {
+                $variationName = trim(implode(' • ', array_filter([
+                    $variation->model ?? null,
+                    $variation->processor ?? null,
+                    $variation->ram ?? null,
+                    $variation->storage ?? null,
+                ])));
+            }
+
             // Store buy now data in session
-            // We cast items to objects to match the structure expected by the Checkout View
             $buyNowData = [
+                'is_buy_now' => true,
                 'items' => [
-                    (object)[
+                    [
                         'product_id' => $product->id,
                         'variation_id' => $variation ? $variation->id : null,
-                        'product' => $product,     // Pass full Product model
-                        'variation' => $variation, // Pass full Variation model
-                        'name' => $product->name,
-                        'product_name' => $product->name,
-                        'variation_name' => $variation ? $this->getVariationName($variation) : null,
+                        'quantity' => (int)$request->quantity,
                         'price' => $unitPrice,
-                        'quantity' => $request->quantity,
-                        'image' => $request->image ?? $product->image,
-                        'specs' => $request->specs ?? $this->getProductSpecs($product, $variation),
-                        'total' => $totalAmount
+                        'product_name' => $product->name,
+                        'variation_name' => $variationName,
+                        'image' => $imageUrl,
                     ]
                 ],
-                'subtotal' => $totalAmount,
                 'total' => $totalAmount,
-                'is_buy_now' => true,
-                'created_at' => now()
+                'timestamp' => now()->timestamp
             ];
 
-            Session::put('buy_now_order', $buyNowData);
+            session()->put('buy_now_order', $buyNowData);
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([

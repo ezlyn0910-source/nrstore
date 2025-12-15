@@ -189,22 +189,8 @@ class CheckoutController extends Controller
                         'message' => 'Invalid variation selected.',
                     ], 422);
                 }
-
-                if ((int) $variation->stock < $qty) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Not enough stock for this variation.',
-                    ], 422);
-                }
-            } else {
-                if ((int) $product->stock < $qty) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Not enough stock for this product.',
-                    ], 422);
-                }
-            }
-
+            } 
+            
             session()->forget('buy_now_order');
 
             $unitPrice = $variation ? (float) $variation->price : (float) $product->price;

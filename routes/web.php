@@ -57,9 +57,6 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // Product Routes (Public)
 Route::controller(ProductController::class)->group(function () {
     Route::get('/products', 'index')->name('products.index');
-    Route::post('/buy-now', [ProductController::class, 'buyNow'])
-    ->middleware('auth')
-    ->name('buy-now');
     Route::get('/products/{productId}/variations', 'getVariations')
         ->whereNumber('productId')
         ->name('products.variations');
@@ -162,6 +159,8 @@ Route::prefix('api')->name('api.')->group(function () {
 
 // ==================== AUTHENTICATED ROUTES (Require login) ====================
 Route::middleware(['auth'])->group(function () {
+
+    Route::post('/buy-now', [ProductController::class, 'buyNow'])->name('buy-now');
 
     /*Checkout Routes (Authentication Required)*/
     Route::prefix('checkout')->name('checkout.')->group(function () {

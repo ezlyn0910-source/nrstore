@@ -1234,6 +1234,7 @@
                                                 data-product-description="{{ $product->short_description ?? '' }}"
                                                 data-product-stock="{{ $product->stock ?? '' }}"
                                                 data-has-variations="{{ $product->has_variations ? '1' : '0' }}"
+                                                data-buy-now-url="{{ route('buy-now') }}"
                                                 style="flex: 1; background: #2d4a35; color: white; padding: 0.75rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; border: none; transition: all 0.2s ease; cursor: pointer;">
                                                 Buy Now
                                             </button>
@@ -1336,7 +1337,7 @@
                                         </p>
 
                                         <div style="display: flex; gap: 0.75rem;">
-                                            <!-- Add to Cart + Buy Now buttons (unchanged) -->
+                                            <!-- Add to Cart + Buy Now -->
                                             <button class="add-to-cart-btn" 
                                                     data-product-id="{{ $product->id }}"
                                                     data-product-slug="{{ $product->slug }}"
@@ -1362,6 +1363,7 @@
                                                     data-product-description="{{ $product->short_description ?? '' }}"
                                                     data-product-stock="{{ $product->stock ?? '' }}"
                                                     data-has-variations="{{ $product->has_variations ? '1' : '0' }}"
+                                                    data-buy-now-url="{{ route('buy-now') }}"
                                                     style="flex: 1; background: #2d4a35; color: white; padding: 0.75rem 0.5rem; border-radius: 2rem; font-size: 0.8rem; border: none; transition: all 0.2s ease; cursor: pointer;">
                                                 Buy Now
                                             </button>
@@ -2238,59 +2240,66 @@ async function buyNowFromPopup(productData, variation, quantity, button, origina
 document.addEventListener('DOMContentLoaded', function () {
     initRecommendationSlider();
 
-    // helper to build productData from a button
+    // Helper to build productData from a button
     function buildProductDataFromBtn(btn) {
         return {
-            id:           btn.dataset.productId,
-            slug:         btn.dataset.productSlug,
-            url:          btn.dataset.productUrl,
+            id: btn.dataset.productId,
+            slug: btn.dataset.productSlug,
+            url: btn.dataset.productUrl,
             variationsUrl: btn.dataset.variationsUrl,
-            name:         btn.dataset.productName,
-            price:        btn.dataset.productPrice,
-            image:        btn.dataset.productImage,
-            description:  btn.dataset.productDescription || '',
-            stock:        btn.dataset.productStock || ''
+            name: btn.dataset.productName,
+            price: btn.dataset.productPrice,
+            image: btn.dataset.productImage,
+            description: btn.dataset.productDescription || '',
+            stock: btn.dataset.productStock || '',
+            buyNowUrl: btn.dataset.buyNowUrl || '/buy-now'
         };
     }
 
-    // Add to Cart buttons
+    // -------------------------------------------------------------
+    // ADD TO CART BUTTONS - INDEX PAGE (opens popup)
+    // -------------------------------------------------------------
     document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
         const productData = buildProductDataFromBtn(btn);
         const hasVariations = btn.dataset.hasVariations === '1';
 
-        // ✅ Preload BEFORE click (hover / touch)
+        // Preload variations on hover/touch
         btn.addEventListener('mouseenter', () => preloadVariations(productData, hasVariations), { passive: true });
         btn.addEventListener('touchstart', () => preloadVariations(productData, hasVariations), { passive: true });
 
-        // ✅ Click opens popup
+        // Click opens popup (for index page)
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            openProductPopup(productData, hasVariations, false);
+            openProductPopup(productData, hasVariations, false); // false = Add to Cart mode
         });
     });
 
-    // Buy Now buttons
+    // -------------------------------------------------------------
+    // BUY NOW BUTTONS - INDEX PAGE (opens popup)
+    // -------------------------------------------------------------
     document.querySelectorAll('.buy-now-btn').forEach(btn => {
         const productData = buildProductDataFromBtn(btn);
         const hasVariations = btn.dataset.hasVariations === '1';
 
-        // ✅ Preload variations BEFORE click (desktop + mobile)
+        // Preload variations on hover/touch
         btn.addEventListener('mouseenter', () => preloadVariations(productData, hasVariations), { passive: true });
         btn.addEventListener('touchstart', () => preloadVariations(productData, hasVariations), { passive: true });
 
-        // ✅ Click → open popup (Buy Now mode)
+        // Click opens popup in Buy Now mode
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            openProductPopup(productData, hasVariations, true);
+            openProductPopup(productData, hasVariations, true); // true = Buy Now mode
         });
     });
 
     // Popup close + background click
     const popupOverlay = document.getElementById('product-popup');
     const popupClose   = document.querySelector('#product-popup .popup-close');
+    
     if (popupClose) {
         popupClose.addEventListener('click', closeProductPopup);
     }
+    
     if (popupOverlay) {
         popupOverlay.addEventListener('click', function (e) {
             if (e.target === popupOverlay) closeProductPopup();
@@ -2308,6 +2317,7 @@ document.addEventListener('DOMContentLoaded', function () {
             v = Math.max(1, v - 1);
             qtyInput.value = v;
         });
+        
         qtyPlus.addEventListener('click', () => {
             let v = parseInt(qtyInput.value, 10) || 1;
             qtyInput.value = v + 1;
@@ -2319,21 +2329,106 @@ document.addEventListener('DOMContentLoaded', function () {
     if (popupConfirm) {
         popupConfirm.addEventListener('click', handlePopupConfirm);
     }
-
-    // Modal close buttons
-    const modalClose   = document.querySelector('.variation-modal-close');
-    const modalCancel  = document.querySelector('.btn-cancel-variation');
-    const modalConfirm = document.querySelector('.btn-confirm-variation');
-    const modal        = document.getElementById('variation-modal');
-
-    if (modalClose)  modalClose.addEventListener('click', closeVariationModal);
-    if (modalCancel) modalCancel.addEventListener('click', closeVariationModal);
-    if (modalConfirm) modalConfirm.addEventListener('click', processVariationAction);
-    if (modal) {
-        modal.addEventListener('click', function (e) {
-            if (e.target === this) closeVariationModal();
-        });
-    }
 });
+
+// -------------------------------------------------------------
+// ADD TO CART DIRECT (for show.blade.php)
+// -------------------------------------------------------------
+function addToCartDirect(productData, button) {
+    const labelSpan = button.querySelector('.cart-btn-text');
+    const originalTxt = labelSpan ? labelSpan.textContent : button.textContent;
+
+    if (labelSpan) labelSpan.textContent = 'Adding...'; else button.textContent = 'Adding...';
+    button.disabled = true;
+
+    const requestData = {
+        product_id: productData.id,
+        quantity: 1,
+        _token: document.querySelector('meta[name="csrf-token"]').content
+    };
+
+    // If product has variations, we need to get selected variation
+    if (productData.hasVariations) {
+        // Get selected variation from show page
+        const selectedVariation = document.querySelector('input[name="variation"]:checked');
+        if (selectedVariation) {
+            requestData.variation_id = selectedVariation.value;
+        }
+    }
+
+    fetch('/cart/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Product added to cart successfully!');
+            updateHeaderCartCount(data.cart_count || 0);
+        } else {
+            showNotification(data.message || 'Failed to add product to cart.', 'error');
+        }
+    })
+    .catch(() => {
+        showNotification('Network error. Please try again.', 'error');
+    })
+    .finally(() => {
+        if (labelSpan) labelSpan.textContent = originalTxt; else button.textContent = originalTxt;
+        button.disabled = false;
+    });
+}
+
+// -------------------------------------------------------------
+// BUY NOW DIRECT (for show.blade.php)
+// -------------------------------------------------------------
+function processBuyNowDirect(productData, button) {
+    const originalText = button.textContent;
+    button.textContent = 'Processing...';
+    button.disabled = true;
+
+    const requestData = {
+        product_id: productData.id,
+        quantity: 1,
+        _token: document.querySelector('meta[name="csrf-token"]').content
+    };
+
+    // If product has variations, we need to get selected variation
+    if (productData.hasVariations) {
+        // Get selected variation from show page
+        const selectedVariation = document.querySelector('input[name="variation"]:checked');
+        if (selectedVariation) {
+            requestData.variation_id = selectedVariation.value;
+        }
+    }
+
+    fetch('/buy-now', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.redirect_url;
+        } else {
+            showNotification(data.message || 'Failed to process buy now.', 'error');
+            button.textContent = originalText;
+            button.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Network error. Please try again.', 'error');
+        button.textContent = originalText;
+        button.disabled = false;
+    });
+}
 </script>
 @endpush
