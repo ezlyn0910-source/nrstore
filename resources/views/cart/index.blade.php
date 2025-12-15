@@ -134,7 +134,7 @@
                     <span class="subtotal-amount" id="subtotal">RM {{ number_format($subtotal, 2) }}</span>
                 </div>
                 <!-- Updated ORDER NOW button that redirects to checkout -->
-                <a href="{{ route('checkout.index') }}" class="order-btn">
+                <a href="{{ route('checkout.index') }}" class="order-btn" onclick="clearBuyNowSession(event)">
                     ORDER NOW
                 </a>
             </div>
@@ -199,6 +199,30 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             removeAlert.style.display = 'none';
         }, 2000); // show for 2 seconds
+    }
+
+    function clearBuyNowSession(event) {
+        // Prevent immediate navigation
+        event.preventDefault();
+        
+        // Clear buy now session before navigating to checkout
+        fetch('{{ route("checkout.clear-buy-now") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            // Navigate to checkout after clearing session
+            window.location.href = '{{ route("checkout.index") }}';
+        })
+        .catch(err => {
+            console.error('Failed to clear buy now session:', err);
+            // Still navigate to checkout even if API call fails
+            window.location.href = '{{ route("checkout.index") }}';
+        });
     }
 
     window.addEventListener('scroll', function() {

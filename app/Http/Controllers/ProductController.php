@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
-use App\Models\Variation; // Added correctly
+use App\Models\Variation;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session; // Added correctly
+use Illuminate\Support\Facades\Session;
 
 class ProductController extends Controller
 {
@@ -145,16 +145,59 @@ class ProductController extends Controller
      */
     public function getVariations($productId)
     {
-        $product = Product::with(['variations' => function($query) {
-            $query->active();
-        }])->active()->findOrFail($productId);
-
-        return response()->json([
-            'success' => true,
-            'product' => $product,
-            'variations' => $product->variations,
-            'has_variations' => $product->has_variations
-        ]);
+        try {
+            // Clear any previous output
+            if (ob_get_length()) {
+                ob_clean();
+            }
+            
+            $product = Product::with(['variations' => function($query) {
+                $query->where('is_active', true);
+            }])->where('is_active', true)->find($productId);
+            
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not found',
+                    'variations' => []
+                ], 404)->header('Content-Type', 'application/json');
+            }
+            
+            // Format variations
+            $formattedVariations = $product->variations->map(function($variation) {
+                return [
+                    'id' => $variation->id,
+                    'name' => $variation->name,
+                    'price' => (float) $variation->price,
+                    'effective_price' => (float) ($variation->effective_price ?? $variation->price),
+                    'stock' => (int) $variation->stock,
+                    'processor' => $variation->processor ?? '',
+                    'ram' => $variation->ram ?? '',
+                    'storage' => $variation->storage ?? '',
+                    'model' => $variation->model ?? '',
+                    'sku' => $variation->sku ?? '',
+                    'is_active' => (bool) $variation->is_active,
+                ];
+            })->toArray();
+            
+            return response()->json([
+                'success' => true,
+                'product_id' => (int) $productId,
+                'product_name' => $product->name,
+                'has_variations' => $product->has_variations,
+                'variations' => $formattedVariations,
+                'count' => count($formattedVariations)
+            ])->header('Content-Type', 'application/json');
+            
+        } catch (\Exception $e) {
+            \Log::error('Get variations error for product ' . $productId . ': ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error',
+                'variations' => []
+            ], 500)->header('Content-Type', 'application/json');
+        }
     }
 
     /**
@@ -226,11 +269,15 @@ class ProductController extends Controller
 
             Session::put('buy_now_order', $buyNowData);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Redirecting to checkout...',
-                'redirect_url' => route('checkout.index')
-            ]);
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Redirecting to checkout...',
+                    'redirect_url' => route('checkout.index')
+                ]);
+            }
+
+            return redirect()->route('checkout.index');
 
         } catch (\Exception $e) {
             \Log::error('Buy Now error: ' . $e->getMessage());
