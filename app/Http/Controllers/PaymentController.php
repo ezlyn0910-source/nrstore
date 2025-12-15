@@ -66,18 +66,36 @@ class PaymentController extends Controller
         ]);
 
         $cart = Cart::where('user_id', $user->id)
-            ->with('items.product', 'items.variation')
+            ->whereHas('items') // ✅ ensure cart has items
+            ->with(['items.product', 'items.variation'])
+            ->latest('id')      // ✅ pick latest cart record
             ->first();
+
+        if (!$cart || $cart->items->isEmpty()) {
+            // ✅ prevent creating empty orders
+            $order->delete();
+
+            return redirect()
+                ->route('cart.index')
+                ->with('error', 'Your cart is empty. Please add items before making payment.');
+        }
 
         foreach ($cart->items as $item) {
             $order->orderItems()->create([
-                'product_id'   => $item->product_id,
-                'variation_id' => $item->variation_id,
-                'quantity'     => $item->quantity,
-                'price'        => $item->price,
-                'total'        => $item->price * $item->quantity,
-                'product_name' => $item->product->name,
-                'variation_name' => $item->variation->name ?? null,
+                'product_id'      => $item->product_id,
+                'variation_id'    => $item->variation_id,
+                'quantity'        => $item->quantity,
+                'price'           => $item->price,
+                'total'           => $item->price * $item->quantity,
+                'product_name'    => $item->product->name ?? null,
+                'variation_name'  => $item->variation
+                    ? trim(implode(' • ', array_filter([
+                        $item->variation->model ?? null,
+                        $item->variation->processor ?? null,
+                        $item->variation->ram ?? null,
+                        $item->variation->storage ?? null,
+                    ])))
+                    : null,
             ]);
         }
 
