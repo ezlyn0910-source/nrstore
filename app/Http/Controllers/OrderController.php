@@ -13,7 +13,11 @@ class OrderController extends Controller
         if (Auth::check()) {
             // Get real orders from database for authenticated user
             $orders = Order::with([
-                'orderItems.product',
+                'orderItems' => function($query) {
+                    $query->select(['id', 'order_id', 'product_id', 'variation_id', 
+                                'product_name', 'variation_name', 'quantity', 
+                                'price', 'total']);
+                },
                 'shippingAddress'
             ])
             ->where('user_id', Auth::id())
