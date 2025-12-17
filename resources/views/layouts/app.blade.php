@@ -195,10 +195,10 @@
                         <div class="footer-section">
                             <h3 class="footer-heading">Customer Service</h3>
                             <ul class="footer-links">
-                                <li><a href="#" class="footer-link">Shipping Information</a></li>
-                                <li><a href="#" class="footer-link">Returns & Refunds</a></li>
-                                <li><a href="#" class="footer-link">Privacy Policy</a></li>
-                                <li><a href="#" class="footer-link">Terms & Conditions</a></li>
+                                <li><a href="{{ route('shipping.info') }}" class="footer-link">Shipping Information</a></li>
+                                <li><a href="{{ route('return.policy') }}" class="footer-link">Returns & Refunds</a></li>
+                                <li><a href="{{ route('privacy.policy') }}" class="footer-link">Privacy Policy</a></li>
+                                <li><a href="{{ route('terms.conditions') }}" class="footer-link">Terms & Conditions</a></li>
                             </ul>
                         </div>
                         

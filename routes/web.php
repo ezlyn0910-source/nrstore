@@ -124,19 +124,19 @@ Route::get('/faq', function () {
 })->name('faq');
 
 Route::get('/shipping-info', function () {
-    return view('pages.shipping');
+    return view('policy.shippinginfo');
 })->name('shipping.info');
 
 Route::get('/return-policy', function () {
-    return view('pages.returns');
+    return view('policy.returnsrefunds');
 })->name('return.policy');
 
 Route::get('/privacy-policy', function () {
-    return view('pages.privacy');
+    return view('policy.privacypolicy');
 })->name('privacy.policy');
 
 Route::get('/terms-conditions', function () {
-    return view('pages.terms');
+    return view('policy.termsconditions');
 })->name('terms.conditions');
 
 // API Routes for AJAX calls (Public)

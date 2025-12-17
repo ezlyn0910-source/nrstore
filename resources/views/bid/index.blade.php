@@ -842,14 +842,17 @@ document.addEventListener('DOMContentLoaded', function() {
     /* Live Auctions */
     .live-auctions-slider-container {
         position: relative;
-        overflow: hidden;
+        overflow: visible;
         padding: 1rem 0;
     }
 
     .live-auctions-track {
         display: flex;
         gap: 1.5rem;
-        animation: slideInfinite 40s linear infinite;
+        width: fit-content;          /* key: shrink to content */
+        margin: 0 auto;              /* key: center the grid */
+        justify-content: center;
+        animation: none !important;
         width: max-content;
     }
 
@@ -1123,7 +1126,9 @@ document.addEventListener('DOMContentLoaded', function() {
     .upcoming-auctions-track {
         display: flex;
         gap: 1.5rem;
-        width: max-content;
+        width: fit-content;          /* shrink to content */
+        margin: 0 auto;              /* center grid */
+        justify-content: center;
     }
 
     .upcoming-auction-card {
