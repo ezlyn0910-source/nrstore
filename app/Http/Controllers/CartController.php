@@ -350,15 +350,26 @@ class CartController extends Controller
     /**
      * Get cart count for header
      */
-    public function getCount()
+    public function getCount(Request $request)
     {
-        $cart = Cart::where('session_id', session()->getId())->first();
-        $count = $cart ? $cart->items()->sum('quantity') : 0;
+        try {
+            $cart = $this->getOrCreateCart(); // ✅ same logic as index()
 
-        return response()->json(['count' => (int) $count])
-            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0');
+            $count = $cart ? (int) $cart->items()->sum('quantity') : 0;
+
+            return response()->json(['count' => $count])
+                ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+
+        } catch (\Exception $e) {
+            \Log::error('Cart count error: ' . $e->getMessage());
+
+            return response()->json(['count' => 0])
+                ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+        }
     }
 
     /**

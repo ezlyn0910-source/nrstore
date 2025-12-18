@@ -262,16 +262,16 @@
         const headerExists = document.querySelector('.header-bottom');
         if (!headerExists) return;
 
-        const url = "{{ route('cart.count') }}"; // ✅ correct absolute URL
+        const url = "{{ rtrim(request()->getBaseUrl(), '/') }}{{ route('cart.count', [], false) }}";
 
         fetch(url, {
             method: 'GET',
-            credentials: 'same-origin', // ✅ send session cookie
+            credentials: 'same-origin',
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            cache: 'no-store' // ✅ disable caching
+            cache: 'no-store'
         })
         .then(response => {
             if (!response.ok) {
