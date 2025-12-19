@@ -38,15 +38,49 @@ class Cart extends Model
     public static function getCart($user = null, $sessionId = null)
     {
         try {
-            if ($user) {
-                return static::firstOrCreate(['user_id' => $user->id]);
+            // Guest only
+            if (!$user) {
+                return $sessionId ? static::firstOrCreate(['session_id' => $sessionId]) : null;
             }
-            
-            if ($sessionId) {
-                return static::firstOrCreate(['session_id' => $sessionId]);
+
+            // Logged-in: get/create user cart
+            $userCart = static::firstOrCreate(['user_id' => $user->id]);
+
+            // If no session id, just return user cart
+            if (!$sessionId) return $userCart;
+
+            // Find session cart (guest cart)
+            $sessionCart = static::where('session_id', $sessionId)->first();
+
+            // If there is a session cart and it’s different from the user cart, merge
+            if ($sessionCart && $sessionCart->id !== $userCart->id) {
+
+                // Move/merge items from session cart to user cart
+                foreach ($sessionCart->items as $item) {
+
+                    $existing = $userCart->items()
+                        ->where('product_id', $item->product_id)
+                        ->where('variation_id', $item->variation_id)
+                        ->first();
+
+                    if ($existing) {
+                        $existing->quantity += $item->quantity;
+                        $existing->save();
+
+                        $item->delete();
+                    } else {
+                        $item->cart_id = $userCart->id;
+                        $item->save();
+                    }
+                }
+
+                // Delete session cart after merge
+                $sessionCart->delete();
             }
-            
-            return null;
+
+            // Ensure user cart is returned
+            return $userCart;
+
         } catch (\Exception $e) {
             \Log::error('Cart::getCart error: ' . $e->getMessage());
             return null;
@@ -61,7 +95,7 @@ class Cart extends Model
         $total = 0;
         $count = 0;
 
-        foreach ($this->items as $item) {
+        foreach ($this->items()->get() as $item) {
             $total += $item->quantity * $item->price;
             $count += $item->quantity;
         }

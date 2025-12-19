@@ -264,12 +264,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('payment.')
         ->controller(PaymentController::class)
         ->group(function () {
-            // Called from the "Place Order" button on checkout page
             Route::post('/process', 'process')->name('process');
-
-            // STRIPE (Card) – redirects from Stripe after customer pays
-            Route::get('/stripe/success/{order}', 'stripeSuccess')->name('stripe.success');
-            Route::get('/stripe/cancel/{order}', 'stripeCancel')->name('stripe.cancel');
         });
 
 });
@@ -384,13 +379,16 @@ Route::middleware(['auth'])
         ->name('payment.')
         ->controller(PaymentController::class)
         ->group(function () {
-            // Toyyibpay server-to-server callback
-            Route::post('/toyyibpay/callback', 'toyyibpayCallback')->name('toyyibpay.callback');
 
+            // Stripe
+            Route::get('/stripe/success/{order}', 'stripeSuccess')->name('stripe.success');
+            Route::get('/stripe/cancel/{order}', 'stripeCancel')->name('stripe.cancel');
+            Route::post('/stripe/webhook', 'stripeWebhook')->name('stripe.webhook');
+
+            // Toyyibpay
+            Route::post('/toyyibpay/callback', 'toyyibpayCallback')->name('toyyibpay.callback');
             Route::get('/toyyibpay/return/{order}', 'toyyibpayReturn')->name('toyyibpay.return');
             
-            // Optional generic webhook (Stripe, etc.)
-            Route::post('/webhook/{gateway}', 'webhook')->name('webhook');
         });
 
 

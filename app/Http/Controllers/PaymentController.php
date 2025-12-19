@@ -9,47 +9,41 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Stripe\StripeClient;
 use Stripe\Stripe;
+use Stripe\Webhook;
+use Stripe\Exception\SignatureVerificationException;
 use Stripe\Checkout\Session as StripeSession;
 
 class PaymentController extends Controller
 {
-    /**
-     * Payment method values used by checkout form
-     */
+
     public const METHOD_STRIPE      = 'stripe_card';
     public const METHOD_TOYYIBPAY   = 'fpx_toyyibpay';
 
-    /**
-     * Map frontend payment method to internal gateway
-     */
+    /* Map frontend payment method to internal gateway */
     private function mapToGateway(string $frontendMethod): string
     {
         return match($frontendMethod) {
-            'credit_card', 'debit_card' => self::METHOD_STRIPE, // Both use Stripe
-            'online_banking' => self::METHOD_TOYYIBPAY,         // Online banking uses Toyyibpay
+            'credit_card', 'debit_card' => self::METHOD_STRIPE,
+            'online_banking' => self::METHOD_TOYYIBPAY,
             default => $frontendMethod
         };
     }
 
-    /**
-     * Main entry: called by Place Order button (POST /payment/process)
-     */
+    /* Main entry: called by Place Order button (POST /payment/process) */
     public function process(Request $request)
     {
         $user = $request->user();
 
-        // Basic validation - ACCEPT frontend values directly
         $rules = [
-            'payment_method'   => 'required|in:credit_card,debit_card,online_banking', // Accept frontend values
+            'payment_method'   => 'required|in:credit_card,debit_card,online_banking',
             'selected_address' => 'required|integer',
             'amount'           => 'required|numeric|min:0.50',
         ];
 
         $validated = $request->validate($rules);
         
-        $paymentMethod = $validated['payment_method']; // Use frontend value directly
+        $paymentMethod = $validated['payment_method'];
         
-        // Create order - store what user selected
         $order = Order::create([
             'user_id'            => $user->id,
             'shipping_address_id'=> $validated['selected_address'],
@@ -59,20 +53,20 @@ class PaymentController extends Controller
             'tax_amount'         => 0,
             'discount_amount'    => 0,
             'status'             => Order::STATUS_PENDING,
-            'payment_method'     => $paymentMethod, // Store frontend value: 'credit_card', 'debit_card', 'online_banking'
-            'payment_gateway'    => $this->mapGatewayName($paymentMethod), // Map to gateway name
+            'payment_method'     => $paymentMethod,
+            'payment_gateway'    => $this->mapGatewayName($paymentMethod),
             'payment_status'     => Order::PAYMENT_STATUS_PENDING,
             'currency'           => strtoupper(config('services.stripe.currency', 'myr')),
         ]);
 
         $cart = Cart::where('user_id', $user->id)
-            ->whereHas('items') // ✅ ensure cart has items
+            ->whereHas('items')
             ->with(['items.product', 'items.variation'])
-            ->latest('id')      // ✅ pick latest cart record
+            ->latest('id')
             ->first();
 
         if (!$cart || $cart->items->isEmpty()) {
-            // ✅ prevent creating empty orders
+
             $order->delete();
 
             return redirect()
@@ -101,7 +95,6 @@ class PaymentController extends Controller
 
         $this->clearUserCart($user);
 
-        // Route to correct gateway
         switch ($paymentMethod) {
             case 'credit_card':
             case 'debit_card':
@@ -117,14 +110,12 @@ class PaymentController extends Controller
         }
     }
 
-    /**
-     * Map payment method → human readable gateway name
-     */
+    /* Map payment method → human readable gateway name */
     protected function mapGatewayName(string $method): string
     {
         return match ($method) {
-            'credit_card', 'debit_card' => 'Stripe',     // Both card types use Stripe
-            'online_banking' => 'Toyyibpay',             // Online banking uses Toyyibpay
+            'credit_card', 'debit_card' => 'Stripe',
+            'online_banking' => 'Toyyibpay',
             default => 'Unknown',
         };
     }
@@ -148,7 +139,6 @@ class PaymentController extends Controller
         $stripe  = new StripeClient($secret);
         $currency = strtolower(config('services.stripe.currency', $order->currency ?: 'myr'));
 
-        // Stripe expects smallest unit (sen/cents)
         $amountInCents = (int) round($order->total_amount * 100);
 
         try {
@@ -172,7 +162,6 @@ class PaymentController extends Controller
                 'cancel_url'         => route('payment.stripe.cancel', ['order' => $order->id]),
             ]);
 
-            // Save Stripe session ID as reference
             $order->payment_reference = $session->id ?? null;
             $order->save();
 
@@ -191,10 +180,7 @@ class PaymentController extends Controller
         }
     }
 
-    /**
-     * Stripe success redirect (browser)
-     * Route: GET /payment/stripe/success
-     */
+    /* Stripe success redirect (browser) */
     public function stripeSuccess(Request $request, Order $order)
     {
         Log::info('STRIPE SUCCESS HIT', [
@@ -215,12 +201,10 @@ class PaymentController extends Controller
             $secret = config('services.stripe.secret');
             $stripe = new \Stripe\StripeClient($secret);
 
-            // Retrieve session + expand payment_intent for reliable status
             $session = $stripe->checkout->sessions->retrieve($sessionId, [
                 'expand' => ['payment_intent'],
             ]);
 
-            // Save reference if not already saved (or if you want to overwrite safely)
             $order->payment_reference = $session->id ?? $order->payment_reference;
 
             $paymentStatus = $session->payment_status ?? null; // usually 'paid' for successful card
@@ -229,11 +213,8 @@ class PaymentController extends Controller
             $piId = is_object($pi) ? ($pi->id ?? null) : null;
 
             if ($paymentStatus === 'paid' || $piStatus === 'succeeded') {
-                // ✅ Mark paid properly
                 $order->markAsPaid('stripe', $piId, $session);
             } else {
-                // ⚠️ Don’t mark failed here — keep pending and let webhook/verification handle it
-                // If you don't have webhooks yet, this avoids false "failed".
                 $order->payment_status = Order::PAYMENT_STATUS_PENDING;
                 $order->save();
 
@@ -248,7 +229,6 @@ class PaymentController extends Controller
                 'error'    => $e->getMessage(),
             ]);
 
-            // Don’t mark failed just because verification failed on redirect
             return redirect()
                 ->route('checkout.success', ['order' => $order->id])
                 ->with('info', 'We are verifying your payment. If it does not appear, please contact support.');
@@ -257,10 +237,7 @@ class PaymentController extends Controller
         return redirect()->route('checkout.success', ['order' => $order->id]);
     }
 
-    /**
-     * Stripe cancel redirect (browser)
-     * Route: GET /payment/stripe/cancel
-     */
+    /* Stripe cancel redirect (browser) */
     public function stripeCancel(Request $request, Order $order)
     {
         Log::warning('STRIPE CANCEL HIT', [
@@ -273,6 +250,76 @@ class PaymentController extends Controller
         return redirect()
             ->route('checkout.failed')
             ->with('error', 'You cancelled the card payment. You can try again or choose another method.');
+    }
+
+    /* Stripe webhook handler */
+    public function stripeWebhook(Request $request)
+    {
+        $payload = $request->getContent();
+        $sigHeader = $request->header('Stripe-Signature');
+        $webhookSecret = config('services.stripe.webhook_secret');
+
+        if (empty($webhookSecret)) {
+            Log::error('Stripe webhook secret missing in config/services.php or .env');
+            return response('Webhook secret missing', 500);
+        }
+
+        try {
+            $event = \Stripe\Webhook::constructEvent(
+                $payload,
+                $sigHeader,
+                $webhookSecret
+            );
+        } catch (\UnexpectedValueException $e) {
+            Log::warning('Stripe webhook invalid payload', ['error' => $e->getMessage()]);
+            return response('Invalid payload', 400);
+        } catch (\Stripe\Exception\SignatureVerificationException $e) {
+            Log::warning('Stripe webhook signature verification failed', ['error' => $e->getMessage()]);
+            return response('Invalid signature', 400);
+        } catch (\Throwable $e) {
+            Log::error('Stripe webhook error', ['error' => $e->getMessage()]);
+            return response('Webhook error', 500);
+        }
+
+        if ($event->type === 'checkout.session.completed') {
+            /** @var \Stripe\Checkout\Session $session */
+            $session = $event->data->object;
+
+            $orderId = $session->client_reference_id ?? null;
+            $sessionId = $session->id ?? null;
+            $paymentIntentId = $session->payment_intent ?? null;
+
+            if (!$orderId) {
+                Log::warning('Stripe webhook: missing client_reference_id', ['session_id' => $sessionId]);
+                return response('Missing order reference', 200);
+            }
+
+            $order = \App\Models\Order::find($orderId);
+
+            if (!$order) {
+                Log::warning('Stripe webhook: order not found', ['order_id' => $orderId, 'session_id' => $sessionId]);
+                return response('Order not found', 200);
+            }
+
+            if ($order->payment_status === \App\Models\Order::PAYMENT_STATUS_PAID) {
+                return response('Already processed', 200);
+            }
+
+            $order->payment_reference = $sessionId ?: $order->payment_reference;
+            $order->markAsPaid('stripe', $paymentIntentId, (array)$session);
+
+            if ($order->user) {
+                $this->clearUserCart($order->user);
+            }
+
+            Log::info('Stripe webhook: order marked as paid', [
+                'order_id' => $order->id,
+                'session_id' => $sessionId,
+                'payment_intent' => $paymentIntentId,
+            ]);
+        }
+
+        return response('OK', 200);
     }
 
     /* ============================================================
@@ -295,7 +342,6 @@ class PaymentController extends Controller
         $callbackUrl= route('payment.toyyibpay.callback');
         $returnUrl = route('payment.toyyibpay.return', ['order' => $order->id]);
 
-        // Toyyibpay amount is also in sen (cents)
         $amountInCents = (int) round($order->total_amount * 100);
 
         try {
@@ -331,7 +377,6 @@ class PaymentController extends Controller
 
             $data = $response->json();
 
-            // Official API returns an array, index 0, key BillCode
             $billCode = $data[0]['BillCode'] ?? null;
 
             if (!$billCode) {
@@ -343,11 +388,9 @@ class PaymentController extends Controller
                     ->with('error', 'Unable to start FPX payment. Please try again.');
             }
 
-            // Save bill code as reference
             $order->payment_reference = $billCode;
             $order->save();
 
-            // Redirect customer to payment page
             $redirectUrl = $endpoint . '/' . $billCode;
 
             return redirect()->away($redirectUrl);
@@ -365,19 +408,13 @@ class PaymentController extends Controller
         }
     }
 
-    /**
-     * Toyyibpay callback (server-to-server)
-     * Route: POST /payment/toyyibpay/callback
-     *
-     * NOTE: Adjust field names according to your Toyyibpay dashboard / latest docs.
-     */
+    /* Toyyibpay callback (server-to-server) */
     public function toyyibpayCallback(Request $request)
     {
         Log::info('Toyyibpay callback received', $request->all());
 
-        // Common fields: refno (billcode) and status (1 = success, 0 = failed)
-        $refNo  = $request->input('refno');   // often the BillCode or internal ref
-        $status = $request->input('status');  // "1" or "0"
+        $refNo  = $request->input('refno');
+        $status = $request->input('status');
 
         if (!$refNo) {
             return response('MISSING REFNO', 400);
@@ -401,19 +438,15 @@ class PaymentController extends Controller
 
     public function toyyibpayReturn(Request $request, Order $order)
     {
-        // Toyyibpay usually sends one of these (depends on account/version):
-        $statusId = $request->input('status_id'); // e.g. 1=success, 2=pending, 3=failed
-        $status   = $request->input('status');    // e.g. "1" success, "0" failed
+        $statusId = $request->input('status_id');
+        $status   = $request->input('status');
         $billCode = $request->input('billcode') ?? $request->input('refno');
 
-        // Optional: ensure it matches this order's bill code if present
         if ($billCode && $order->payment_reference && $billCode !== $order->payment_reference) {
-            // Mismatch -> don't show success
             $order->markAsFailed('Toyyibpay return mismatch');
             return redirect()->route('checkout.failed')->with('error', 'Payment verification failed. Please try again.');
         }
 
-        // Determine success/fail
         $isSuccess =
             ((string)$status === '1') ||
             ((string)$statusId === '1');
@@ -423,7 +456,6 @@ class PaymentController extends Controller
             return redirect()->route('checkout.success', ['order' => $order->id]);
         }
 
-        // cancelled/failed
         $order->markAsFailed('Toyyibpay cancelled/failed on return');
         return redirect()->route('checkout.failed')->with('error', 'Payment was cancelled or failed.');
     }
@@ -435,7 +467,6 @@ class PaymentController extends Controller
 
     public function success()
     {
-        // This route is optional – you can redirect here from gateways
         return redirect()
             ->route('orders.index')
             ->with('success', 'Payment processed. You can review your order details in your account.');
@@ -448,40 +479,27 @@ class PaymentController extends Controller
             ->with('error', 'Payment was cancelled. You can try again or choose another method.');
     }
 
-    /**
-     * Generic webhook receiver – optional.
-     * Route: POST /payment/webhook/{gateway}
-     *
-     * IMPORTANT:
-     * In real deployment, verify signatures for each provider BEFORE trusting data.
-     */
+    /* Generic webhook receiver */
     public function webhook(Request $request, string $gateway)
     {
         Log::info("Payment webhook received from {$gateway}", $request->all());
 
-        // For now we just acknowledge; real logic depends on which gateways
-        // you enable webhook for (Stripe, Toyyibpay, etc).
         return response('OK', 200);
     }
 
     private function clearUserCart($user): void
     {
-        // DB cart
         $cart = Cart::where('user_id', $user->id)->first();
         if ($cart) {
-            // If you have relationship: $cart->items()
             if (method_exists($cart, 'items')) {
                 $cart->items()->delete();
             } else {
-                // fallback if relationship name is cartItems
                 $cart->cartItems()->delete();
             }
         }
 
-        // Session "Buy Now" (if you use it)
         session()->forget('buy_now_order');
 
-        // If you store cart count in session (optional)
         session()->forget('cart_count');
     }
 }
