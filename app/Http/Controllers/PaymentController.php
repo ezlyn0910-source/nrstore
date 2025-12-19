@@ -197,10 +197,15 @@ class PaymentController extends Controller
      */
     public function stripeSuccess(Request $request, Order $order)
     {
+        Log::info('STRIPE SUCCESS HIT', [
+            'order_id' => $order->id,
+            'url' => $request->fullUrl(),
+            'session_id' => $request->query('session_id'),
+        ]);
+
         $sessionId = $request->query('session_id');
 
-        if (!$sessionId || $order->payment_reference !== $sessionId) {
-            // We still let user see success if Stripe later confirms via webhook.
+        if (!$sessionId) {
             return redirect()
                 ->route('checkout.success', ['order' => $order->id])
                 ->with('info', 'We are verifying your payment. If it does not appear, please contact support.');
@@ -208,19 +213,45 @@ class PaymentController extends Controller
 
         try {
             $secret = config('services.stripe.secret');
-            $stripe = new StripeClient($secret);
+            $stripe = new \Stripe\StripeClient($secret);
 
-            $session = $stripe->checkout->sessions->retrieve($sessionId, []);
-            if (($session->payment_status ?? null) === 'paid') {
-                $order->markAsPaid('Stripe Checkout completed');
+            // Retrieve session + expand payment_intent for reliable status
+            $session = $stripe->checkout->sessions->retrieve($sessionId, [
+                'expand' => ['payment_intent'],
+            ]);
+
+            // Save reference if not already saved (or if you want to overwrite safely)
+            $order->payment_reference = $session->id ?? $order->payment_reference;
+
+            $paymentStatus = $session->payment_status ?? null; // usually 'paid' for successful card
+            $pi = $session->payment_intent ?? null;
+            $piStatus = is_object($pi) ? ($pi->status ?? null) : null; // usually 'succeeded'
+            $piId = is_object($pi) ? ($pi->id ?? null) : null;
+
+            if ($paymentStatus === 'paid' || $piStatus === 'succeeded') {
+                // ✅ Mark paid properly
+                $order->markAsPaid('stripe', $piId, $session);
             } else {
-                $order->markAsFailed('Stripe payment not completed on success URL');
+                // ⚠️ Don’t mark failed here — keep pending and let webhook/verification handle it
+                // If you don't have webhooks yet, this avoids false "failed".
+                $order->payment_status = Order::PAYMENT_STATUS_PENDING;
+                $order->save();
+
+                return redirect()
+                    ->route('checkout.success', ['order' => $order->id])
+                    ->with('info', 'We are verifying your payment. If it does not appear, please contact support.');
             }
+
         } catch (\Throwable $e) {
             Log::error('Stripe verify on success URL failed', [
                 'order_id' => $order->id,
                 'error'    => $e->getMessage(),
             ]);
+
+            // Don’t mark failed just because verification failed on redirect
+            return redirect()
+                ->route('checkout.success', ['order' => $order->id])
+                ->with('info', 'We are verifying your payment. If it does not appear, please contact support.');
         }
 
         return redirect()->route('checkout.success', ['order' => $order->id]);
@@ -232,8 +263,12 @@ class PaymentController extends Controller
      */
     public function stripeCancel(Request $request, Order $order)
     {
-        // Keep order as pending/failed so user can retry
-        $order->markAsFailed('Stripe payment cancelled by customer');
+        Log::warning('STRIPE CANCEL HIT', [
+            'order_id' => $order->id,
+            'url' => $request->fullUrl(),
+        ]);
+
+        $order->markAsFailed('stripe', null, ['reason' => 'cancelled_by_customer']);
 
         return redirect()
             ->route('checkout.failed')

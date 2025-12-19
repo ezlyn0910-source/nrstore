@@ -48,6 +48,7 @@ return [
     'stripe' => [
         'key'    => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
+        'currency' => env('STRIPE_CURRENCY', 'myr'),
     ],
 
     /*
@@ -64,22 +65,6 @@ return [
         'secret_key'    => env('TOYYIBPAY_SECRET_KEY'),
         'category_code' => env('TOYYIBPAY_CATEGORY_CODE'),
         'sandbox'       => env('TOYYIBPAY_SANDBOX', true),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Billplz
-    |--------------------------------------------------------------------------
-    |
-    | FPX online banking via Billplz. Configured from .env:
-    | BILLPLZ_API_KEY, BILLPLZ_COLLECTION_ID, BILLPLZ_SANDBOX
-    |
-    */
-
-    'billplz' => [
-        'api_key'       => env('BILLPLZ_API_KEY'),
-        'collection_id' => env('BILLPLZ_COLLECTION_ID'),
-        'sandbox'       => env('BILLPLZ_SANDBOX', true),
     ],
 
 ];

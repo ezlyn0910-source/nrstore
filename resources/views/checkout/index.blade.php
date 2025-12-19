@@ -937,10 +937,18 @@
                     return;
                 }
 
-                // Map front-end method to what your backend expects
                 const paymentMethodMap = {
-                    card:   'credit_card',     // matches validation + Stripe branch
-                    online: 'online_banking'   // matches validation + Toyyibpay branch
+                    // card
+                    card: 'credit_card',
+                    credit_card: 'credit_card',
+                    debit_card: 'debit_card',
+
+                    // online banking
+                    online: 'online_banking',
+                    online_banking: 'online_banking',
+                    fpx: 'online_banking',
+                    fpx_toyyibpay: 'online_banking',
+                    toyyibpay: 'online_banking',
                 };
 
                 addrInput.value = addressRadio.value;
