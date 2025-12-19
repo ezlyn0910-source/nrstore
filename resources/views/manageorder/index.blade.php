@@ -3,6 +3,7 @@
 
 @section('content')
 
+
 <style> 
 /* Minimalist Color Theme */
 :root {
@@ -117,6 +118,57 @@
     color: var(--light-text);
     margin: 0;
     font-size: 0.7rem;
+}
+
+/* Status Filter Navigation */
+.status-filter-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(26, 36, 18, 0.08);
+    flex-wrap: wrap;
+}
+
+.status-filter-item {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--light-bone);
+    color: var(--light-text);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+}
+
+.status-filter-item:hover {
+    background: rgba(45, 74, 53, 0.05);
+    color: var(--primary-green);
+    transform: translateY(-2px);
+}
+
+.status-filter-item.active {
+    background: var(--primary-green);
+    color: var(--white);
+}
+
+.status-filter-item.active:hover {
+    background: var(--primary-dark);
+    color: var(--white);
+}
+
+.status-badge-count {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
 }
 
 /* Table Container */
@@ -285,6 +337,7 @@
 .status-shipped { background: #d4edda; color: #155724; }
 .status-delivered { background: var(--success); color: var(--white); }
 .status-cancelled { background: #f8d7da; color: #721c24; }
+.status-paid { background: #d4edda; color: #155724; }
 
 .payment-pending { background: #fff3cd; color: #856404; }
 .payment-paid { background: #d4edda; color: #155724; }
@@ -519,6 +572,11 @@
         grid-template-columns: repeat(2, 1fr);
     }
     
+    .status-filter-nav {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+    
     .table-header {
         flex-direction: column;
         align-items: stretch;
@@ -572,6 +630,62 @@
         color: var(--success);
     }
 }
+
+/* Modal Overlay Fix */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.modal-content {
+    background: var(--white);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Date and number input styling */
+.date-input, 
+input[type="number"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.date-input:focus,
+input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(45, 74, 53, 0.1);
+}
 </style>
 
 <div class="orders-container">
@@ -584,39 +698,28 @@
     <!-- Statistics Cards -->
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-icon total">
-                <i class="fas fa-shopping-bag"></i>
-            </div>
+            <div class="stat-icon total"><i class="fas fa-shopping-bag"></i></div>
             <div class="stat-content">
                 <h3 class="stat-number">{{ $stats['total'] }}</h3>
                 <p class="stat-label">Total Orders</p>
             </div>
         </div>
-        
         <div class="stat-card">
-            <div class="stat-icon paid">
-                <i class="fas fa-clock"></i>
-            </div>
+            <div class="stat-icon paid"><i class="fas fa-credit-card"></i></div>
             <div class="stat-content">
                 <h3 class="stat-number">{{ $stats['paid'] }}</h3>
                 <p class="stat-label">Paid</p>
             </div>
         </div>
-        
         <div class="stat-card">
-            <div class="stat-icon processing">
-                <i class="fas fa-cog"></i>
-            </div>
+            <div class="stat-icon processing"><i class="fas fa-cog"></i></div>
             <div class="stat-content">
                 <h3 class="stat-number">{{ $stats['processing'] }}</h3>
                 <p class="stat-label">Processing</p>
             </div>
         </div>
-        
         <div class="stat-card">
-            <div class="stat-icon delivered">
-                <i class="fas fa-check-circle"></i>
-            </div>
+            <div class="stat-icon delivered"><i class="fas fa-check-circle"></i></div>
             <div class="stat-content">
                 <h3 class="stat-number">{{ $stats['shipped'] }}</h3>
                 <p class="stat-label">Shipped</p>
@@ -624,20 +727,37 @@
         </div>
     </div>
 
-    <!-- Orders Table -->
+    <!-- Status Filter Navigation -->
+    <div class="status-filter-nav">
+        @php
+            $filters = request()->all(); // Preserve all filters
+        @endphp
+        @foreach(['' => 'All Orders', 'paid' => 'Paid', 'processing' => 'Processing', 'shipped' => 'Shipped', 'cancelled' => 'Cancelled'] as $key => $label)
+            @php
+                $params = array_merge($filters, ['status' => $key ?: null]);
+            @endphp
+            <a href="{{ route('admin.manageorder.index', $params) }}"
+               class="status-filter-item {{ request('status') == $key ? 'active' : (!$key && !request('status') ? 'active' : '') }}">
+                <i class="fas fa-shopping-bag"></i>
+                {{ $label }}
+                <span class="status-badge-count">{{ $stats[$key ?: 'total'] }}</span>
+            </a>
+        @endforeach
+    </div>
+
+    <!-- Orders Table & Filters Form -->
     <div class="orders-table-container">
         <div class="table-header">
-            <h2 class="table-title">Recent Orders</h2>
-            <div class="table-actions">
-                <div class="search-box">
-                    <input type="text" id="searchOrders" placeholder="Search orders...">
-                    <i class="fas fa-search"></i>
-                </div>
-                <button class="filter-btn" id="filterBtn">
-                    <i class="fas fa-filter"></i>
-                    Filter
-                </button>
-            </div>
+            <h2 class="table-title">
+                @if(request('status'))
+                    {{ ucfirst(request('status')) }} Orders
+                @else
+                    Recent Orders
+                @endif
+                <span class="orders-count" style="font-size:1rem; color:var(--light-text); margin-left:0.5rem;">
+                    ({{ $orders->total() }} orders)
+                </span>
+            </h2>
         </div>
 
         <div class="table-responsive">
@@ -655,18 +775,18 @@
                 </thead>
                 <tbody>
                     @forelse($orders as $order)
-                    <tr class="order-row" data-status="{{ $order->status }}">
+                    <tr class="order-row">
                         <td class="order-id">#{{ $order->id }}</td>
                         <td class="order-products">
                             @foreach($order->orderItems as $item)
-                                <div class="product-item" style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+                                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
                                     <img src="{{ $item->product->main_image_url ?? '/placeholder.png' }}" 
-                                        alt="{{ $item->product_name ?? $item->product->name }}" 
-                                        style="width:40px; height:40px; object-fit:cover; border-radius:6px;">
+                                         alt="{{ $item->product_name ?? $item->product->name }}" 
+                                         style="width:40px;height:40px;object-fit:cover;border-radius:6px;">
                                     <div>
                                         <div style="font-weight:600;">{{ $item->product_name ?? $item->product->name }}</div>
                                         @if($item->variation_name)
-                                            <div style="font-size:0.8rem; color:#6b7c72;">{{ $item->variation_name }}</div>
+                                            <div style="font-size:0.8rem;color:#6b7c72;">{{ $item->variation_name }}</div>
                                         @endif
                                     </div>
                                 </div>
@@ -680,19 +800,15 @@
                             {{ $order->created_at->format('M d, Y') }}
                             <div class="order-time">{{ $order->created_at->format('h:i A') }}</div>
                         </td>
-                        <td class="order-amount">RM {{ number_format($order->total_amount, 2) }}</td>
+                        <td class="order-amount">RM {{ number_format($order->total_amount,2) }}</td>
                         <td class="order-status">
                             <span class="status-badge status-{{ $order->status }}">
                                 {{ ucfirst($order->status) }}
                             </span>
                         </td>
                         <td class="order-actions">
-                            <a href="{{ route('admin.manageorder.show', $order) }}" class="action-btn view-btn" title="View Order">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ route('admin.manageorder.edit', $order) }}" class="action-btn edit-btn" title="Edit Order">
-                                <i class="fas fa-edit"></i>
-                            </a>
+                            <a href="{{ route('admin.manageorder.show', $order) }}" class="action-btn view-btn" title="View Order"><i class="fas fa-eye"></i></a>
+                            <a href="{{ route('admin.manageorder.edit', $order) }}" class="action-btn edit-btn" title="Edit Order"><i class="fas fa-edit"></i></a>
                         </td>
                     </tr>
                     @empty
@@ -701,7 +817,13 @@
                             <div class="no-orders-content">
                                 <i class="fas fa-box-open"></i>
                                 <h3>No Orders Found</h3>
-                                <p>There are no orders to display at the moment.</p>
+                                <p>
+                                    @if(request('status'))
+                                        No {{ request('status') }} orders found.
+                                    @else
+                                        There are no orders to display.
+                                    @endif
+                                </p>
                             </div>
                         </td>
                     </tr>
@@ -712,9 +834,9 @@
 
         <!-- Pagination -->
         @if($orders->hasPages())
-        <div class="pagination-container">
-            {{ $orders->links() }}
-        </div>
+            <div class="pagination-container">
+                {{ $orders->appends(request()->all())->links() }}
+            </div>
         @endif
     </div>
 </div>
@@ -723,45 +845,48 @@
 <div class="modal-overlay" id="filterModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>Filter Orders</h3>
-            <button class="close-modal" id="closeFilterModal">
-                <i class="fas fa-times"></i>
-            </button>
+            <h3>Advanced Filter</h3>
+            <button class="close-modal" id="closeFilterModal"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body">
             <div class="filter-group">
-                <label>Status</label>
-                <select id="statusFilter">
-                    <option value="">All Status</option>
-                    <option value="paid">Paid</option>
-                    <option value="processing">Processing</option>
-                    <option value="shipped">Shipped</option>
-                    <option value="cancelled">Cancelled</option>
-                </select>
+                <label>Date Range</label>
+                <div style="display:flex;gap:1rem;margin-bottom:0.5rem;">
+                    <div style="flex:1;">
+                        <small style="display:block;margin-bottom:0.25rem;color:var(--light-text);">From Date</small>
+                        <input type="date" name="date_from" id="dateFrom" value="{{ request('date_from') }}" class="date-input" form="filterForm">
+                    </div>
+                    <div style="flex:1;">
+                        <small style="display:block;margin-bottom:0.25rem;color:var(--light-text);">To Date</small>
+                        <input type="date" name="date_to" id="dateTo" value="{{ request('date_to') }}" class="date-input" form="filterForm">
+                    </div>
+                </div>
             </div>
             <div class="filter-group">
-                <label>Date Range</label>
-                <input type="date" id="dateFrom" placeholder="From Date">
-                <input type="date" id="dateTo" placeholder="To Date">
+                <label>Amount Range (RM)</label>
+                <div style="display:flex;gap:1rem;">
+                    <div style="flex:1;">
+                        <small style="display:block;margin-bottom:0.25rem;color:var(--light-text);">Minimum Amount</small>
+                        <input type="number" name="amount_from" id="amountFrom" value="{{ request('amount_from') }}" step="0.01" min="0" form="filterForm">
+                    </div>
+                    <div style="flex:1;">
+                        <small style="display:block;margin-bottom:0.25rem;color:var(--light-text);">Maximum Amount</small>
+                        <input type="number" name="amount_to" id="amountTo" value="{{ request('amount_to') }}" step="0.01" min="0" form="filterForm">
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-secondary" id="resetFilters">Reset</button>
-            <button class="btn-primary" id="applyFilters">Apply Filters</button>
         </div>
     </div>
 </div>
+
 @endsection
 
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Filter Modal
     const filterBtn = document.getElementById('filterBtn');
     const filterModal = document.getElementById('filterModal');
     const closeFilterModal = document.getElementById('closeFilterModal');
-    const applyFilters = document.getElementById('applyFilters');
-    const resetFilters = document.getElementById('resetFilters');
 
     filterBtn.addEventListener('click', () => {
         filterModal.style.display = 'flex';
@@ -771,35 +896,21 @@ document.addEventListener('DOMContentLoaded', function() {
         filterModal.style.display = 'none';
     });
 
-    applyFilters.addEventListener('click', () => {
-        // Implement filter logic here
-        filterModal.style.display = 'none';
-    });
-
-    resetFilters.addEventListener('click', () => {
-        document.getElementById('statusFilter').value = '';
-        document.getElementById('dateFrom').value = '';
-        document.getElementById('dateTo').value = '';
-    });
-
-    // Search functionality
-    const searchInput = document.getElementById('searchOrders');
-    searchInput.addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const rows = document.querySelectorAll('.order-row');
-        
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
-    });
-
-    // Close modal when clicking outside
     window.addEventListener('click', (e) => {
-        if (e.target === filterModal) {
+        if (e.target === filterModal) filterModal.style.display = 'none';
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && filterModal.style.display === 'flex') {
             filterModal.style.display = 'none';
         }
     });
 });
 </script>
 @endsection
+
+
+
+
+
+
