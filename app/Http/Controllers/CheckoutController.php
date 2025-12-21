@@ -528,13 +528,11 @@ class CheckoutController extends Controller
 
     public function success(Order $order)
     {
-        // Add check to ensure user owns this order
-        $user = Auth::user();
-        if ($order->user_id !== $user->id) {
-            abort(403);
-        }
-
-        return view('checkout.success', compact('order'));
+        // Show success page regardless of authentication
+        return view('checkout.success', [
+            'order' => $order,
+            'message' => 'Your payment was successful!'
+        ]);
     }
 
     public function failed()
