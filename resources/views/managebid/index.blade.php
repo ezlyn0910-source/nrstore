@@ -502,13 +502,18 @@
     font-weight: 500;
 }
 
-.ended-badge, .paused-badge, .starts-in {
+.ended-badge, .endedin-badge, .paused-badge, .starts-in {
     padding: 0.5rem 1rem;
     border-radius: 1rem;
     font-size: 0.8rem;
     font-weight: 600;
     display: inline-block;
     margin-bottom: 0.5rem;
+}
+
+.endedin-badge {
+    background: var(--success);
+    color: var(--white);
 }
 
 .ended-badge {
@@ -1124,13 +1129,9 @@
                             </td>
                             <td class="time-cell">
                                 @if($bid->is_active)
-                                <div class="countdown-timer" data-end-time="{{ $bid->end_time->format('c') }}">
-                                    <div class="timer-display">
-                                        <span class="days">00</span>d <span class="hours">00</span>h <span class="minutes">00</span>m <span class="seconds">00</span>s
-                                    </div>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" id="progress-{{ $bid->id }}"></div>
-                                    </div>
+                                <div class="time-remaining">
+                                    <span class="endedin-badge">Ended In</span>
+                                    <div class="endedin-time">{{ $bid->end_time->diffForHumans() }}</div>
                                 </div>
                                 @elseif($bid->has_ended)
                                 <div class="ended-state">
@@ -1224,7 +1225,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initBidManagement() {
-    // 1. COUNTDOWN TIMERS
+    // --- 1. COUNTDOWN TIMERS ---
     function updateCountdowns() {
         document.querySelectorAll('.countdown-timer').forEach(timer => {
             const endStr = timer.getAttribute('data-end-time');
@@ -1234,8 +1235,14 @@ function initBidManagement() {
             const now = new Date().getTime();
             const distance = endTime - now;
 
+            const progressFill = timer.querySelector('.progress-fill');
+            const row = timer.closest('tr');
+            const startTimeStr = row ? row.getAttribute('data-start-time') : null;
+            const startTime = startTimeStr ? new Date(startTimeStr).getTime() : null;
+
             if (distance < 0) {
                 timer.innerHTML = '<span class="ended-badge">Ended</span>';
+                if(progressFill) progressFill.style.width = '100%';
                 return;
             }
 
@@ -1249,54 +1256,70 @@ function initBidManagement() {
             const mEl = timer.querySelector('.minutes'); if(mEl) mEl.textContent = String(minutes).padStart(2, '0');
             const sEl = timer.querySelector('.seconds'); if(sEl) sEl.textContent = String(seconds).padStart(2, '0');
 
-            const row = timer.closest('.bid-row');
-            if (row) {
-                const startStr = row.getAttribute('data-start-time');
-                if (startStr) {
-                    const startTime = new Date(startStr).getTime();
-                    const totalDuration = endTime - startTime;
-                    const elapsed = totalDuration - distance;
-                    const progress = (elapsed / totalDuration) * 100;
-                    
-                    const bar = timer.querySelector('.progress-fill');
-                    if (bar) bar.style.width = Math.min(Math.max(progress, 0), 100) + '%';
-                }
+            if(progressFill && startTime) {
+                const totalDuration = endTime - startTime;
+                const elapsed = now - startTime;
+                let percent = Math.min(Math.max((elapsed / totalDuration) * 100, 0), 100);
+                progressFill.style.width = percent + '%';
             }
         });
     }
+
     setInterval(updateCountdowns, 1000);
     updateCountdowns();
 
-    // 2. BULK ACTIONS UI
-    const selectAll = document.getElementById('selectAllCheckbox');
-    const checkboxes = document.querySelectorAll('.bid-checkbox');
-    const bulkBar = document.getElementById('bulkActionsBar');
-    const selectedCount = document.getElementById('selectedCount');
-    const deselectBtn = document.getElementById('bulkDeselectBtn');
+    // --- 2. BULK ACTIONS ---
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const bidCheckboxes = document.querySelectorAll('.bid-checkbox');
+    const bulkActionsBar = document.getElementById('bulkActionsBar');
+    const selectedCountEl = document.getElementById('selectedCount');
+    const bulkActionForm = document.getElementById('bulkActionForm');
+    const bulkActionInput = document.getElementById('bulkActionInput');
+    const bulkIdsInput = document.getElementById('bulkIdsInput');
+    const bulkDeselectBtn = document.getElementById('bulkDeselectBtn');
 
-    function updateBulkUI() {
-        const checked = document.querySelectorAll('.bid-checkbox:checked');
-        if (checked.length > 0) {
-            bulkBar.style.display = 'flex';
-            selectedCount.textContent = checked.length + ' selected';
+    function updateBulkActions() {
+        const selected = Array.from(bidCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+        if(selected.length > 0) {
+            bulkActionsBar.style.display = 'flex';
+            selectedCountEl.textContent = `${selected.length} bids selected`;
         } else {
-            bulkBar.style.display = 'none';
+            bulkActionsBar.style.display = 'none';
+            selectedCountEl.textContent = '0 bids selected';
         }
     }
 
-    selectAll.addEventListener('change', function() {
-        checkboxes.forEach(cb => cb.checked = this.checked);
-        updateBulkUI();
+    bidCheckboxes.forEach(cb => {
+        cb.addEventListener('change', updateBulkActions);
     });
 
-    checkboxes.forEach(cb => cb.addEventListener('change', updateBulkUI));
-
-    if(deselectBtn) {
-        deselectBtn.addEventListener('click', function() {
-            checkboxes.forEach(cb => cb.checked = false);
-            selectAll.checked = false;
-            updateBulkUI();
+    if(selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            bidCheckboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+            updateBulkActions();
         });
+    }
+
+    if(bulkDeselectBtn) {
+        bulkDeselectBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            bidCheckboxes.forEach(cb => cb.checked = false);
+            if(selectAllCheckbox) selectAllCheckbox.checked = false;
+            updateBulkActions();
+        });
+    }
+
+    window.submitBulkAction = function(action) {
+        const selected = Array.from(bidCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+        if(selected.length === 0) {
+            alert('Please select at least one bid');
+            return;
+        }
+        if(confirm(`Are you sure you want to ${action} selected bids?`)) {
+            bulkActionInput.value = action;
+            bulkIdsInput.value = selected.join(',');
+            bulkActionForm.submit();
+        }
     }
 }
 </script>

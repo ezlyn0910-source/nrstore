@@ -18,7 +18,6 @@ class CartController extends Controller
     public function index()
     {
         try {
-
             session()->forget('buy_now_order');
 
             $cart = $this->getOrCreateCart();
@@ -29,8 +28,22 @@ class CartController extends Controller
                 $total = 0;
             } else {
                 $cartItems = $cart->items()->with(['product.images', 'variation'])->get();
-                $cart->calculateTotals();
-                $subtotal = $cart->total_amount;
+                
+                // Calculate subtotal using current prices instead of stored prices
+                $subtotal = 0;
+                foreach ($cartItems as $item) {
+                    if ($item->variation_id && $item->variation) {
+                        // Use current variation price
+                        $price = $item->variation->price ?? $item->product->price;
+                    } else {
+                        // Use current product price
+                        $price = $item->product->price;
+                    }
+                    $item->current_price = $price;
+                    $item->current_subtotal = $price * $item->quantity;
+                    $subtotal += $item->current_subtotal;
+                }
+                
                 $total = $subtotal;
             }
 

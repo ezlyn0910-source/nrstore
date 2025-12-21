@@ -909,28 +909,6 @@ input:checked + .toggle-slider:before {
         </div>
     </div>
 
-    <!-- Bulk Actions -->
-    <div class="bulk-actions-section">
-        <form action="{{ route('admin.manageproduct.bulkAction') }}" method="POST" id="bulkActionForm">
-            @csrf
-            <div class="bulk-actions-row">
-                <div class="bulk-checkbox">
-                    <input type="checkbox" id="selectAll">
-                    <label for="selectAll">Select All</label>
-                </div>
-                <select name="action" class="bulk-action-select" id="bulkActionSelect">
-                    <option value="">Bulk Actions</option>
-                    <option value="activate">Activate</option>
-                    <option value="deactivate">Deactivate</option>
-                    <option value="delete">Delete</option>
-                </select>
-                <button type="submit" class="btn btn-secondary" id="applyBulkAction" disabled>
-                    Apply
-                </button>
-            </div>
-        </form>
-    </div>
-
     <!-- Products Table -->
     <div class="products-table-container">
         <div class="table-responsive">

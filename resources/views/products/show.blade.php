@@ -409,7 +409,9 @@
 @endsection
 
 @push('scripts')
+
 <script>
+
 document.addEventListener('DOMContentLoaded', function () {
     // Thumbnail → main image swap
     const mainImage = document.getElementById('mainProductImage');
@@ -764,31 +766,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: formData
             })
             .then(async (r) => {
+                // Check if response is a redirect
                 if (r.redirected) {
-                    window.location.href = r.url; // usually login or checkout
+                    window.location.href = r.url;
                     return;
                 }
-
-                const ct = r.headers.get('content-type') || '';
-                if (!ct.includes('application/json')) {
-                    showCartAlert('Session expired. Please login again.', true);
-                    window.location.href = "{{ route('login') }}";
-                    return;
-                }
-
-                const data = await r.json();
-
-                if (data.success && data.redirect_url) {
-                    window.location.href = data.redirect_url;
-                } else {
-                    showCartAlert(data.message || 'Error processing buy now.', true);
+                
+                // Try to parse as JSON
+                try {
+                    const data = await r.json();
+                    
+                    if (data.success && data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                    } else if (data.success && r.ok) {
+                        // Fallback: if success but no redirect_url, try to redirect anyway
+                        window.location.href = "{{ route('checkout.index') }}";
+                    } else {
+                        showCartAlert(data.message || 'Error processing buy now.', true);
+                    }
+                } catch (e) {
+                    // If not JSON, it might be HTML or a direct redirect
+                    if (r.ok) {
+                        // Successful response but not JSON - redirect to checkout
+                        window.location.href = "{{ route('checkout.index') }}";
+                    } else {
+                        showCartAlert('Error processing buy now. Please try again.', true);
+                    }
                 }
             })
             .catch(() => showCartAlert('Error processing buy now. Please try again.', true));
         });
     }
+
 });
+
 </script>
+
 @endpush
 
 @section('styles')
