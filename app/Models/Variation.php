@@ -141,4 +141,27 @@ class Variation extends Model
         }
         return $html;
     }
+
+    /**
+     * Decrement stock with validation
+     */
+    public function decrementStock(int $quantity): bool
+    {
+        if ($this->stock < $quantity) {
+            throw new \Exception("Insufficient stock. Available: {$this->stock}, Requested: {$quantity}");
+        }
+
+        $this->decrement('stock', $quantity);
+        return true;
+    }
+
+    /**
+     * Increment stock
+     */
+    public function incrementStock(int $quantity): bool
+    {
+        $this->increment('stock', $quantity);
+        return true;
+    }
+    
 }

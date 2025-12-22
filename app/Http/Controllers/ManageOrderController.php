@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB; 
 
 class ManageOrderController extends Controller
 {
@@ -128,9 +128,6 @@ class ManageOrderController extends Controller
         return view('manageorder.edit', compact('order', 'statusOptions'));
     }
 
-    /**
-     * Update the order status and tracking number.
-     */
     public function update(Request $request, Order $order): RedirectResponse
     {
         $request->validate([
@@ -145,19 +142,67 @@ class ManageOrderController extends Controller
             'tracking_number.required_if' => 'Tracking number is required when status is set to Shipped.'
         ]);
 
-        $oldStatus = $order->status;
+        try {
+            DB::beginTransaction();
+            
+            $oldStatus = $order->status;
+            
+            // Validate stock before shipping
+            if ($request->status === Order::STATUS_SHIPPED && $oldStatus !== Order::STATUS_SHIPPED) {
+                $order->load(['orderItems.product', 'orderItems.variation']);
+                
+                foreach ($order->orderItems as $item) {
+                    if ($item->variation_id && $item->variation && $item->variation->stock < $item->quantity) {
+                        DB::rollBack();
+                        return redirect()->back()
+                            ->with('error', "Insufficient stock for {$item->product_name}. Available: {$item->variation->stock}, Needed: {$item->quantity}")
+                            ->withInput();
+                    } else if ($item->product && $item->product->stock_quantity < $item->quantity) {
+                        DB::rollBack();
+                        return redirect()->back()
+                            ->with('error', "Insufficient stock for {$item->product_name}. Available: {$item->product->stock_quantity}, Needed: {$item->quantity}")
+                            ->withInput();
+                    }
+                }
+                
+                // Set tracking number if provided
+                if ($request->tracking_number) {
+                    $order->tracking_number = $request->tracking_number;
+                }
+            }
+            
+            // Use the model's updateStatus method for consistency
+            $success = $order->updateStatus($request->status, "Status updated via admin panel");
+            
+            if (!$success) {
+                DB::rollBack();
+                return redirect()->back()
+                    ->with('error', 'Failed to update order status. Please check order state.')
+                    ->withInput();
+            }
+            
+            // Save any tracking number updates
+            if ($request->tracking_number && $request->status !== Order::STATUS_SHIPPED) {
+                $order->tracking_number = $request->tracking_number;
+            }
+            
+            $order->save();
+            
+            DB::commit();
 
-        // Use the model's updateStatus method for consistency
-        if ($request->status === Order::STATUS_SHIPPED && $request->tracking_number) {
-            $order->setTrackingNumber($request->tracking_number);
+            return redirect()->route('admin.manageorder.show', $order)
+                ->with('success', "Order #{$order->id} status updated successfully");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            \Log::error("Order update failed: " . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
+            return redirect()->back()
+                ->with('error', 'Failed to update order: ' . $e->getMessage())
+                ->withInput();
         }
-
-        $order->updateStatus($request->status, "Status updated via admin panel");
-
-        return redirect()->route('admin.manageorder.show', $order)
-            ->with('success', 
-                "Order status updated from " . $order->getStatusLabelAttribute() . " to " . ucfirst($request->status)
-            );
     }
 
     /**
@@ -182,7 +227,11 @@ class ManageOrderController extends Controller
                 ->with('info', 'Please enter tracking number for shipped order.');
         }
 
-        $order->updateStatus($request->status, "Quick status update via admin panel");
+        $success = $order->updateStatus($request->status, "Quick status update via admin panel");
+        
+        if (!$success) {
+            return redirect()->back()->with('error', 'Failed to update order status. Please check order state.');
+        }
 
         return redirect()->back()->with('success', 
             "Order status updated from " . ucfirst($oldStatus) . " to " . ucfirst($request->status)
@@ -252,6 +301,10 @@ class ManageOrderController extends Controller
                     
                     $orders = Order::whereIn('id', $orderIds)->get();
                     foreach ($orders as $order) {
+                        // Skip shipped orders without tracking
+                        if ($request->bulk_status === Order::STATUS_SHIPPED && empty($order->tracking_number)) {
+                            continue;
+                        }
                         $order->updateStatus($request->bulk_status, "Bulk status update");
                     }
                     $message = count($orderIds) . ' order(s) status updated to ' . ucfirst($request->bulk_status);

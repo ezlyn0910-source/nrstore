@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class Order extends Model
 {
@@ -255,66 +257,191 @@ class Order extends Model
     }
 
     /**
-     * Update order status with history tracking.
+     * Update order status safely with proper checks and logging.
      */
-    public function updateStatus(string $status, string $notes = null): void
+    public function updateStatus(string $status, string $notes = null): bool
     {
-        if (! array_key_exists($status, self::STATUS_FLOW)) {
-            throw new \InvalidArgumentException("Invalid status: {$status}");
-        }
+        try {
+            if (! array_key_exists($status, self::STATUS_FLOW)) {
+                \Log::warning("Attempted to set invalid order status", [
+                    'order_id' => $this->id,
+                    'status' => $status,
+                ]);
+                return false;
+            }
 
-        $oldStatus = $this->status;
+            $oldStatus = $this->status;
 
-        // Prevent backward status transition
-        if (
-            isset(self::STATUS_FLOW[$oldStatus]) &&
-            self::STATUS_FLOW[$status] < self::STATUS_FLOW[$oldStatus]
-        ) {
-            throw new \LogicException(
-                "Order status cannot be reverted from {$oldStatus} to {$status}"
-            );
-        }
+            // Prevent backward transition
+            if (
+                isset(self::STATUS_FLOW[$oldStatus]) &&
+                self::STATUS_FLOW[$status] < self::STATUS_FLOW[$oldStatus]
+            ) {
+                \Log::warning("Cannot revert order status", [
+                    'order_id' => $this->id,
+                    'from' => $oldStatus,
+                    'to' => $status,
+                ]);
+                return false;
+            }
 
-        // Prevent any change once shipped
-        if ($oldStatus === self::STATUS_SHIPPED && $status !== self::STATUS_SHIPPED) {
-            throw new \LogicException('Shipped orders cannot be modified.');
-        }
+            // Prevent changes to shipped or cancelled orders
+            if ($oldStatus === self::STATUS_SHIPPED && $status !== self::STATUS_SHIPPED) {
+                \Log::warning("Shipped orders cannot be modified", ['order_id' => $this->id]);
+                return false;
+            }
 
-        // Prevent resurrecting cancelled orders
-        if ($oldStatus === self::STATUS_CANCELLED) {
-            throw new \LogicException('Cancelled orders cannot be modified.');
-        }
+            if ($oldStatus === self::STATUS_CANCELLED) {
+                \Log::warning("Cancelled orders cannot be modified", ['order_id' => $this->id]);
+                return false;
+            }
 
-        $this->status = $status;
+            $this->status = $status;
 
-        switch ($status) {
-            case self::STATUS_SHIPPED:
-                $this->shipped_at = $this->shipped_at ?? now();
-                break;
+            DB::transaction(function () use ($status, $oldStatus, $notes) {
+                switch ($status) {
+                    case self::STATUS_SHIPPED:
+                        if ($oldStatus !== self::STATUS_SHIPPED) {
+                            $this->deductStockSafe();
+                        }
+                        $this->shipped_at = $this->shipped_at ?? now();
+                        break;
 
-            case self::STATUS_CANCELLED:
-                $this->cancelled_at = $this->cancelled_at ?? now();
-                break;
+                    case self::STATUS_CANCELLED:
+                        $this->cancelled_at = $this->cancelled_at ?? now();
+                        if (in_array($oldStatus, [self::STATUS_PROCESSING, self::STATUS_PAID, self::STATUS_SHIPPED])) {
+                            $this->restoreStock();
+                        }
+                        break;
 
-            case self::STATUS_PAID:
-                if ($this->payment_status !== self::PAYMENT_STATUS_PAID) {
-                    $this->payment_status = self::PAYMENT_STATUS_PAID;
+                    case self::STATUS_PAID:
+                        $this->payment_status = self::PAYMENT_STATUS_PAID;
+                        $this->paid_at = $this->paid_at ?? now();
+                        break;
                 }
-                $this->paid_at = $this->paid_at ?? now();
-                break;
-        }
 
-        $this->save();
+                $this->save();
 
-        if ($oldStatus !== $status) {
-            OrderStatusHistory::create([
+                if ($oldStatus !== $status) {
+                    OrderStatusHistory::create([
+                        'order_id' => $this->id,
+                        'status'   => $status,
+                        'notes'    => $notes ?? "Status changed from {$oldStatus} to {$status}",
+                    ]);
+                }
+            });
+
+            return true;
+
+        } catch (\Exception $e) {
+            \Log::error("Failed to update order status", [
                 'order_id' => $this->id,
-                'status'   => $status,
-                'notes'    => $notes ?? "Status changed from {$oldStatus} to {$status}",
+                'from' => $this->status,
+                'to' => $status,
+                'error' => $e->getMessage()
             ]);
+            return false;
         }
     }
 
+    /**
+     * Safe stock deduction to avoid exceptions that cause 500.
+     */
+    public function deductStockSafe(): void
+    {
+        $this->loadMissing('orderItems.product', 'orderItems.variation');
+
+        foreach ($this->orderItems as $item) {
+            try {
+                if ($item->variation_id && $item->variation) {
+                    $variation = Variation::where('id', $item->variation_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (! $variation) {
+                        \Log::warning("Variation not found", ['variation_id' => $item->variation_id]);
+                        continue;
+                    }
+
+                    if ($variation->stock < $item->quantity) {
+                        \Log::warning("Insufficient stock for variation", [
+                            'variation_id' => $variation->id,
+                            'requested' => $item->quantity,
+                            'available' => $variation->stock,
+                            'order_id' => $this->id
+                        ]);
+                        continue; // skip instead of throwing exception
+                    }
+
+                    $variation->decrement('stock', $item->quantity);
+
+                } elseif ($item->product) {
+                    $product = Product::where('id', $item->product_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (! $product) {
+                        \Log::warning("Product not found", ['product_id' => $item->product_id]);
+                        continue;
+                    }
+
+                    if ($product->stock_quantity < $item->quantity) {
+                        \Log::warning("Insufficient stock for product", [
+                            'product_id' => $product->id,
+                            'requested' => $item->quantity,
+                            'available' => $product->stock_quantity,
+                            'order_id' => $this->id
+                        ]);
+                        continue; // skip instead of throwing exception
+                    }
+
+                    $product->decrement('stock_quantity', $item->quantity);
+                }
+            } catch (\Exception $e) {
+                \Log::error("Error deducting stock", [
+                    'order_item_id' => $item->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+    }
+
+
+    /**
+     * Restore stock when order is cancelled
+     */
+    public function restoreStock(): void
+    {
+        DB::transaction(function () {
+            // Load the order items with product and variation relationships
+            $this->loadMissing('orderItems.product', 'orderItems.variation');
+
+            foreach ($this->orderItems as $item) {
+                // If product has variation
+                if ($item->variation_id && $item->variation) {
+                    // Restore stock to variation
+                    $item->variation->increment('stock', $item->quantity);
+                    
+                    // Also restore the parent product's stock if it tracks stock
+                    if ($item->product) {
+                        $item->product->increment('stock_quantity', $item->quantity);
+                    }
+
+                } else if ($item->product) {
+                    // Product without variation
+                    $item->product->increment('stock_quantity', $item->quantity);
+                }
+            }
+            
+            // Log the stock restoration
+            \Log::info("Stock restored for cancelled order #{$this->order_number}", [
+                'order_id' => $this->id,
+                'order_number' => $this->order_number,
+                'status' => $this->status,
+                'items_count' => $this->orderItems->count(),
+            ]);
+        });
+    }
 
     /**
      * Set tracking number.
@@ -431,4 +558,5 @@ class Order extends Model
             }
         });
     }
+
 }
