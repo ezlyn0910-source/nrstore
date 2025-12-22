@@ -18,6 +18,9 @@
     <!-- Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
+    <!-- SweetAlert2 for beautiful dialogs -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     @yield('styles') {{-- Page-specific styles only --}}
 </head>
 <body>
@@ -50,11 +53,11 @@
                                         <span>{{ $firstName }}</span>
                                     </a>
                                     <div class="auth-divider"></div>
-                                    <form method="POST" action="{{ route('logout') }}" style="display:inline;">
+                                    <form method="POST" action="{{ route('logout') }}" id="logout-form" style="display:inline;">
                                         @csrf
                                         <a href="{{ route('logout') }}"
                                         class="header-link"
-                                        onclick="event.preventDefault(); this.closest('form').submit();">
+                                        onclick="event.preventDefault(); confirmLogout();">
                                             <span>Logout</span>
                                         </a>
                                     </form>
@@ -106,6 +109,12 @@
                                 class="nav-link nav-link-indicator {{ request()->is('bid*') ? 'nav-link-active' : '' }}">
                                     Bid Now
                                 </a>
+
+                                <a href="/bid"
+                                class="nav-link nav-link-indicator {{ request()->is('bid*') ? 'nav-link-active' : '' }}">
+                                    About Us
+                                </a>
+
                             </nav>
                         </div>
 
@@ -241,8 +250,6 @@
         @endif
     </div>
 
-    @stack('scripts')
-    <!-- Global Cart Count Script -->
     <script>
     // Wait for DOM to be fully loaded
     document.addEventListener('DOMContentLoaded', function() {
@@ -301,6 +308,26 @@
 
     // Custom event for cart updates
     document.addEventListener('cartUpdated', updateCartBadge);
+
+    // Logout confirmation function
+    function confirmLogout() {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'You will be logged out from your account.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#2d4a35',
+            confirmButtonText: 'Yes, logout',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Submit the logout form
+                document.getElementById('logout-form').submit();
+            }
+        });
+    }
     </script>
 
     <style>
@@ -549,7 +576,7 @@
             align-items: center !important;
             width: 100% !important;
             height: 100% !important;
-            gap: 10rem;
+            gap: 6.5rem;
             margin: 0;
             padding: 0 !important;
         }
@@ -583,7 +610,7 @@
         .main-nav {
             display: flex;
             align-items: center;
-            gap: 2.5rem;
+            gap: 2.2rem;
             margin: 0 auto;
         }
 
@@ -1007,7 +1034,8 @@
 
             .header-bottom-content {
                 flex-direction: column;
-                gap: 1.5rem;
+                gap: 1rem;
+
             }
 
             .header-bottom {

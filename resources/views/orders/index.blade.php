@@ -266,6 +266,34 @@
     border: 1px solid #ef4444;
 }
 
+/* Ensure filter empty state styles */
+.filter-empty-state {
+    margin-top: 2rem;
+    animation: fadeIn 0.5s ease;
+    grid-column: 1 / -1;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Make sure orders container handles empty state properly */
+.orders-container {
+    position: relative;
+    min-height: 200px;
+}
+
+/* Ensure order cards have smooth transitions */
+.order-card {
+    transition: all 0.3s ease;
+}
+
+/* Debug styles (remove in production) */
+.debug-border {
+    border: 1px solid red !important;
+}
+
 /* Shipping Section */
 .shipping-section {
     margin-bottom: 2rem;
@@ -921,33 +949,53 @@
         </div>
     </section>
 </div>
-@endsection
 
-@section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Get elements
-    const categoryButtons = document.querySelectorAll('.status-category');
+    console.log('=== ORDERS PAGE FILTER INITIALIZATION ===');
+    
+    // Get all filter buttons and order cards
+    const filterButtons = document.querySelectorAll('.status-category');
     const orderCards = document.querySelectorAll('.order-card');
     
-    console.log(`Found ${categoryButtons.length} category buttons`);
-    console.log(`Found ${orderCards.length} order cards`);
+    // Debug: Log what we found
+    console.log('Filter buttons found:', filterButtons.length);
+    console.log('Order cards found:', orderCards.length);
     
-    // Debug: Show all data-status values
-    orderCards.forEach((card, index) => {
-        console.log(`Order ${index + 1} has status: "${card.dataset.status}"`);
+    // Test: Add a simple click handler to verify buttons work
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Button clicked:', this.getAttribute('data-status'));
+            
+            // Remove active class from all buttons
+            filterButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Get the selected status
+            const selectedStatus = this.getAttribute('data-status');
+            
+            // Filter the orders
+            filterOrdersByStatus(selectedStatus);
+        });
     });
     
-    // Function to filter orders
-    function filterOrders(status) {
-        console.log(`Filtering by status: ${status}`);
+    // Filter function
+    function filterOrdersByStatus(status) {
+        console.log('Filtering by status:', status);
         
         let visibleCount = 0;
         
+        // Loop through all order cards
         orderCards.forEach(card => {
-            const cardStatus = card.dataset.status ? card.dataset.status.trim().toLowerCase() : '';
+            const cardStatus = card.getAttribute('data-status');
             
-            if (status === 'all' || cardStatus === status.toLowerCase()) {
+            // Show or hide based on status
+            if (status === 'all' || cardStatus === status) {
                 card.style.display = 'block';
                 visibleCount++;
             } else {
@@ -955,73 +1003,83 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        console.log(`Total visible orders: ${visibleCount}`);
+        console.log('Visible orders after filtering:', visibleCount);
         
-        // Show/hide empty state
+        // Show/hide empty state message
         const ordersContainer = document.querySelector('.orders-container');
         const existingEmptyState = ordersContainer.querySelector('.filter-empty-state');
+        const existingMainEmptyState = ordersContainer.querySelector('.empty-state:not(.filter-empty-state)');
         
-        if (visibleCount === 0 && !existingEmptyState && status !== 'all') {
+        // If no orders visible and we're not showing "all" orders
+        if (visibleCount === 0 && status !== 'all') {
+            // Remove any existing filter empty state
+            if (existingEmptyState) {
+                existingEmptyState.remove();
+            }
+            
+            // Hide the main "no orders" empty state if it exists
+            if (existingMainEmptyState) {
+                existingMainEmptyState.style.display = 'none';
+            }
+            
+            // Create and show filter empty state
             const emptyState = document.createElement('div');
             emptyState.className = 'empty-state filter-empty-state';
             emptyState.innerHTML = `
                 <div class="empty-icon">📭</div>
-                <h3>No ${status.charAt(0).toUpperCase() + status.slice(1)} Orders</h3>
+                <h3>No ${capitalizeFirstLetter(status)} Orders</h3>
                 <p>You don't have any orders with "${status}" status.</p>
                 <button class="btn-primary show-all-btn">Show All Orders</button>
             `;
             
             ordersContainer.appendChild(emptyState);
             
-            // Add event to "Show All Orders" button
+            // Add event listener to "Show All" button
             emptyState.querySelector('.show-all-btn').addEventListener('click', function() {
-                filterOrders('all');
-                
-                // Update active button
-                categoryButtons.forEach(btn => {
+                // Reset to show all orders
+                filterButtons.forEach(btn => {
                     btn.classList.remove('active');
-                    if (btn.dataset.status === 'all') {
+                    if (btn.getAttribute('data-status') === 'all') {
                         btn.classList.add('active');
                     }
                 });
                 
-                // Remove empty state
+                filterOrdersByStatus('all');
                 emptyState.remove();
+                
+                // Show main empty state if it was hidden
+                if (existingMainEmptyState) {
+                    existingMainEmptyState.style.display = 'flex';
+                }
             });
-        } else if (visibleCount > 0 && existingEmptyState) {
-            existingEmptyState.remove();
+        } else {
+            // Remove filter empty state if it exists
+            if (existingEmptyState) {
+                existingEmptyState.remove();
+            }
+            
+            // Show main empty state if it exists and we're showing all orders
+            if (existingMainEmptyState && status === 'all') {
+                existingMainEmptyState.style.display = 'flex';
+            }
         }
     }
     
-    // Add click events to category buttons
-    categoryButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Button clicked:', this.dataset.status);
-            
-            // Remove active class from all buttons
-            categoryButtons.forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Add active class to clicked button
-            this.classList.add('active');
-            
-            // Filter orders
-            const selectedStatus = this.dataset.status;
-            filterOrders(selectedStatus);
-        });
-    });
+    // Helper function to capitalize first letter
+    function capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
     
-    // Initialize with 'all' orders showing
-    filterOrders('all');
+    // Initialize by showing all orders
+    console.log('Initial filter state: showing all orders');
+    filterOrdersByStatus('all');
     
     // Order cancellation functionality
     const cancelButtons = document.querySelectorAll('.cancel-btn');
     cancelButtons.forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
-            const orderId = this.dataset.orderId;
+            const orderId = this.getAttribute('data-order-id');
             
             if (confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
                 cancelOrder(orderId, this);
@@ -1029,7 +1087,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    console.log('=== INITIALIZATION COMPLETE ===');
 });
 
 function cancelOrder(orderId, buttonElement) {
@@ -1060,7 +1117,7 @@ function cancelOrder(orderId, buttonElement) {
                 statusBadge.className = 'order-status-badge cancelled';
             }
             
-            orderCard.dataset.status = 'cancelled';
+            orderCard.setAttribute('data-status', 'cancelled');
             buttonElement.remove();
             
             // Show success message
@@ -1079,109 +1136,5 @@ function cancelOrder(orderId, buttonElement) {
 }
 </script>
 
-<style>
-/* Add some styles for the filter empty state */
-.filter-empty-state {
-    margin-top: 2rem;
-    animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Make sure buttons are properly clickable */
-.status-category {
-    cursor: pointer !important;
-}
-
-/* Debug highlight for testing */
-.status-category:active {
-    background-color: #e0e0e0 !important;
-}
-
-/* Additional styles for the filtering system */
-.no-orders-state {
-    margin-top: 2rem;
-}
-
-.show-all-btn {
-    margin-top: 1rem;
-}
-
-/* Ensure buttons are properly styled */
-.status-category:focus {
-    outline: 2px solid var(--primary-green);
-    outline-offset: 2px;
-}
-
-/* Fix for pagination styling */
-.pagination .page-link {
-    padding: 0.75rem 1.25rem;
-    border: 2px solid var(--border-light);
-    background: var(--white);
-    border-radius: 0.75rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 600;
-    font-size: 0.875rem;
-    text-decoration: none;
-    color: var(--dark-text);
-    display: block;
-}
-
-.pagination .page-item.active .page-link {
-    background: var(--primary-green);
-    color: var(--white);
-    border-color: var(--primary-green);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(45, 74, 53, 0.3);
-}
-
-.pagination .page-link:hover {
-    border-color: var(--primary-green);
-    transform: translateY(-1px);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .orders-layout {
-        grid-template-columns: 1fr;
-    }
-    
-    .categories-column {
-        order: 2;
-        margin-top: 2rem;
-    }
-    
-    .status-categories {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    .status-category {
-        width: auto;
-        min-width: 140px;
-    }
-}
-
-@media (max-width: 480px) {
-    .status-category {
-        min-width: 120px;
-        padding: 0.5rem 1rem;
-    }
-    
-    .status-text {
-        font-size: 0.8rem;
-    }
-    
-    .status-count {
-        width: 24px;
-        height: 24px;
-        font-size: 0.75rem;
-    }
-}
-</style>
 @endsection
+
