@@ -244,52 +244,63 @@
     @stack('scripts')
     <!-- Global Cart Count Script -->
     <script>
-    // Global function to update cart count (can be called from any page)
-    function updateHeaderCartCount(count) {
-        const cartBadge = document.querySelector('#cart-icon .action-badge');
-        if (cartBadge) {
-            if (count > 0) {
-                cartBadge.textContent = count;
-                cartBadge.style.display = 'flex';
-            } else {
-                cartBadge.style.display = 'none';
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded - initializing cart badge');
+        updateCartBadge();
+        
+        // Update every 5 seconds to keep badge fresh
+        setInterval(updateCartBadge, 5000);
+        
+        // Make function available globally
+        window.updateCartBadge = updateCartBadge;
+    });
+
+    // Cart badge update function
+    async function updateCartBadge() {
+        try {
+            const response = await fetch('{{ route("cart.count") }}', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                cache: 'no-cache'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+
+            const data = await response.json();
+            const cartBadge = document.getElementById('cart-badge');
+            
+            if (cartBadge) {
+                const count = data.count || 0;
+                
+                if (count > 0) {
+                    cartBadge.textContent = count > 9 ? '9+' : count.toString();
+                    cartBadge.style.display = 'flex';
+                    console.log(`Cart badge updated: ${count} items`);
+                } else {
+                    cartBadge.style.display = 'none';
+                    console.log('Cart badge hidden (empty cart)');
+                }
+            }
+        } catch (error) {
+            console.error('Error updating cart badge:', error);
         }
     }
 
-    // Load cart count on page load for ALL pages
-    document.addEventListener('DOMContentLoaded', function () {
-        const headerExists = document.querySelector('.header-bottom');
-        if (!headerExists) return;
-
-        const url = "{{ rtrim(request()->getBaseUrl(), '/') }}{{ route('cart.count', [], false) }}";
-
-        fetch(url, {
-            method: 'GET',
-            credentials: 'same-origin',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            cache: 'no-store'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            updateHeaderCartCount(Number(data.count || 0));
-        })
-        .catch(error => {
-            console.error('Error fetching cart count:', error);
-            updateHeaderCartCount(0);
-        });
+    // Event listeners for cart updates
+    window.addEventListener('storage', function(event) {
+        if (event.key === 'cart_updated') {
+            updateCartBadge();
+        }
     });
 
-    // Make the function globally available
-    window.updateHeaderCartCount = updateHeaderCartCount;
+    // Custom event for cart updates
+    document.addEventListener('cartUpdated', updateCartBadge);
     </script>
 
     <style>
@@ -318,6 +329,54 @@
             padding: 0;
             font-family: "Nunito", sans-serif;
             background-color: var(--primary-dark) !important;
+        }
+
+        /* Badge Animation */
+        .action-badge.badge-pulse {
+            animation: badgePulse 0.3s ease-in-out;
+        }
+
+        @keyframes badgePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        /* Cart Toast Notification */
+        .cart-toast {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: var(--light-green);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: var(--shadow-hover);
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            z-index: 9999;
+            min-width: 280px;
+            max-width: 350px;
+        }
+
+        .cart-toast.show {
+            transform: translateX(0);
+        }
+
+        .cart-toast i {
+            font-size: 1.25rem;
+        }
+
+        .cart-toast.error {
+            background: #dc3545;
+        }
+
+        .cart-toast.warning {
+            background: #ffc107;
+            color: #212529;
         }
 
         /* Only control containers inside header/footer, not the page content */
@@ -1736,6 +1795,40 @@
                 padding: 1rem 2rem;
                 font-size: 1rem;
             }
+        }
+
+        .action-badge {
+            position: absolute !important;
+            top: -8px !important;
+            right: -8px !important;
+            background: var(--light-green) !important;
+            color: var(--white) !important;
+            border-radius: 50% !important;
+            min-width: 18px !important;
+            height: 18px !important;
+            padding: 0 4px !important;
+            font-size: 0.7rem !important;
+            font-weight: 700 !important;
+            display: none !important;
+            align-items: center !important;
+            justify-content: center !important;
+            line-height: 1 !important;
+            border: 2px solid #1a2412 !important;
+            z-index: 1001 !important;
+        }
+
+        .action-badge:not(:empty) {
+            display: flex !important;
+        }
+
+        /* Animation for badge updates */
+        @keyframes badgeBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .action-badge.updated {
+            animation: badgeBounce 0.3s ease;
         }
         </style>
 </body>

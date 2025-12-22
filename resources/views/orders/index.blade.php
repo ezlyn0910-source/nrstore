@@ -11,6 +11,8 @@
 .page-title-section {
     width: 100%;
     padding: 2.5rem 0;
+    position: relative;
+    z-index: 1;
 }
 
 .page-title-container {
@@ -34,6 +36,7 @@
     padding: 0;
     position: relative;
     margin-top: 0;
+    z-index: 5;
 }
 
 .container {
@@ -49,7 +52,6 @@
     gap: 1.5rem;
     margin: 0 auto;
     padding: 0;
-    margin-top: -2rem;
     max-width: 1200px;
 }
 
@@ -57,6 +59,8 @@
 .categories-column {
     padding: 0 !important;
     height: fit-content;
+    position: relative;
+    z-index: 1;
 }
 
 .categories-title {
@@ -73,6 +77,7 @@
     flex-direction: column;
     gap: 0.75rem;
     align-items: flex-start;
+    pointer-events: auto !important;
 }
 
 .status-category {
@@ -88,12 +93,20 @@
     text-align: left;
     width: 100%;
     font-size: 1rem;
+    position: relative;
+    z-index: 10;
+    user-select: none;
+    outline: none;
 }
 
 .status-category:hover {
     border-color: var(--primary-green);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(45, 74, 53, 0.15);
+}
+
+.status-category:active {
+    transform: translateY(0);
 }
 
 .status-category.active {
@@ -190,6 +203,19 @@
     margin-bottom: 0.2rem;
 }
 
+.order-date {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+}
+
+.shipping-address {
+    font-size: 0.85rem;
+    color: #4b5563;
+    margin-top: 0.5rem;
+    line-height: 1.4;
+}
+
 .order-status-badge {
     padding: 0.5rem 0.8rem;
     border-radius: 20px;
@@ -228,16 +254,16 @@
     border: 1px solid #22c55e;
 }
 
+.order-status-badge.paid {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #22c55e;
+}
+
 .order-status-badge.cancelled {
     background: #fee2e2;
     color: #991b1b;
     border: 1px solid #ef4444;
-}
-
-.order-status-badge.returned {
-    background: #f3e8ff;
-    color: #7c3aed;
-    border: 1px solid #a855f7;
 }
 
 /* Shipping Section */
@@ -297,18 +323,11 @@
     height: 100%;
     object-fit: cover;
     display: block;
+    transition: transform 0.3s ease;
 }
 
 .order-item:hover .item-image img {
     transform: scale(1.05);
-}
-
-.item-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.25rem;
-    flex-wrap: wrap;
 }
 
 .item-details {
@@ -321,7 +340,7 @@
 }
 
 .item-top-row {
-    margin-bottom: 0;
+    margin-bottom: 0.5rem;
 }
 
 .item-name-specs {
@@ -329,6 +348,7 @@
     align-items: center;
     gap: 0.5rem;
     flex-wrap: wrap;
+    margin-bottom: 0.5rem;
 }
 
 .item-name {
@@ -344,6 +364,13 @@
     margin: 0;
 }
 
+.item-bottom-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
 .item-price {
     font-size: 1rem;
     color: var(--dark-text);
@@ -355,6 +382,13 @@
     color: var(--grey-text);
     font-weight: 600;
     margin: 0;
+}
+
+.item-total {
+    font-size: 1rem;
+    color: var(--primary-green);
+    font-weight: 700;
+    margin-left: auto;
 }
 
 /* Order Footer */
@@ -370,6 +404,12 @@
     min-height: auto;
 }
 
+.order-total-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
 .order-total {
     font-size: 1rem;
     font-weight: 700;
@@ -380,6 +420,42 @@
     font-size: 0.9rem;
     color: #6b7280;
     font-weight: 500;
+    margin-left: 0.5rem;
+}
+
+.payment-status {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Order Actions */
+.order-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.cancel-btn {
+    padding: 0.5rem 1.25rem;
+    background: #dc2626;
+    color: var(--white);
+    border: none;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+}
+
+.cancel-btn:hover {
+    background: #b91c1c;
+    transform: translateY(-2px);
+}
+
+.cancel-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* Empty State */
@@ -427,6 +503,7 @@
     text-decoration: none;
     transition: all 0.3s ease;
     font-size: 0.9rem;
+    display: inline-block;
 }
 
 .btn-primary:hover {
@@ -474,6 +551,35 @@
 .pagination-number:hover:not(.active) {
     border-color: var(--primary-green);
     transform: translateY(-1px);
+}
+
+/* Payment Status Badges */
+.payment-status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid;
+    display: inline-block;
+    margin-left: 0.25rem;
+}
+
+.payment-status-badge.paid { 
+    background: #d1fae5; 
+    color: #065f46; 
+    border-color: #10b981;
+}
+
+.payment-status-badge.pending { 
+    background: #fef3c7; 
+    color: #92400e; 
+    border-color: #f59e0b;
+}
+
+.payment-status-badge.failed { 
+    background: #fee2e2; 
+    color: #991b1b; 
+    border-color: #ef4444;
 }
 
 /* CSS Variables */
@@ -528,7 +634,7 @@
         align-items: stretch;
     }
 
-    .details-btn {
+    .cancel-btn {
         align-self: center;
         width: 100%;
         max-width: 200px;
@@ -536,17 +642,26 @@
 
     .order-item {
         flex-direction: column;
-        text-align: center;
     }
 
     .item-image {
         width: 100%;
         height: 200px;
-        margin: 0 auto;
+        border-radius: 0.75rem 0.75rem 0 0;
+        border-right: none;
+        border-bottom: 1px solid var(--border-light);
     }
 
     .item-details {
         gap: 1rem;
+    }
+    
+    .item-bottom-row {
+        justify-content: space-between;
+    }
+    
+    .item-total {
+        margin-left: 0;
     }
 }
 
@@ -597,6 +712,20 @@
 
 @section('content')
 <div class="orders-page">
+
+    <!-- Debug Section (remove after testing) -->
+    <div style="display: none; background: #f0f0f0; padding: 10px; margin: 10px; border-radius: 5px;">
+        <h4>Debug Info:</h4>
+        @php
+            $statuses = [];
+            foreach($orders as $order) {
+                $statuses[] = $order->status;
+            }
+        @endphp
+        <p>All Statuses in Database: {{ implode(', ', array_unique($statuses)) }}</p>
+        <p>Order Count: {{ $orders->count() }}</p>
+    </div>
+    
     <section class="page-title-section">
         <div class="container">
             <div class="page-title-container">
@@ -610,27 +739,27 @@
             <div class="orders-layout">
                 <div class="categories-column">
                     <div class="status-categories">
-                        <button class="status-category active" data-status="all">
+                        <button type="button" class="status-category active" data-status="all">
                             <span class="status-text">All Orders</span>
                             <span class="status-count">{{ $orders->count() }}</span>
                         </button>
-                        <button class="status-category" data-status="pending">
+                        <button type="button" class="status-category" data-status="pending">
                             <span class="status-text">Pending</span>
                             <span class="status-count">{{ $orders->where('status', 'pending')->count() }}</span>
                         </button>
-                        <button class="status-category" data-status="paid">
+                        <button type="button" class="status-category" data-status="paid">
                             <span class="status-text">Paid</span>
                             <span class="status-count">{{ $orders->where('status', 'paid')->count() }}</span>
                         </button>
-                        <button class="status-category" data-status="processing">
+                        <button type="button" class="status-category" data-status="processing">
                             <span class="status-text">Processing</span>
                             <span class="status-count">{{ $orders->where('status', 'processing')->count() }}</span>
                         </button>
-                        <button class="status-category" data-status="shipped">
+                        <button type="button" class="status-category" data-status="shipped">
                             <span class="status-text">Shipped</span>
                             <span class="status-count">{{ $orders->where('status', 'shipped')->count() }}</span>
                         </button>
-                        <button class="status-category" data-status="cancelled">
+                        <button type="button" class="status-category" data-status="cancelled">
                             <span class="status-text">Cancelled</span>
                             <span class="status-count">{{ $orders->where('status', 'cancelled')->count() }}</span>
                         </button>
@@ -644,7 +773,7 @@
                                 <div class="empty-icon">🔒</div>
                                 <h3>Please Log In</h3>
                                 <p>You need to be logged in to view your orders.</p>
-                                <a href="{{ route('login') }}" class="btn btn-primary">Log In</a>
+                                <a href="{{ route('login') }}" class="btn-primary">Log In</a>
                             </div>
                         @elseif($orders->count() > 0)
                             @foreach($orders as $order)
@@ -775,7 +904,7 @@
                                 <div class="empty-icon">📦</div>
                                 <h3>No Orders Yet</h3>
                                 <p>You haven't placed any orders. Start shopping to see your orders here.</p>
-                                <a href="{{ route('products.index') }}" class="btn btn-primary">Start Shopping</a>
+                                <a href="{{ route('products.index') }}" class="btn-primary">Start Shopping</a>
                             </div>
                         @endif
                     </div>
@@ -797,239 +926,261 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Order category filtering
+    // Get elements
     const categoryButtons = document.querySelectorAll('.status-category');
     const orderCards = document.querySelectorAll('.order-card');
     
-    categoryButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const status = this.dataset.status;
+    console.log(`Found ${categoryButtons.length} category buttons`);
+    console.log(`Found ${orderCards.length} order cards`);
+    
+    // Debug: Show all data-status values
+    orderCards.forEach((card, index) => {
+        console.log(`Order ${index + 1} has status: "${card.dataset.status}"`);
+    });
+    
+    // Function to filter orders
+    function filterOrders(status) {
+        console.log(`Filtering by status: ${status}`);
+        
+        let visibleCount = 0;
+        
+        orderCards.forEach(card => {
+            const cardStatus = card.dataset.status ? card.dataset.status.trim().toLowerCase() : '';
             
-            // Update active button
-            categoryButtons.forEach(btn => btn.classList.remove('active'));
+            if (status === 'all' || cardStatus === status.toLowerCase()) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        console.log(`Total visible orders: ${visibleCount}`);
+        
+        // Show/hide empty state
+        const ordersContainer = document.querySelector('.orders-container');
+        const existingEmptyState = ordersContainer.querySelector('.filter-empty-state');
+        
+        if (visibleCount === 0 && !existingEmptyState && status !== 'all') {
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state filter-empty-state';
+            emptyState.innerHTML = `
+                <div class="empty-icon">📭</div>
+                <h3>No ${status.charAt(0).toUpperCase() + status.slice(1)} Orders</h3>
+                <p>You don't have any orders with "${status}" status.</p>
+                <button class="btn-primary show-all-btn">Show All Orders</button>
+            `;
+            
+            ordersContainer.appendChild(emptyState);
+            
+            // Add event to "Show All Orders" button
+            emptyState.querySelector('.show-all-btn').addEventListener('click', function() {
+                filterOrders('all');
+                
+                // Update active button
+                categoryButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.status === 'all') {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Remove empty state
+                emptyState.remove();
+            });
+        } else if (visibleCount > 0 && existingEmptyState) {
+            existingEmptyState.remove();
+        }
+    }
+    
+    // Add click events to category buttons
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Button clicked:', this.dataset.status);
+            
+            // Remove active class from all buttons
+            categoryButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
             this.classList.add('active');
             
             // Filter orders
-            orderCards.forEach(card => {
-                if (status === 'all' || card.dataset.status === status) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+            const selectedStatus = this.dataset.status;
+            filterOrders(selectedStatus);
         });
     });
-
-    // Order cancellation
+    
+    // Initialize with 'all' orders showing
+    filterOrders('all');
+    
+    // Order cancellation functionality
     const cancelButtons = document.querySelectorAll('.cancel-btn');
     cancelButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
             const orderId = this.dataset.orderId;
+            
             if (confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
-                cancelOrder(orderId);
+                cancelOrder(orderId, this);
             }
         });
     });
+    
+    console.log('=== INITIALIZATION COMPLETE ===');
 });
 
-function cancelOrder(orderId) {
-    const cancelBtn = document.querySelector(`.cancel-btn[data-order-id="${orderId}"]`);
-    const originalText = cancelBtn.textContent;
+function cancelOrder(orderId, buttonElement) {
+    const originalText = buttonElement.textContent;
+    buttonElement.textContent = 'Cancelling...';
+    buttonElement.disabled = true;
     
-    // Show loading state
-    cancelBtn.textContent = 'Cancelling...';
-    cancelBtn.disabled = true;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     
     fetch(`/orders/${orderId}/cancel`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-CSRF-TOKEN': csrfToken,
             'X-Requested-With': 'XMLHttpRequest'
-        }
+        },
+        body: JSON.stringify({ _method: 'PUT' })
     })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(data => {
-                throw new Error(data.message || 'Network response was not ok');
-            });
-        }
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Update UI
+            const orderCard = buttonElement.closest('.order-card');
+            const statusBadge = orderCard.querySelector('.order-status-badge');
+            
+            if (statusBadge) {
+                statusBadge.textContent = 'Cancelled';
+                statusBadge.className = 'order-status-badge cancelled';
+            }
+            
+            orderCard.dataset.status = 'cancelled';
+            buttonElement.remove();
+            
             // Show success message
-            showNotification(data.message, 'success');
-            // Reload page to reflect changes
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
+            alert('Order cancelled successfully!');
+            setTimeout(() => location.reload(), 1000);
         } else {
             throw new Error(data.message || 'Failed to cancel order');
         }
     })
     .catch(error => {
-        console.error('Error cancelling order:', error);
-        showNotification(error.message || 'Error cancelling order. Please try again.', 'error');
-        // Reset button
-        cancelBtn.textContent = originalText;
-        cancelBtn.disabled = false;
+        console.error('Error:', error);
+        alert(error.message || 'Error cancelling order');
+        buttonElement.textContent = originalText;
+        buttonElement.disabled = false;
     });
-}
-
-function showNotification(message, type = 'info') {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 10000;
-        min-width: 300px;
-    `;
-    notification.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
-    }, 5000);
 }
 </script>
 
 <style>
-/* Payment status badges */
-.payment-status-badge.paid { 
-    background: #d1fae5; 
-    color: #065f46; 
-    padding: 0.25rem 0.75rem;
-    border-radius: 15px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border: 1px solid #10b981;
+/* Add some styles for the filter empty state */
+.filter-empty-state {
+    margin-top: 2rem;
+    animation: fadeIn 0.5s ease;
 }
 
-.payment-status-badge.pending { 
-    background: #fef3c7; 
-    color: #92400e; 
-    padding: 0.25rem 0.75rem;
-    border-radius: 15px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border: 1px solid #f59e0b;
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.payment-status-badge.failed { 
-    background: #fee2e2; 
-    color: #991b1b; 
-    padding: 0.25rem 0.75rem;
-    border-radius: 15px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border: 1px solid #ef4444;
+/* Make sure buttons are properly clickable */
+.status-category {
+    cursor: pointer !important;
 }
 
-/* Order actions */
-.order-actions {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
+/* Debug highlight for testing */
+.status-category:active {
+    background-color: #e0e0e0 !important;
 }
 
-.cancel-btn {
-    padding: 0.5rem 1.25rem;
-    background: #dc2626;
-    color: var(--white);
-    border: none;
-    border-radius: 25px;
-    font-weight: 600;
+/* Additional styles for the filtering system */
+.no-orders-state {
+    margin-top: 2rem;
+}
+
+.show-all-btn {
+    margin-top: 1rem;
+}
+
+/* Ensure buttons are properly styled */
+.status-category:focus {
+    outline: 2px solid var(--primary-green);
+    outline-offset: 2px;
+}
+
+/* Fix for pagination styling */
+.pagination .page-link {
+    padding: 0.75rem 1.25rem;
+    border: 2px solid var(--border-light);
+    background: var(--white);
+    border-radius: 0.75rem;
     cursor: pointer;
     transition: all 0.3s ease;
+    font-weight: 600;
     font-size: 0.875rem;
+    text-decoration: none;
+    color: var(--dark-text);
+    display: block;
 }
 
-.cancel-btn:hover {
-    background: #b91c1c;
-    transform: translateY(-2px);
+.pagination .page-item.active .page-link {
+    background: var(--primary-green);
+    color: var(--white);
+    border-color: var(--primary-green);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(45, 74, 53, 0.3);
 }
 
-.cancel-btn:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.order-total-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.payment-status {
-    font-size: 0.875rem;
-    color: #6b7280;
-}
-
-/* Loading spinner */
-.loading-spinner {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.8);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-
-.spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+.pagination .page-link:hover {
+    border-color: var(--primary-green);
+    transform: translateY(-1px);
 }
 
 /* Responsive adjustments */
-@media (max-width: 640px) {
-    .order-header {
-        flex-direction: column;
-        gap: 1rem;
+@media (max-width: 768px) {
+    .orders-layout {
+        grid-template-columns: 1fr;
     }
     
-    .order-footer {
-        flex-direction: column;
-        gap: 1rem;
+    .categories-column {
+        order: 2;
+        margin-top: 2rem;
     }
     
-    .order-actions {
-        width: 100%;
-        justify-content: flex-end;
+    .status-categories {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
     }
     
-    .order-item {
-        flex-direction: column;
+    .status-category {
+        width: auto;
+        min-width: 140px;
+    }
+}
+
+@media (max-width: 480px) {
+    .status-category {
+        min-width: 120px;
+        padding: 0.5rem 1rem;
     }
     
-    .item-image {
-        width: 100%;
-        height: 200px;
+    .status-text {
+        font-size: 0.8rem;
+    }
+    
+    .status-count {
+        width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
     }
 }
 </style>

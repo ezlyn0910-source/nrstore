@@ -101,6 +101,7 @@
     box-shadow: 0 6px 25px rgba(26, 36, 18, 0.08);
     border: 1px solid var(--border-light);
     overflow: hidden;
+    padding: 1.2rem;
 }
 
 .card-header {
@@ -431,8 +432,8 @@
     align-items: center;
     gap: 4px;
 }
-
-.no-activity {
+ 
+.no-activity { 
     text-align: center;
     padding: 40px 20px;
     color: var(--light-text);
@@ -1187,31 +1188,10 @@
                 </div>
                 <div class="card-body">
                     @if($bid->is_active)
-                    <div class="countdown-timer">
-                        <div class="timer-display" data-end-time="{{ $bid->end_time->format('Y-m-d H:i:s') }}">
-                            <div class="time-unit">
-                                <span class="time-value days">00</span>
-                                <span class="time-label">Days</span>
-                            </div>
-                            <div class="time-unit">
-                                <span class="time-value hours">00</span>
-                                <span class="time-label">Hours</span>
-                            </div>
-                            <div class="time-unit">
-                                <span class="time-value minutes">00</span>
-                                <span class="time-label">Minutes</span>
-                            </div>
-                            <div class="time-unit">
-                                <span class="time-value seconds">00</span>
-                                <span class="time-label">Seconds</span>
-                            </div>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="timerProgress"></div>
-                        </div>
-                        <div class="timer-meta">
-                            <small>Ends at: {{ $bid->end_time->format('M d, Y H:i') }}</small>
-                        </div>
+                    <div class="simple-timer">
+                        <p>Time Remaining: 
+                            <div class="endedin-time">{{ $bid->end_time->diffForHumans() }}</div>
+                        </p>
                     </div>
                     @elseif($bid->has_ended)
                     <div class="ended-state">
@@ -1235,12 +1215,7 @@
                             <i class="fas fa-clock"></i>
                         </div>
                         <h4>Auction Starts In</h4>
-                        <div class="start-countdown" data-start-time="{{ $bid->start_time->format('Y-m-d H:i:s') }}">
-                            <span class="start-days">00</span>d
-                            <span class="start-hours">00</span>h
-                            <span class="start-minutes">00</span>m
-                        </div>
-                        <p class="start-time">{{ $bid->start_time->format('M d, Y H:i') }}</p>
+                        <p>{{ $bid->start_time->format('M d, Y H:i') }}</p>
                     </div>
                     @else
                     <div class="paused-state">
@@ -1630,5 +1605,36 @@ function simulateNewBid() {
 if ({{ $bid->is_active ? 'true' : 'false' }}) {
     setInterval(simulateNewBid, 30000);
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    const timerEl = document.getElementById('timeRemaining');
+    if (!timerEl) return;
+
+    const endTime = new Date(timerEl.dataset.endTime).getTime();
+
+    function updateTimer() {
+        const now = new Date().getTime();
+        let distance = endTime - now;
+
+        if (distance < 0) {
+            timerEl.textContent = "00:00:00";
+            clearInterval(timerInterval);
+            return;
+        }
+
+        const hours = Math.floor(distance / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        timerEl.textContent = 
+            String(hours).padStart(2, '0') + ":" +
+            String(minutes).padStart(2, '0') + ":" +
+            String(seconds).padStart(2, '0');
+    }
+
+    updateTimer();
+    const timerInterval = setInterval(updateTimer, 1000);
+});
+
 </script>
 @endsection

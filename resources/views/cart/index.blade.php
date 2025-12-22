@@ -109,7 +109,7 @@
     </div>
 
     <div class="item-total">
-        RM {{ number_format($item->subtotal, 2) }}
+        RM {{ number_format($item->current_subtotal ?? $item->subtotal, 2) }}
     </div>
 
     <!-- REMOVE ICON -->

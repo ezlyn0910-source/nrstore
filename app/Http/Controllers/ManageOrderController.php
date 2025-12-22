@@ -13,17 +13,54 @@ class ManageOrderController extends Controller
     /**
      * Display a listing of the orders.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $orders = Order::with([
+        $query = Order::with([
             'user', 
             'shippingAddress', 
             'billingAddress', 
             'orderItems.product',
-            ])
-            ->where('status', '!=', Order::STATUS_PENDING)
-            ->latest()
-            ->paginate(10);
+        ])
+        ->where('status', '!=', Order::STATUS_PENDING);
+        
+        // Filter by status if provided
+        if ($request->has('status') && $request->status != '' && in_array($request->status, [
+            Order::STATUS_PAID,
+            Order::STATUS_PROCESSING,
+            Order::STATUS_SHIPPED,
+            Order::STATUS_CANCELLED
+        ])) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->has('search') && $request->search) {
+            $query->whereHas('user', function($q) use ($request){
+                $q->where('name', 'like', '%'.$request->search.'%')
+                ->orWhere('email', 'like', '%'.$request->search.'%');
+            })->orWhereHas('orderItems', function($q) use ($request){
+                $q->where('product_name', 'like', '%'.$request->search.'%');
+            })->orWhere('id', 'like', '%'.$request->search.'%');
+        }
+        
+        // Filter by date range
+        if ($request->has('date_from') && $request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->has('date_to') && $request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        
+        // Filter by amount range
+        if ($request->has('amount_from') && $request->amount_from) {
+            $query->where('total_amount', '>=', floatval($request->amount_from));
+        }
+        
+        if ($request->has('amount_to') && $request->amount_to) {
+            $query->where('total_amount', '<=', floatval($request->amount_to));
+        }
+        
+        $orders = $query->latest()->paginate(10);
 
         $stats = [
             'total'      => Order::where('status', '!=', Order::STATUS_PENDING)->count(),

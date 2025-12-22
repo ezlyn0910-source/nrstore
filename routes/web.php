@@ -84,6 +84,10 @@ Route::controller(CartController::class)
         Route::get('/validate-quantities', 'validateQuantities')->name('validate.quantities');
     });
 
+// Checkout result pages
+Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+Route::get('/checkout/failed', [CheckoutController::class, 'failed'])->name('checkout.failed');
+
 // Bid Routes (Combined - Public and Authenticated)
 Route::controller(BidController::class)
     ->prefix('bid')
@@ -190,10 +194,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/shipping-methods', [CheckoutController::class, 'getShippingMethods'])->name('shipping-methods');
         Route::get('/payment-methods', [CheckoutController::class, 'getPaymentMethods'])->name('payment-methods');
         Route::get('/verify-stock', [CheckoutController::class, 'verifyStock'])->name('verify-stock');
-
-        // Checkout results
-        Route::get('/success/{order}', [CheckoutController::class, 'success'])->name('success');
-        Route::get('/failed', [CheckoutController::class, 'failed'])->name('failed');
 
         // Clear buy now session route
         Route::post('/clear-buy-now', [CheckoutController::class, 'clearBuyNow'])->name('clear-buy-now');

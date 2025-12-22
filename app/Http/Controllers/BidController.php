@@ -42,14 +42,25 @@ class BidController extends Controller
             })
             ->get();
 
-        
         $winnerAuctions = collect();
 
         if (Auth::check()) {
-            $winnerAuctions = Bid::with('product')
+            $winnerAuctions = Bid::with(['product'])
                 ->where('status', 'completed')
                 ->where('winner_id', Auth::id())
-                ->get();
+                ->get()
+                ->filter(function($bid) {
+                    // Check if user already has a PAID order for this bid's product
+                    return !Order::where('user_id', Auth::id())
+                        ->where('payment_status', Order::PAYMENT_STATUS_PAID)
+                        ->whereHas('orderItems', function($query) use ($bid) {
+                            $query->where('product_id', $bid->product_id);
+                            if ($bid->variation_id) {
+                                $query->where('variation_id', $bid->variation_id);
+                            }
+                        })
+                        ->exists();
+                });
         }
 
         return view('bid.index', compact(
@@ -58,8 +69,6 @@ class BidController extends Controller
             'winnerAuctions'
         ));
     }
-
-
 
     public function brandAuctions($brand)
     {
@@ -199,6 +208,21 @@ class BidController extends Controller
             ->where('status', 'completed')
             ->where('winner_id', Auth::id())
             ->findOrFail($id);
+
+        // Check if user already has a PAID order for this bid's product
+        $hasPaidOrder = Order::where('user_id', Auth::id())
+            ->where('payment_status', Order::PAYMENT_STATUS_PAID)
+            ->whereHas('orderItems', function($query) use ($bid) {
+                $query->where('product_id', $bid->product_id);
+                if ($bid->variation_id) {
+                    $query->where('variation_id', $bid->variation_id);
+                }
+            })
+            ->exists();
+
+        if ($hasPaidOrder) {
+            return redirect()->back()->with('info', 'You have already paid for this winning bid.');
+        }
 
         // Safety check
         if (!$bid->winning_bid_amount) {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\CartItem;
 use App\Models\Category;
 use App\Models\ProductImage;
 use App\Models\Variation;
@@ -547,6 +548,13 @@ class ManageProductController extends Controller
                         }
 
                         $variation->update($updateData);
+
+                        // Update cart items when variation price changes
+                        if ($oldPrice != $variation->price) {
+                            CartItem::where('product_id', $product->id)
+                                ->where('variation_id', $variation->id)
+                                ->update(['price' => $variation->price]);
+                        }
                     }
                 }
             }
@@ -603,6 +611,24 @@ class ManageProductController extends Controller
             if ($product->has_variations) {
                 $totalVariationStock = Variation::where('product_id', $product->id)->sum('stock');
                 $product->update(['stock_quantity' => $totalVariationStock]);
+            }
+
+            // Update cart items when product price changes (add this after $product->update() line)
+            if ($product->price != $request->price) {
+                // Update all cart items with the new price
+                CartItem::where('product_id', $product->id)
+                    ->whereNull('variation_id') // Only update non-variation items
+                    ->update(['price' => $request->price]);
+                
+                // Also update variation cart items if product has variations
+                if ($product->has_variations) {
+                    // For each variation, update corresponding cart items
+                    foreach ($product->variations as $variation) {
+                        CartItem::where('product_id', $product->id)
+                            ->where('variation_id', $variation->id)
+                            ->update(['price' => $variation->price]);
+                    }
+                }
             }
 
             DB::commit();

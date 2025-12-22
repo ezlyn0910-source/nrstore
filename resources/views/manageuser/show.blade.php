@@ -304,16 +304,6 @@ form.d-inline {
                     <p><strong>Email Verified:</strong> 
                         {{ $user->email_verified_at ? $user->email_verified_at->format('M d, Y') : 'Not Verified' }}
                     </p>
-                    <p><strong>Last Login:</strong> 
-                        @if($user->last_login_at)
-                            {{ $user->last_login_at->diffForHumans() }}
-                            @if($user->last_login_ip)
-                                <br><small class="text-muted">IP: {{ $user->last_login_ip }}</small>
-                            @endif
-                        @else
-                            Never
-                        @endif
-                    </p>
                 </div>
                 <div class="card-footer">
                     <div class="btn-group w-100">
