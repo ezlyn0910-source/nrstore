@@ -34,29 +34,9 @@ class PaymentController extends Controller
     {
         $user = $request->user();
 
-        $rules = [
+        $validated = $request->validate([
             'payment_method'   => 'required|in:credit_card,debit_card,online_banking',
             'selected_address' => 'required|integer',
-            'amount'           => 'required|numeric|min:0.50',
-        ];
-
-        $validated = $request->validate($rules);
-        
-        $paymentMethod = $validated['payment_method'];
-        
-        $order = Order::create([
-            'user_id'            => $user->id,
-            'shipping_address_id'=> $validated['selected_address'],
-            'billing_address_id' => $validated['selected_address'],
-            'total_amount'       => (float) $validated['amount'],
-            'shipping_cost'      => 0,
-            'tax_amount'         => 0,
-            'discount_amount'    => 0,
-            'status'             => Order::STATUS_PENDING,
-            'payment_method'     => $paymentMethod,
-            'payment_gateway'    => $this->mapGatewayName($paymentMethod),
-            'payment_status'     => Order::PAYMENT_STATUS_PENDING,
-            'currency'           => strtoupper(config('services.stripe.currency', 'myr')),
         ]);
 
         $cart = Cart::where('user_id', $user->id)
@@ -66,13 +46,33 @@ class PaymentController extends Controller
             ->first();
 
         if (!$cart || $cart->items->isEmpty()) {
-
-            $order->delete();
-
-            return redirect()
-                ->route('cart.index')
+            return redirect()->route('cart.index')
                 ->with('error', 'Your cart is empty. Please add items before making payment.');
         }
+
+        $subtotal = $cart->items->sum(function ($item) {
+            return (float)$item->price * (int)$item->quantity;
+        });
+
+        $shippingFee = 0;
+        $discount    = 0;
+
+        $finalAmount = max(0, $subtotal + $shippingFee - $discount);
+
+        $order = Order::create([
+            'user_id'             => $user->id,
+            'shipping_address_id' => $validated['selected_address'],
+            'billing_address_id'  => $validated['selected_address'],
+            'total_amount'        => $finalAmount,
+            'shipping_cost'       => $shippingFee,
+            'tax_amount'          => 0,
+            'discount_amount'     => $discount,
+            'status'              => Order::STATUS_PENDING,
+            'payment_method'      => $validated['payment_method'],
+            'payment_gateway'     => $this->mapGatewayName($validated['payment_method']),
+            'payment_status'      => Order::PAYMENT_STATUS_PENDING,
+            'currency'            => strtoupper(config('services.stripe.currency', 'myr')),
+        ]);
 
         foreach ($cart->items as $item) {
             $order->orderItems()->create([
@@ -93,21 +93,11 @@ class PaymentController extends Controller
             ]);
         }
 
-        $this->clearUserCart($user);
-
-        switch ($paymentMethod) {
-            case 'credit_card':
-            case 'debit_card':
-                return $this->redirectToStripeCheckout($order, $request);
-
-            case 'online_banking':
-                return $this->redirectToToyyibpayFPX($order, $request);
-
-            default:
-                return redirect()
-                    ->route('checkout.failed')
-                    ->with('error', 'Unsupported payment method selected.');
-        }
+        return match ($validated['payment_method']) {
+            'credit_card', 'debit_card' => $this->redirectToStripeCheckout($order, $request),
+            'online_banking'            => $this->redirectToToyyibpayFPX($order, $request),
+            default                     => redirect()->route('checkout.failed')->with('error', 'Unsupported payment method selected.'),
+        };
     }
 
     /* Map payment method → human readable gateway name */
@@ -124,10 +114,9 @@ class PaymentController extends Controller
      *  STRIPE – CARD PAYMENT
      * ============================================================
      */
-
     protected function redirectToStripeCheckout(Order $order, Request $request)
     {
-        $secret  = config('services.stripe.secret');
+        $secret = config('services.stripe.secret');
 
         if (empty($secret)) {
             Log::error('Stripe secret not configured.');
@@ -136,43 +125,88 @@ class PaymentController extends Controller
                 ->with('error', 'Payment gateway is not configured. Please contact support.');
         }
 
-        $stripe  = new StripeClient($secret);
+        $stripe   = new \Stripe\StripeClient($secret);
         $currency = strtolower(config('services.stripe.currency', $order->currency ?: 'myr'));
 
-        $amountInCents = (int) round($order->total_amount * 100);
+        $amountInCents = (int) round(((float) $order->total_amount) * 100);
+
+        if ($amountInCents < 200) {
+            return redirect()
+                ->route('checkout.failed')
+                ->with('error', 'Card payment minimum is RM2.00. Please add more items or use online banking.');
+        }
+
+        $user = $request->user();
+        $customerId = $user->stripe_customer_id ?? null;
 
         try {
-            $session = $stripe->checkout->sessions->create([
-                'mode'                 => 'payment',
+            if (!$customerId) {
+                $customer = $stripe->customers->create([
+                    'email' => $user->email,
+                    'name'  => $user->name ?? null,
+                ]);
+                $customerId = $customer->id;
+
+                try {
+                    $user->forceFill(['stripe_customer_id' => $customerId])->save();
+                } catch (\Throwable $e) {
+                    Log::warning('Unable to save stripe_customer_id on user (proceeding anyway)', [
+                        'user_id' => $user->id,
+                        'error'   => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            $sessionPayload = [
+                'mode' => 'payment',
+                'customer' => $customerId,
                 'payment_method_types' => ['card'],
-                'line_items'           => [[
+
+                'payment_intent_data' => [
+                    'setup_future_usage' => 'off_session',
+                    'metadata' => [
+                        'order_id' => (string) $order->id,
+                        'user_id'  => (string) $user->id,
+                    ],
+                ],
+
+                'line_items' => [[
                     'price_data' => [
                         'currency'     => $currency,
                         'product_data' => [
-                            'name' => 'Order #' . $order->order_number,
+                            'name' => 'Order #' . ($order->order_number ?? $order->id),
                         ],
                         'unit_amount'  => $amountInCents,
                     ],
-                    'quantity'   => 1,
+                    'quantity' => 1,
                 ]],
-                'customer_email'     => $request->user()->email,
-                'client_reference_id'=> $order->id,
-                'success_url'        => route('payment.stripe.success', ['order' => $order->id])
-                                        . '?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url'         => route('payment.stripe.cancel', ['order' => $order->id]),
-            ]);
+
+                'client_reference_id' => (string) $order->id,
+
+                'success_url' => route('payment.stripe.success', ['order' => $order->id])
+                    . '?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url'  => route('payment.stripe.cancel', ['order' => $order->id]),
+            ];
+
+            $session = $stripe->checkout->sessions->create(
+                $sessionPayload,
+                ['idempotency_key' => 'order_'.$order->id.'_stripe_checkout']
+            );
 
             $order->payment_reference = $session->id ?? null;
             $order->save();
 
             return redirect()->away($session->url);
+
         } catch (\Throwable $e) {
             Log::error('Stripe Checkout error', [
                 'order_id' => $order->id,
                 'error'    => $e->getMessage(),
             ]);
 
-            $order->markAsFailed('Stripe initialisation failed');
+            $order->markAsFailed('stripe_checkout_create_failed', null, [
+                'error' => $e->getMessage(),
+            ]);
 
             return redirect()
                 ->route('checkout.failed')
@@ -197,8 +231,15 @@ class PaymentController extends Controller
                 ->with('info', 'We are verifying your payment. If it does not appear, please contact support.');
         }
 
+        $secret = config('services.stripe.secret');
+        if (empty($secret)) {
+            Log::error('Stripe secret missing on success verify', ['order_id' => $order->id]);
+            return redirect()
+                ->route('checkout.success', ['order' => $order->id])
+                ->with('info', 'We are verifying your payment. If it does not appear, please contact support.');
+        }
+
         try {
-            $secret = config('services.stripe.secret');
             $stripe = new \Stripe\StripeClient($secret);
 
             $session = $stripe->checkout->sessions->retrieve($sessionId, [
@@ -207,34 +248,39 @@ class PaymentController extends Controller
 
             $order->payment_reference = $session->id ?? $order->payment_reference;
 
-            $paymentStatus = $session->payment_status ?? null; // usually 'paid' for successful card
+            $paymentStatus = $session->payment_status ?? null;
             $pi = $session->payment_intent ?? null;
-            $piStatus = is_object($pi) ? ($pi->status ?? null) : null; // usually 'succeeded'
+            $piStatus = is_object($pi) ? ($pi->status ?? null) : null;
             $piId = is_object($pi) ? ($pi->id ?? null) : null;
 
             if ($paymentStatus === 'paid' || $piStatus === 'succeeded') {
-                $order->markAsPaid('stripe', $piId, $session);
-            } else {
-                $order->payment_status = Order::PAYMENT_STATUS_PENDING;
-                $order->save();
+                $order->markAsPaid('stripe', $piId, (array) $session);
 
-                return redirect()
-                    ->route('checkout.success', ['order' => $order->id])
-                    ->with('info', 'We are verifying your payment. If it does not appear, please contact support.');
+                if ($order->user) {
+                    $this->clearUserCart($order->user);
+                }
+
+                return redirect()->route('checkout.success', ['order' => $order->id]);
             }
+
+            $order->payment_status = Order::PAYMENT_STATUS_PENDING;
+            $order->save();
+
+            return redirect()
+                ->route('checkout.success', ['order' => $order->id])
+                ->with('info', 'We are verifying your payment. If it does not appear, please contact support.');
 
         } catch (\Throwable $e) {
             Log::error('Stripe verify on success URL failed', [
                 'order_id' => $order->id,
-                'error'    => $e->getMessage(),
+                'session_id' => $sessionId,
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()
                 ->route('checkout.success', ['order' => $order->id])
                 ->with('info', 'We are verifying your payment. If it does not appear, please contact support.');
         }
-
-        return redirect()->route('checkout.success', ['order' => $order->id]);
     }
 
     /* Stripe cancel redirect (browser) */
@@ -429,6 +475,10 @@ class PaymentController extends Controller
 
         if ((string) $status === '1') {
             $order->markAsPaid('Toyyibpay callback success');
+
+            if ($order->user) {
+                $this->clearUserCart($order->user);
+            }
         } else {
             $order->markAsFailed('Toyyibpay callback failed/cancelled');
         }
@@ -453,6 +503,11 @@ class PaymentController extends Controller
 
         if ($isSuccess) {
             $order->markAsPaid('Toyyibpay return success');
+
+            if ($order->user) {
+                $this->clearUserCart($order->user);
+            }
+
             return redirect()->route('checkout.success', ['order' => $order->id]);
         }
 
