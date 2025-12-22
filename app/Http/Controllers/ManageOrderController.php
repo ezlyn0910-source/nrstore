@@ -33,14 +33,21 @@ class ManageOrderController extends Controller
             $query->where('status', $request->status);
         }
 
-        if ($request->has('search') && $request->search) {
-            $query->whereHas('user', function($q) use ($request){
-                $q->where('name', 'like', '%'.$request->search.'%')
-                ->orWhere('email', 'like', '%'.$request->search.'%');
-            })->orWhereHas('orderItems', function($q) use ($request){
-                $q->where('product_name', 'like', '%'.$request->search.'%');
-            })->orWhere('id', 'like', '%'.$request->search.'%');
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($q2) use ($search) {
+                    $q2->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+                })
+                ->orWhereHas('orderItems', function ($q2) use ($search) {
+                    $q2->where('product_name', 'like', "%{$search}%");
+                })
+                ->orWhere('id', 'like', "%{$search}%");
+            });
         }
+
         
         // Filter by date range
         if ($request->has('date_from') && $request->date_from) {

@@ -3,7 +3,6 @@
 
 @section('content')
 
-
 <style> 
 /* Minimalist Color Theme */
 :root {
@@ -403,39 +402,6 @@
     color: var(--light-text);
 }
 
-/* Pagination */
-.pagination-container {
-    padding: 1.5rem 2rem;
-    border-top: 1px solid var(--border-light);
-    display: flex;
-    justify-content: center;
-}
-
-.pagination-container .pagination {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.pagination-container .page-link {
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border-light);
-    border-radius: 8px;
-    color: var(--primary-dark);
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
-
-.pagination-container .page-link:hover {
-    background: var(--primary-green);
-    color: var(--white);
-    border-color: var(--primary-green);
-}
-
-.pagination-container .page-item.active .page-link {
-    background: var(--primary-green);
-    border-color: var(--primary-green);
-    color: var(--white);
-}
 
 /* Modal Styles */
 .modal-overlay {
@@ -686,6 +652,51 @@ input[type="number"]:focus {
     border-color: var(--primary-green);
     box-shadow: 0 0 0 3px rgba(45, 74, 53, 0.1);
 }
+
+/* Pagination */
+.pagination-wrapper {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: center;
+    background: var(--white);
+    border-top: 1px solid var(--border-light);
+}
+
+.pagination {
+    display: flex;
+    gap: 0.25rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.page-item .page-link {
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    color: var(--primary-dark);
+    background: var(--light-bone);
+    font-weight: 500;
+    transition: all 0.25s ease;
+}
+
+.page-item .page-link:hover {
+    background: var(--primary-green);
+    color: var(--white);
+    border-color: var(--primary-green);
+}
+
+.page-item.active .page-link {
+    background: var(--primary-green);
+    border-color: var(--primary-green);
+    color: var(--white);
+}
+
+.page-item.disabled .page-link {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 </style>
 
 <div class="orders-container">
@@ -831,53 +842,15 @@ input[type="number"]:focus {
                 </tbody>
             </table>
         </div>
-
-        <!-- Pagination -->
-        @if($orders->hasPages())
-            <div class="pagination-container">
-                {{ $orders->appends(request()->all())->links() }}
-            </div>
-        @endif
     </div>
 </div>
 
-<!-- Filter Modal -->
-<div class="modal-overlay" id="filterModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Advanced Filter</h3>
-            <button class="close-modal" id="closeFilterModal"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <div class="filter-group">
-                <label>Date Range</label>
-                <div style="display:flex;gap:1rem;margin-bottom:0.5rem;">
-                    <div style="flex:1;">
-                        <small style="display:block;margin-bottom:0.25rem;color:var(--light-text);">From Date</small>
-                        <input type="date" name="date_from" id="dateFrom" value="{{ request('date_from') }}" class="date-input" form="filterForm">
-                    </div>
-                    <div style="flex:1;">
-                        <small style="display:block;margin-bottom:0.25rem;color:var(--light-text);">To Date</small>
-                        <input type="date" name="date_to" id="dateTo" value="{{ request('date_to') }}" class="date-input" form="filterForm">
-                    </div>
-                </div>
-            </div>
-            <div class="filter-group">
-                <label>Amount Range (RM)</label>
-                <div style="display:flex;gap:1rem;">
-                    <div style="flex:1;">
-                        <small style="display:block;margin-bottom:0.25rem;color:var(--light-text);">Minimum Amount</small>
-                        <input type="number" name="amount_from" id="amountFrom" value="{{ request('amount_from') }}" step="0.01" min="0" form="filterForm">
-                    </div>
-                    <div style="flex:1;">
-                        <small style="display:block;margin-bottom:0.25rem;color:var(--light-text);">Maximum Amount</small>
-                        <input type="number" name="amount_to" id="amountTo" value="{{ request('amount_to') }}" step="0.01" min="0" form="filterForm">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+@if($orders->hasPages())
+<div class="pagination-wrapper">
+    {{ $orders->appends(request()->query())->links('pagination::bootstrap-4') }}
 </div>
+@endif
+
 
 @endsection
 
@@ -908,9 +881,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
-
-
-
-
-
-
