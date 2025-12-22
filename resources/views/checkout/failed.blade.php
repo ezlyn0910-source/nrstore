@@ -10,8 +10,12 @@
         <h1>Payment Failed</h1>
 
         <p class="status-message">
-            Unfortunately, your payment could not be completed.
+            {{ session('error') ?? 'Unfortunately, your payment could not be completed.' }}
         </p>
+
+        @if(session('info'))
+            <p class="status-message">{{ session('info') }}</p>
+        @endif
 
         <a href="{{ route('home') }}" class="btn-home">
             Go to Homepage

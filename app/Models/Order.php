@@ -30,10 +30,12 @@ class Order extends Model
         'shipped_at',
         'cancelled_at',
         'payment_status',
+        'currency',
 
         // Payment-related
         'payment_gateway',
         'gateway_transaction_id',
+        'payment_reference',
         'gateway_meta',
         'paid_at',
     ];

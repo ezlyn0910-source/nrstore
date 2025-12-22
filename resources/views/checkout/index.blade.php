@@ -466,7 +466,7 @@
                         <input type="hidden" name="selected_address" id="po_selected_address">
                         <input type="hidden" name="payment_method" id="po_payment_method">
                         <input type="hidden" name="online_banking_bank" id="po_online_banking_bank">
-                        <input type="hidden" name="amount" id="po_amount" value="{{ $total }}">
+                        <input type="hidden" name="amount" id="po_amount" value="{{ ($subtotal - $discountAmount) + $shippingFee }}">
                     </form>
                 </div>
 
