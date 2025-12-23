@@ -743,22 +743,22 @@
                             <span class="status-text">All Orders</span>
                             <span class="status-count">{{ $orders->count() }}</span>
                         </button>
-                        <button type="button" class="status-category" data-status="pending">
-                            <span class="status-text">Pending</span>
-                            <span class="status-count">{{ $orders->where('status', 'pending')->count() }}</span>
-                        </button>
-                        <button type="button" class="status-category" data-status="paid">
-                            <span class="status-text">Paid</span>
-                            <span class="status-count">{{ $orders->where('status', 'paid')->count() }}</span>
-                        </button>
+
                         <button type="button" class="status-category" data-status="processing">
                             <span class="status-text">Processing</span>
                             <span class="status-count">{{ $orders->where('status', 'processing')->count() }}</span>
                         </button>
+
                         <button type="button" class="status-category" data-status="shipped">
                             <span class="status-text">Shipped</span>
                             <span class="status-count">{{ $orders->where('status', 'shipped')->count() }}</span>
                         </button>
+
+                        <button type="button" class="status-category" data-status="delivered">
+                            <span class="status-text">Delivered</span>
+                            <span class="status-count">{{ $orders->where('status', 'delivered')->count() }}</span>
+                        </button>
+
                         <button type="button" class="status-category" data-status="cancelled">
                             <span class="status-text">Cancelled</span>
                             <span class="status-count">{{ $orders->where('status', 'cancelled')->count() }}</span>
@@ -890,7 +890,7 @@
                                         @endif
                                     </div>
                                     <div class="order-actions">
-                                        @if(in_array($order->status, ['pending', 'processing']))
+                                        @if(in_array($order->status, ['processing']))
                                             <button class="cancel-btn" data-order-id="{{ $order->id }}">
                                                 Cancel Order
                                             </button>
@@ -925,96 +925,75 @@
 
 @section('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Get elements
-    const categoryButtons = document.querySelectorAll('.status-category');
-    const orderCards = document.querySelectorAll('.order-card');
-    
-    console.log(`Found ${categoryButtons.length} category buttons`);
-    console.log(`Found ${orderCards.length} order cards`);
-    
-    // Debug: Show all data-status values
-    orderCards.forEach((card, index) => {
-        console.log(`Order ${index + 1} has status: "${card.dataset.status}"`);
-    });
-    
-    // Function to filter orders
-    function filterOrders(status) {
-        console.log(`Filtering by status: ${status}`);
-        
-        let visibleCount = 0;
-        
-        orderCards.forEach(card => {
-            const cardStatus = card.dataset.status ? card.dataset.status.trim().toLowerCase() : '';
-            
-            if (status === 'all' || cardStatus === status.toLowerCase()) {
-                card.style.display = 'block';
-                visibleCount++;
-            } else {
-                card.style.display = 'none';
-            }
-        });
-        
-        console.log(`Total visible orders: ${visibleCount}`);
-        
-        // Show/hide empty state
+    document.addEventListener('DOMContentLoaded', function () {
+        const categoryButtons = document.querySelectorAll('.status-category');
+        const orderCards = document.querySelectorAll('.order-card');
         const ordersContainer = document.querySelector('.orders-container');
-        const existingEmptyState = ordersContainer.querySelector('.filter-empty-state');
-        
-        if (visibleCount === 0 && !existingEmptyState && status !== 'all') {
+
+        function removeFilterEmptyState() {
+            const existing = ordersContainer.querySelector('.filter-empty-state');
+            if (existing) existing.remove();
+        }
+
+        function showFilterEmptyState(status) {
+            removeFilterEmptyState();
+
             const emptyState = document.createElement('div');
             emptyState.className = 'empty-state filter-empty-state';
             emptyState.innerHTML = `
                 <div class="empty-icon">📭</div>
                 <h3>No ${status.charAt(0).toUpperCase() + status.slice(1)} Orders</h3>
                 <p>You don't have any orders with "${status}" status.</p>
-                <button class="btn-primary show-all-btn">Show All Orders</button>
+                <button type="button" class="btn-primary show-all-btn">Show All Orders</button>
             `;
-            
+
             ordersContainer.appendChild(emptyState);
-            
-            // Add event to "Show All Orders" button
-            emptyState.querySelector('.show-all-btn').addEventListener('click', function() {
+
+            emptyState.querySelector('.show-all-btn').addEventListener('click', function () {
+                setActiveButton('all');
                 filterOrders('all');
-                
-                // Update active button
-                categoryButtons.forEach(btn => {
-                    btn.classList.remove('active');
-                    if (btn.dataset.status === 'all') {
-                        btn.classList.add('active');
-                    }
-                });
-                
-                // Remove empty state
-                emptyState.remove();
             });
-        } else if (visibleCount > 0 && existingEmptyState) {
-            existingEmptyState.remove();
         }
-    }
-    
-    // Add click events to category buttons
-    categoryButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Button clicked:', this.dataset.status);
-            
-            // Remove active class from all buttons
-            categoryButtons.forEach(btn => {
-                btn.classList.remove('active');
+
+        function setActiveButton(status) {
+            categoryButtons.forEach(btn => btn.classList.remove('active'));
+            const target = Array.from(categoryButtons).find(b => (b.dataset.status || '').toLowerCase() === status);
+            if (target) target.classList.add('active');
+        }
+
+        function filterOrders(status) {
+            const normalized = (status || 'all').toLowerCase().trim();
+            let visibleCount = 0;
+
+            orderCards.forEach(card => {
+                const cardStatus = (card.dataset.status || '').toLowerCase().trim();
+
+                const shouldShow = (normalized === 'all') || (cardStatus === normalized);
+                card.style.display = shouldShow ? '' : 'none';
+
+                if (shouldShow) visibleCount++;
             });
-            
-            // Add active class to clicked button
-            this.classList.add('active');
-            
-            // Filter orders
-            const selectedStatus = this.dataset.status;
-            filterOrders(selectedStatus);
+
+            removeFilterEmptyState();
+
+            if (normalized !== 'all' && visibleCount === 0) {
+                showFilterEmptyState(normalized);
+            }
+        }
+
+        // Bind clicks
+        categoryButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const selectedStatus = (this.dataset.status || 'all').toLowerCase().trim();
+                setActiveButton(selectedStatus);
+                filterOrders(selectedStatus);
+            });
         });
+
+        // Initial
+        setActiveButton('all');
+        filterOrders('all');
     });
-    
-    // Initialize with 'all' orders showing
-    filterOrders('all');
     
     // Order cancellation functionality
     const cancelButtons = document.querySelectorAll('.cancel-btn');
@@ -1094,11 +1073,6 @@ function cancelOrder(orderId, buttonElement) {
 /* Make sure buttons are properly clickable */
 .status-category {
     cursor: pointer !important;
-}
-
-/* Debug highlight for testing */
-.status-category:active {
-    background-color: #e0e0e0 !important;
 }
 
 /* Additional styles for the filtering system */

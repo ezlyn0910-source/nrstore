@@ -914,6 +914,7 @@
         // ============================
         if (placeOrderBtn) {
             placeOrderBtn.addEventListener('click', function () {
+
                 const addressRadio = document.querySelector('input[name="selected_address"]:checked');
                 if (!addressRadio) {
                     alert('Please select a shipping address.');
@@ -954,7 +955,6 @@
                 addrInput.value = addressRadio.value;
                 pmInput.value   = paymentMethodMap[paymentMethodKey] || paymentMethodKey;
 
-                // If you later add bank selection for online banking, handle it safely:
                 if (paymentMethodKey === 'online') {
                     const bankSelectEl = document.getElementById('selectedBank');
                     if (bankSelectEl) {
@@ -967,6 +967,10 @@
                         if (bankInput) bankInput.value = selectedBank;
                     }
                 }
+
+                // ✅ NOW disable only when everything is valid
+                placeOrderBtn.disabled = true;
+                placeOrderBtn.innerText = 'Processing...';
 
                 form.submit();
             });

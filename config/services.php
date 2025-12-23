@@ -2,18 +2,6 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Third Party Services
-    |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
-    */
-
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
@@ -35,32 +23,12 @@ return [
         ],
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Stripe
-    |--------------------------------------------------------------------------
-    |
-    | Card payments using Stripe. Keys are defined in .env:
-    | STRIPE_KEY, STRIPE_SECRET
-    |
-    */
-
     'stripe' => [
         'key'    => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
         'currency' => env('STRIPE_CURRENCY', 'myr'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Toyyibpay
-    |--------------------------------------------------------------------------
-    |
-    | FPX online banking via Toyyibpay. Configured from .env:
-    | TOYYIBPAY_SECRET_KEY, TOYYIBPAY_CATEGORY_CODE, TOYYIBPAY_SANDBOX
-    |
-    */
 
     'toyyibpay' => [
         'secret_key'    => env('TOYYIBPAY_SECRET_KEY'),

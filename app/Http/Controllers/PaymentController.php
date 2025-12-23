@@ -59,38 +59,49 @@ class PaymentController extends Controller
 
         $finalAmount = max(0, $subtotal + $shippingFee - $discount);
 
-        $order = Order::create([
-            'user_id'             => $user->id,
-            'shipping_address_id' => $validated['selected_address'],
-            'billing_address_id'  => $validated['selected_address'],
-            'total_amount'        => $finalAmount,
-            'shipping_cost'       => $shippingFee,
-            'tax_amount'          => 0,
-            'discount_amount'     => $discount,
-            'status'              => Order::STATUS_PENDING,
-            'payment_method'      => $validated['payment_method'],
-            'payment_gateway'     => $this->mapGatewayName($validated['payment_method']),
-            'payment_status'      => Order::PAYMENT_STATUS_PENDING,
-            'currency'            => strtoupper(config('services.stripe.currency', 'myr')),
-        ]);
+        $order = Order::where('user_id', $user->id)
+            ->where('status', Order::STATUS_PENDING)
+            ->where('payment_status', Order::PAYMENT_STATUS_PENDING)
+            ->where('total_amount', $finalAmount)
+            ->where('shipping_address_id', $validated['selected_address'])
+            ->where('payment_method', $validated['payment_method'])
+            ->latest('id')
+            ->first();
 
-        foreach ($cart->items as $item) {
-            $order->orderItems()->create([
-                'product_id'      => $item->product_id,
-                'variation_id'    => $item->variation_id,
-                'quantity'        => $item->quantity,
-                'price'           => $item->price,
-                'total'           => $item->price * $item->quantity,
-                'product_name'    => $item->product->name ?? null,
-                'variation_name'  => $item->variation
-                    ? trim(implode(' • ', array_filter([
-                        $item->variation->model ?? null,
-                        $item->variation->processor ?? null,
-                        $item->variation->ram ?? null,
-                        $item->variation->storage ?? null,
-                    ])))
-                    : null,
+        if (!$order) {
+            $order = Order::create([
+                'user_id'             => $user->id,
+                'shipping_address_id' => $validated['selected_address'],
+                'billing_address_id'  => $validated['selected_address'],
+                'total_amount'        => $finalAmount,
+                'shipping_cost'       => $shippingFee,
+                'tax_amount'          => 0,
+                'discount_amount'     => $discount,
+                'status'              => Order::STATUS_PENDING,
+                'payment_method'      => $validated['payment_method'],
+                'payment_gateway'     => $this->mapGatewayName($validated['payment_method']),
+                'payment_status'      => Order::PAYMENT_STATUS_PENDING,
+                'currency'            => strtoupper(config('services.stripe.currency', 'myr')),
             ]);
+
+            foreach ($cart->items as $item) {
+                $order->orderItems()->create([
+                    'product_id'      => $item->product_id,
+                    'variation_id'    => $item->variation_id,
+                    'quantity'        => $item->quantity,
+                    'price'           => $item->price,
+                    'total'           => $item->price * $item->quantity,
+                    'product_name'    => $item->product->name ?? null,
+                    'variation_name'  => $item->variation
+                        ? trim(implode(' • ', array_filter([
+                            $item->variation->model ?? null,
+                            $item->variation->processor ?? null,
+                            $item->variation->ram ?? null,
+                            $item->variation->storage ?? null,
+                        ])))
+                        : null,
+                ]);
+            }
         }
 
         return match ($validated['payment_method']) {
@@ -110,10 +121,7 @@ class PaymentController extends Controller
         };
     }
 
-    /* ============================================================
-     *  STRIPE – CARD PAYMENT
-     * ============================================================
-     */
+    /* ===== STRIPE – CARD PAYMENT =====*/
     protected function redirectToStripeCheckout(Order $order, Request $request)
     {
         $secret = config('services.stripe.secret');
@@ -136,7 +144,7 @@ class PaymentController extends Controller
                 ->with('error', 'Card payment minimum is RM2.00. Please add more items or use online banking.');
         }
 
-        $user = $request->user();
+        $user       = $request->user();
         $customerId = $user->stripe_customer_id ?? null;
 
         try {
@@ -145,6 +153,7 @@ class PaymentController extends Controller
                     'email' => $user->email,
                     'name'  => $user->name ?? null,
                 ]);
+
                 $customerId = $customer->id;
 
                 try {
@@ -157,10 +166,23 @@ class PaymentController extends Controller
                 }
             }
 
+            $successUrl = route('payment.stripe.success.path', [
+                'order'      => $order->id,
+                'session_id' => 'SESSION_ID_PLACEHOLDER',
+            ]);
+            $successUrl = str_replace('SESSION_ID_PLACEHOLDER', '{CHECKOUT_SESSION_ID}', $successUrl);
+
+            $cancelUrl = route('payment.stripe.cancel', ['order' => $order->id]);
+
             $sessionPayload = [
                 'mode' => 'payment',
                 'customer' => $customerId,
                 'payment_method_types' => ['card'],
+
+                'metadata' => [
+                    'order_id' => (string) $order->id,
+                    'user_id'  => (string) $user->id,
+                ],
 
                 'payment_intent_data' => [
                     'setup_future_usage' => 'off_session',
@@ -172,28 +194,37 @@ class PaymentController extends Controller
 
                 'line_items' => [[
                     'price_data' => [
-                        'currency'     => $currency,
+                        'currency' => $currency,
                         'product_data' => [
                             'name' => 'Order #' . ($order->order_number ?? $order->id),
                         ],
-                        'unit_amount'  => $amountInCents,
+                        'unit_amount' => $amountInCents,
                     ],
                     'quantity' => 1,
                 ]],
 
                 'client_reference_id' => (string) $order->id,
 
-                'success_url' => route('payment.stripe.success', ['order' => $order->id])
-                    . '?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url'  => route('payment.stripe.cancel', ['order' => $order->id]),
+                'success_url' => $successUrl,
+                'cancel_url'  => $cancelUrl,
             ];
+
+            $payloadHash = substr(hash('sha256', json_encode([
+                'order_id'    => $order->id,
+                'amount'      => $amountInCents,
+                'currency'    => $currency,
+                'success_url' => $successUrl,
+                'cancel_url'  => $cancelUrl,
+            ])), 0, 16);
+
+            $idempotencyKey = 'order_' . $order->id . '_stripe_' . $payloadHash;
 
             $session = $stripe->checkout->sessions->create(
                 $sessionPayload,
-                ['idempotency_key' => 'order_'.$order->id.'_stripe_checkout']
+                ['idempotency_key' => $idempotencyKey]
             );
 
-            $order->payment_reference = $session->id ?? null;
+            $order->payment_reference = $session->id ?? null; // Checkout Session ID
             $order->save();
 
             return redirect()->away($session->url);
@@ -204,28 +235,28 @@ class PaymentController extends Controller
                 'error'    => $e->getMessage(),
             ]);
 
-            $order->markAsFailed('stripe_checkout_create_failed', null, [
+            $order->markAsFailed('stripe', null, [
                 'error' => $e->getMessage(),
             ]);
 
             return redirect()
                 ->route('checkout.failed')
-                ->with('error', 'Unable to start card payment. Please try again or use another method.');
+                ->with('error', 'Stripe error: ' . $e->getMessage());
         }
     }
 
     /* Stripe success redirect (browser) */
-    public function stripeSuccess(Request $request, Order $order)
+    public function stripeSuccess(Request $request, Order $order, string $session_id)
     {
         Log::info('STRIPE SUCCESS HIT', [
-            'order_id' => $order->id,
-            'url' => $request->fullUrl(),
-            'session_id' => $request->query('session_id'),
+            'order_id'   => $order->id,
+            'url'        => $request->fullUrl(),
+            'session_id' => $session_id,
         ]);
 
-        $sessionId = $request->query('session_id');
+        $sessionId = $session_id;
 
-        if (!$sessionId) {
+        if (empty($sessionId)) {
             return redirect()
                 ->route('checkout.success', ['order' => $order->id])
                 ->with('info', 'We are verifying your payment. If it does not appear, please contact support.');
@@ -246,15 +277,28 @@ class PaymentController extends Controller
                 'expand' => ['payment_intent'],
             ]);
 
+            $sessionOrderId = (string) ($session->client_reference_id ?? '');
+            if ($sessionOrderId !== (string) $order->id) {
+                Log::warning('Stripe success mismatch: session does not belong to order', [
+                    'order_id' => $order->id,
+                    'session_client_reference_id' => $sessionOrderId,
+                    'session_id' => $sessionId,
+                ]);
+
+                return redirect()
+                    ->route('checkout.failed')
+                    ->with('error', 'Payment verification mismatch. Please contact support.');
+            }
+
             $order->payment_reference = $session->id ?? $order->payment_reference;
 
             $paymentStatus = $session->payment_status ?? null;
-            $pi = $session->payment_intent ?? null;
-            $piStatus = is_object($pi) ? ($pi->status ?? null) : null;
-            $piId = is_object($pi) ? ($pi->id ?? null) : null;
+            $pi            = $session->payment_intent ?? null;
+            $piStatus      = is_object($pi) ? ($pi->status ?? null) : null;
+            $piId          = is_object($pi) ? ($pi->id ?? null) : null;
 
             if ($paymentStatus === 'paid' || $piStatus === 'succeeded') {
-                $order->markAsPaid('stripe', $piId, (array) $session);
+                $order->markAsPaid('stripe', $piId, $session->toArray());
 
                 if ($order->user) {
                     $this->clearUserCart($order->user);
@@ -272,9 +316,9 @@ class PaymentController extends Controller
 
         } catch (\Throwable $e) {
             Log::error('Stripe verify on success URL failed', [
-                'order_id' => $order->id,
+                'order_id'   => $order->id,
                 'session_id' => $sessionId,
-                'error' => $e->getMessage(),
+                'error'      => $e->getMessage(),
             ]);
 
             return redirect()
@@ -301,8 +345,8 @@ class PaymentController extends Controller
     /* Stripe webhook handler */
     public function stripeWebhook(Request $request)
     {
-        $payload = $request->getContent();
-        $sigHeader = $request->header('Stripe-Signature');
+        $payload       = $request->getContent();
+        $sigHeader     = $request->header('Stripe-Signature');
         $webhookSecret = config('services.stripe.webhook_secret');
 
         if (empty($webhookSecret)) {
@@ -311,11 +355,7 @@ class PaymentController extends Controller
         }
 
         try {
-            $event = \Stripe\Webhook::constructEvent(
-                $payload,
-                $sigHeader,
-                $webhookSecret
-            );
+            $event = \Stripe\Webhook::constructEvent($payload, $sigHeader, $webhookSecret);
         } catch (\UnexpectedValueException $e) {
             Log::warning('Stripe webhook invalid payload', ['error' => $e->getMessage()]);
             return response('Invalid payload', 400);
@@ -327,51 +367,100 @@ class PaymentController extends Controller
             return response('Webhook error', 500);
         }
 
-        if ($event->type === 'checkout.session.completed') {
-            /** @var \Stripe\Checkout\Session $session */
-            $session = $event->data->object;
+        try {
+            $type = $event->type;
 
-            $orderId = $session->client_reference_id ?? null;
-            $sessionId = $session->id ?? null;
-            $paymentIntentId = $session->payment_intent ?? null;
+            if (in_array($type, ['checkout.session.completed', 'checkout.session.async_payment_succeeded'], true)) {
+                /** @var \Stripe\Checkout\Session $session */
+                $session = $event->data->object;
 
-            if (!$orderId) {
-                Log::warning('Stripe webhook: missing client_reference_id', ['session_id' => $sessionId]);
-                return response('Missing order reference', 200);
+                $orderId         = $session->client_reference_id ?? ($session->metadata->order_id ?? null);
+                $sessionId       = $session->id ?? null;
+                $paymentIntentId = $session->payment_intent ?? null;
+
+                if (!$orderId) {
+                    Log::warning('Stripe webhook: missing order reference', ['type' => $type, 'session_id' => $sessionId]);
+                    return response('Missing order reference', 200);
+                }
+
+                $order = \App\Models\Order::find($orderId);
+
+                if (!$order) {
+                    Log::warning('Stripe webhook: order not found', ['order_id' => $orderId, 'session_id' => $sessionId]);
+                    return response('Order not found', 200);
+                }
+
+                if ($order->payment_status === \App\Models\Order::PAYMENT_STATUS_PAID) {
+                    return response('Already processed', 200);
+                }
+
+                $order->payment_reference = $sessionId ?: $order->payment_reference;
+
+                $order->markAsPaid('stripe', is_string($paymentIntentId) ? $paymentIntentId : null, $session->toArray());
+
+                if ($order->user) {
+                    $this->clearUserCart($order->user);
+                }
+
+                Log::info('Stripe webhook: order marked as paid', [
+                    'order_id'        => $order->id,
+                    'session_id'      => $sessionId,
+                    'payment_intent'  => $paymentIntentId,
+                    'event_type'      => $type,
+                ]);
+
+                return response('OK', 200);
             }
 
-            $order = \App\Models\Order::find($orderId);
+            if ($type === 'payment_intent.succeeded') {
+                /** @var \Stripe\PaymentIntent $pi */
+                $pi = $event->data->object;
 
-            if (!$order) {
-                Log::warning('Stripe webhook: order not found', ['order_id' => $orderId, 'session_id' => $sessionId]);
-                return response('Order not found', 200);
+                $orderId = $pi->metadata->order_id ?? null;
+                $piId    = $pi->id ?? null;
+
+                if (!$orderId) {
+                    Log::warning('Stripe webhook: payment_intent.succeeded missing metadata.order_id', ['pi_id' => $piId]);
+                    return response('OK', 200);
+                }
+
+                $order = \App\Models\Order::find($orderId);
+                if (!$order) {
+                    Log::warning('Stripe webhook: order not found for payment_intent', ['order_id' => $orderId, 'pi_id' => $piId]);
+                    return response('OK', 200);
+                }
+
+                if ($order->payment_status === \App\Models\Order::PAYMENT_STATUS_PAID) {
+                    return response('Already processed', 200);
+                }
+
+                $order->markAsPaid('stripe', $piId, $pi->toArray());
+
+                if ($order->user) {
+                    $this->clearUserCart($order->user);
+                }
+
+                Log::info('Stripe webhook: order marked as paid via payment_intent.succeeded', [
+                    'order_id' => $order->id,
+                    'pi_id'    => $piId,
+                ]);
+
+                return response('OK', 200);
             }
 
-            if ($order->payment_status === \App\Models\Order::PAYMENT_STATUS_PAID) {
-                return response('Already processed', 200);
-            }
+            return response('OK', 200);
 
-            $order->payment_reference = $sessionId ?: $order->payment_reference;
-            $order->markAsPaid('stripe', $paymentIntentId, (array)$session);
-
-            if ($order->user) {
-                $this->clearUserCart($order->user);
-            }
-
-            Log::info('Stripe webhook: order marked as paid', [
-                'order_id' => $order->id,
-                'session_id' => $sessionId,
-                'payment_intent' => $paymentIntentId,
+        } catch (\Throwable $e) {
+            Log::error('Stripe webhook processing failed', [
+                'type'  => $event->type ?? null,
+                'error' => $e->getMessage(),
             ]);
-        }
 
-        return response('OK', 200);
+            return response('OK', 200);
+        }
     }
 
-    /* ============================================================
-     *  TOYYIBPAY – FPX
-     * ============================================================
-     */
+    /* ===== TOYYIBPAY – FPX ===== */
 
     protected function redirectToToyyibpayFPX(Order $order, Request $request)
     {
@@ -474,13 +563,13 @@ class PaymentController extends Controller
         }
 
         if ((string) $status === '1') {
-            $order->markAsPaid('Toyyibpay callback success');
+            $order->markAsPaid('toyyibpay', null, $request->all());
 
             if ($order->user) {
                 $this->clearUserCart($order->user);
             }
         } else {
-            $order->markAsFailed('Toyyibpay callback failed/cancelled');
+            $order->markAsFailed('toyyibpay', null, $request->all());
         }
 
         return response('OK', 200);
@@ -493,16 +582,15 @@ class PaymentController extends Controller
         $billCode = $request->input('billcode') ?? $request->input('refno');
 
         if ($billCode && $order->payment_reference && $billCode !== $order->payment_reference) {
-            $order->markAsFailed('Toyyibpay return mismatch');
+            $order->markAsFailed('toyyibpay', null, ['reason' => 'return_mismatch'] + $request->all());
             return redirect()->route('checkout.failed')->with('error', 'Payment verification failed. Please try again.');
         }
 
-        $isSuccess =
-            ((string)$status === '1') ||
-            ((string)$statusId === '1');
+        $isSuccess = ((string) $status === '1') || ((string) $statusId === '1');
 
         if ($isSuccess) {
-            $order->markAsPaid('Toyyibpay return success');
+            // ✅ status becomes PROCESSING via Order::markAsPaid()
+            $order->markAsPaid('toyyibpay', null, $request->all());
 
             if ($order->user) {
                 $this->clearUserCart($order->user);
@@ -511,14 +599,11 @@ class PaymentController extends Controller
             return redirect()->route('checkout.success', ['order' => $order->id]);
         }
 
-        $order->markAsFailed('Toyyibpay cancelled/failed on return');
+        $order->markAsFailed('toyyibpay', null, ['reason' => 'return_cancelled_or_failed'] + $request->all());
         return redirect()->route('checkout.failed')->with('error', 'Payment was cancelled or failed.');
     }
 
-    /* ============================================================
-     *  GENERIC SUCCESS / CANCEL PAGES (OPTIONAL)
-     * ============================================================
-     */
+    /* ===== GENERIC SUCCESS / CANCEL PAGES (OPTIONAL) =====*/
 
     public function success()
     {
@@ -544,8 +629,9 @@ class PaymentController extends Controller
 
     private function clearUserCart($user): void
     {
-        $cart = Cart::where('user_id', $user->id)->first();
-        if ($cart) {
+        $carts = Cart::where('user_id', $user->id)->get();
+
+        foreach ($carts as $cart) {
             if (method_exists($cart, 'items')) {
                 $cart->items()->delete();
             } else {
@@ -554,7 +640,7 @@ class PaymentController extends Controller
         }
 
         session()->forget('buy_now_order');
-
         session()->forget('cart_count');
     }
+
 }

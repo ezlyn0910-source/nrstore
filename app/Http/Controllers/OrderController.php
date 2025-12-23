@@ -11,14 +11,10 @@ class OrderController extends Controller
     public function index()
     {
         if (Auth::check()) {
-            // Get real orders from database for authenticated user
             $orders = Order::with([
-                'orderItems' => function($query) {
-                    $query->select(['id', 'order_id', 'product_id', 'variation_id', 
-                                'product_name', 'variation_name', 'quantity', 
-                                'price', 'total']);
-                },
-                'shippingAddress'
+                'orderItems.product',
+                'orderItems.variation',
+                'shippingAddress',
             ])
             ->where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
@@ -26,7 +22,6 @@ class OrderController extends Controller
 
             return view('orders.index', compact('orders'));
         } else {
-            // User is not logged in - return empty orders with guest flag
             $orders = collect();
             $isGuest = true;
             return view('orders.index', compact('orders', 'isGuest'));
@@ -71,7 +66,7 @@ class OrderController extends Controller
                     ->firstOrFail();
 
         // Check if order can be cancelled (only pending or processing orders)
-        if (!in_array($order->status, ['pending', 'processing'])) {
+        if (!in_array($order->status, ['processing'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Order cannot be cancelled at this stage'
