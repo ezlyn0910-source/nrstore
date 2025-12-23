@@ -337,4 +337,38 @@ class Product extends Model
     {
         return $this->hasOne(Bid::class)->active();
     }
+
+    /**
+     * Decrement stock with validation
+     */
+    public function decrementStock(int $quantity): bool
+    {
+        if ($this->stock_quantity < $quantity) {
+            throw new \Exception("Insufficient stock. Available: {$this->stock_quantity}, Requested: {$quantity}");
+        }
+
+        $this->decrement('stock_quantity', $quantity);
+        return true;
+    }
+
+    /**
+     * Increment stock
+     */
+    public function incrementStock(int $quantity): bool
+    {
+        $this->increment('stock_quantity', $quantity);
+        return true;
+    }
+
+    /**
+     * Update total stock from variations
+     */
+    public function updateTotalStockFromVariations(): void
+    {
+        if ($this->has_variations) {
+            $totalStock = $this->variations()->sum('stock');
+            $this->stock_quantity = $totalStock;
+            $this->save();
+        }
+    }
 }

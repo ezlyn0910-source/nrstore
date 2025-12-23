@@ -65,23 +65,33 @@ class OrderController extends Controller
                     ->where('id', $orderId)
                     ->firstOrFail();
 
-        // Check if order can be cancelled (only pending or processing orders)
-        if (!in_array($order->status, ['processing'])) {
+        if (!in_array($order->status, [
+            Order::STATUS_PENDING,
+            Order::STATUS_PROCESSING
+        ])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Order cannot be cancelled at this stage'
             ], 422);
         }
 
-        // Update order status
-        $order->update([
-            'status' => 'cancelled',
-            'cancelled_at' => now()
-        ]);
+        try {
+            $order->updateStatus(
+                Order::STATUS_CANCELLED,
+                'Order cancelled by customer'
+            );
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Order cancelled successfully'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Order cancelled successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
+
 }

@@ -266,6 +266,34 @@
     border: 1px solid #ef4444;
 }
 
+/* Ensure filter empty state styles */
+.filter-empty-state {
+    margin-top: 2rem;
+    animation: fadeIn 0.5s ease;
+    grid-column: 1 / -1;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Make sure orders container handles empty state properly */
+.orders-container {
+    position: relative;
+    min-height: 200px;
+}
+
+/* Ensure order cards have smooth transitions */
+.order-card {
+    transition: all 0.3s ease;
+}
+
+/* Debug styles (remove in production) */
+.debug-border {
+    border: 1px solid red !important;
+}
+
 /* Shipping Section */
 .shipping-section {
     margin-bottom: 2rem;
@@ -921,86 +949,137 @@
         </div>
     </section>
 </div>
-@endsection
 
-@section('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const categoryButtons = document.querySelectorAll('.status-category');
-        const orderCards = document.querySelectorAll('.order-card');
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== ORDERS PAGE FILTER INITIALIZATION ===');
+    
+    // Get all filter buttons and order cards
+    const filterButtons = document.querySelectorAll('.status-category');
+    const orderCards = document.querySelectorAll('.order-card');
+    
+    // Debug: Log what we found
+    console.log('Filter buttons found:', filterButtons.length);
+    console.log('Order cards found:', orderCards.length);
+    
+    // Test: Add a simple click handler to verify buttons work
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Button clicked:', this.getAttribute('data-status'));
+            
+            // Remove active class from all buttons
+            filterButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Get the selected status
+            const selectedStatus = this.getAttribute('data-status');
+            
+            // Filter the orders
+            filterOrdersByStatus(selectedStatus);
+        });
+    });
+    
+    // Filter function
+    function filterOrdersByStatus(status) {
+        console.log('Filtering by status:', status);
+        
+        let visibleCount = 0;
+        
+        // Loop through all order cards
+        orderCards.forEach(card => {
+            const cardStatus = card.getAttribute('data-status');
+            
+            // Show or hide based on status
+            if (status === 'all' || cardStatus === status) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        console.log('Visible orders after filtering:', visibleCount);
+        
+        // Show/hide empty state message
         const ordersContainer = document.querySelector('.orders-container');
-
-        function removeFilterEmptyState() {
-            const existing = ordersContainer.querySelector('.filter-empty-state');
-            if (existing) existing.remove();
-        }
-
-        function showFilterEmptyState(status) {
-            removeFilterEmptyState();
-
+        const existingEmptyState = ordersContainer.querySelector('.filter-empty-state');
+        const existingMainEmptyState = ordersContainer.querySelector('.empty-state:not(.filter-empty-state)');
+        
+        // If no orders visible and we're not showing "all" orders
+        if (visibleCount === 0 && status !== 'all') {
+            // Remove any existing filter empty state
+            if (existingEmptyState) {
+                existingEmptyState.remove();
+            }
+            
+            // Hide the main "no orders" empty state if it exists
+            if (existingMainEmptyState) {
+                existingMainEmptyState.style.display = 'none';
+            }
+            
+            // Create and show filter empty state
             const emptyState = document.createElement('div');
             emptyState.className = 'empty-state filter-empty-state';
             emptyState.innerHTML = `
                 <div class="empty-icon">📭</div>
-                <h3>No ${status.charAt(0).toUpperCase() + status.slice(1)} Orders</h3>
+                <h3>No ${capitalizeFirstLetter(status)} Orders</h3>
                 <p>You don't have any orders with "${status}" status.</p>
                 <button type="button" class="btn-primary show-all-btn">Show All Orders</button>
             `;
 
             ordersContainer.appendChild(emptyState);
-
-            emptyState.querySelector('.show-all-btn').addEventListener('click', function () {
-                setActiveButton('all');
-                filterOrders('all');
+            
+            // Add event listener to "Show All" button
+            emptyState.querySelector('.show-all-btn').addEventListener('click', function() {
+                // Reset to show all orders
+                filterButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('data-status') === 'all') {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                filterOrdersByStatus('all');
+                emptyState.remove();
+                
+                // Show main empty state if it was hidden
+                if (existingMainEmptyState) {
+                    existingMainEmptyState.style.display = 'flex';
+                }
             });
-        }
-
-        function setActiveButton(status) {
-            categoryButtons.forEach(btn => btn.classList.remove('active'));
-            const target = Array.from(categoryButtons).find(b => (b.dataset.status || '').toLowerCase() === status);
-            if (target) target.classList.add('active');
-        }
-
-        function filterOrders(status) {
-            const normalized = (status || 'all').toLowerCase().trim();
-            let visibleCount = 0;
-
-            orderCards.forEach(card => {
-                const cardStatus = (card.dataset.status || '').toLowerCase().trim();
-
-                const shouldShow = (normalized === 'all') || (cardStatus === normalized);
-                card.style.display = shouldShow ? '' : 'none';
-
-                if (shouldShow) visibleCount++;
-            });
-
-            removeFilterEmptyState();
-
-            if (normalized !== 'all' && visibleCount === 0) {
-                showFilterEmptyState(normalized);
+        } else {
+            // Remove filter empty state if it exists
+            if (existingEmptyState) {
+                existingEmptyState.remove();
+            }
+            
+            // Show main empty state if it exists and we're showing all orders
+            if (existingMainEmptyState && status === 'all') {
+                existingMainEmptyState.style.display = 'flex';
             }
         }
-
-        // Bind clicks
-        categoryButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                const selectedStatus = (this.dataset.status || 'all').toLowerCase().trim();
-                setActiveButton(selectedStatus);
-                filterOrders(selectedStatus);
-            });
-        });
-
-        // Initial
-        setActiveButton('all');
-        filterOrders('all');
-    });
+    }
+    
+    // Helper function to capitalize first letter
+    function capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+    
+    // Initialize by showing all orders
+    console.log('Initial filter state: showing all orders');
+    filterOrdersByStatus('all');
     
     // Order cancellation functionality
     const cancelButtons = document.querySelectorAll('.cancel-btn');
     cancelButtons.forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
-            const orderId = this.dataset.orderId;
+            const orderId = this.getAttribute('data-order-id');
             
             if (confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
                 cancelOrder(orderId, this);
@@ -1008,7 +1087,6 @@
         });
     });
     
-    console.log('=== INITIALIZATION COMPLETE ===');
 });
 
 function cancelOrder(orderId, buttonElement) {
@@ -1039,7 +1117,7 @@ function cancelOrder(orderId, buttonElement) {
                 statusBadge.className = 'order-status-badge cancelled';
             }
             
-            orderCard.dataset.status = 'cancelled';
+            orderCard.setAttribute('data-status', 'cancelled');
             buttonElement.remove();
             
             // Show success message
