@@ -30,6 +30,7 @@ class Order extends Model
         'payment_method',
         'notes',
         'shipped_at',
+        'delivered_at',
         'cancelled_at',
         'payment_status',
         'currency',
@@ -51,6 +52,7 @@ class Order extends Model
         'tax_amount'      => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'shipped_at'      => 'datetime',
+        'delivered_at'    => 'datetime',
         'cancelled_at'    => 'datetime',
         'paid_at'         => 'datetime',
         'gateway_meta'    => 'array',
@@ -63,43 +65,48 @@ class Order extends Model
         'formatted_total_amount',
         'status_label',
         'is_shipped',
+        'is_delivered',
         'is_cancelled',
         'is_paid',
     ];
 
     /**
-     * Status constants for consistency.
+     * STATUS (business fulfilment flow)
+     * pending = internal only (payment not confirmed yet)
+     * processing = payment confirmed, preparing order
+     * shipped = parcel shipped
+     * delivered = parcel delivered
+     * cancelled = admin only
      */
-    const STATUS_PENDING    = 'pending';
-    const STATUS_PAID       = 'paid';
-    const STATUS_PROCESSING = 'processing';
-    const STATUS_SHIPPED    = 'shipped';
-    const STATUS_CANCELLED  = 'cancelled';
+    public const STATUS_PENDING    = 'pending';
+    public const STATUS_PROCESSING = 'processing';
+    public const STATUS_SHIPPED    = 'shipped';
+    public const STATUS_DELIVERED  = 'delivered';
+    public const STATUS_CANCELLED  = 'cancelled';
 
     /**
      * Order status progression (lower → earlier, higher → later)
      */
     public const STATUS_FLOW = [
         self::STATUS_PENDING    => 1,
-        self::STATUS_PAID       => 2,
-        self::STATUS_PROCESSING => 3,
-        self::STATUS_SHIPPED    => 4,
-        self::STATUS_CANCELLED  => 99, // terminal state
+        self::STATUS_PROCESSING => 2,
+        self::STATUS_SHIPPED    => 3,
+        self::STATUS_DELIVERED  => 4,
+        self::STATUS_CANCELLED  => 99,
     ];
 
     /**
-     * Payment method constants.
+     * Payment method constants (optional / if you standardize later)
      */
-    const PAYMENT_METHOD_STRIPE    = 'stripe';
-    const PAYMENT_METHOD_TOYYIBPAY = 'toyyibpay';
-    const PAYMENT_METHOD_BILLPLZ   = 'billplz';
+    public const PAYMENT_METHOD_STRIPE    = 'stripe';
+    public const PAYMENT_METHOD_TOYYIBPAY = 'toyyibpay';
 
     /**
      * Payment status constants.
      */
-    const PAYMENT_STATUS_PENDING = 'pending';
-    const PAYMENT_STATUS_PAID    = 'paid';
-    const PAYMENT_STATUS_FAILED  = 'failed';
+    public const PAYMENT_STATUS_PENDING = 'pending';
+    public const PAYMENT_STATUS_PAID    = 'paid';
+    public const PAYMENT_STATUS_FAILED  = 'failed';
 
     /**
      * Relationships
@@ -142,16 +149,16 @@ class Order extends Model
      */
     public function getFormattedTotalAmountAttribute(): string
     {
-        return 'RM ' . number_format($this->total_amount, 2);
+        return 'RM ' . number_format((float) $this->total_amount, 2);
     }
 
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
             self::STATUS_PENDING    => 'Pending',
-            self::STATUS_PAID       => 'Paid',
             self::STATUS_PROCESSING => 'Processing',
             self::STATUS_SHIPPED    => 'Shipped',
+            self::STATUS_DELIVERED  => 'Delivered',
             self::STATUS_CANCELLED  => 'Cancelled',
             default                 => ucfirst((string) $this->status),
         };
@@ -159,11 +166,14 @@ class Order extends Model
 
     public function getPaymentMethodLabelAttribute(): ?string
     {
+        // NOTE: your PaymentController stores payment_method like:
+        // credit_card / debit_card / online_banking
         return match ($this->payment_method) {
-            self::PAYMENT_METHOD_STRIPE    => 'Credit/Debit Card (Stripe)',
+            'credit_card', 'debit_card' => 'Credit/Debit Card (Stripe)',
+            'online_banking'            => 'FPX Online Banking (Toyyibpay)',
+            self::PAYMENT_METHOD_STRIPE => 'Credit/Debit Card (Stripe)',
             self::PAYMENT_METHOD_TOYYIBPAY => 'FPX Online Banking (Toyyibpay)',
-            self::PAYMENT_METHOD_BILLPLZ   => 'FPX Online Banking (Billplz)',
-            default                        => $this->payment_method,
+            default                     => $this->payment_method,
         };
     }
 
@@ -184,12 +194,17 @@ class Order extends Model
 
     public function getIsShippedAttribute(): bool
     {
-        return $this->status === self::STATUS_SHIPPED && ! is_null($this->shipped_at);
+        return $this->status === self::STATUS_SHIPPED && !is_null($this->shipped_at);
+    }
+
+    public function getIsDeliveredAttribute(): bool
+    {
+        return $this->status === self::STATUS_DELIVERED && !is_null($this->delivered_at);
     }
 
     public function getIsCancelledAttribute(): bool
     {
-        return $this->status === self::STATUS_CANCELLED && ! is_null($this->cancelled_at);
+        return $this->status === self::STATUS_CANCELLED && !is_null($this->cancelled_at);
     }
 
     /**
@@ -198,7 +213,7 @@ class Order extends Model
     public function calculateTotals(): void
     {
         $subtotal = $this->orderItems->sum(function ($item) {
-            return $item->quantity * $item->price;
+            return (int) $item->quantity * (float) $item->price;
         });
 
         $this->total_amount = $subtotal
@@ -210,50 +225,43 @@ class Order extends Model
     }
 
     /**
-     * Mark this order as successfully paid via a gateway.
-     *
-     * This is what your PaymentController should call, e.g.:
-     * $order->markAsPaid('stripe', $sessionId, $stripePayload);
+     * ✅ IMPORTANT: Payment confirmed → move order into fulfilment flow.
+     * Your desired flow:
+     * successful payment → processing → shipped → delivered
      */
     public function markAsPaid(string $gateway, ?string $transactionId = null, $rawPayload = null): void
     {
-        $this->payment_gateway         = $gateway;
-        $this->payment_status          = self::PAYMENT_STATUS_PAID;
-        $this->gateway_transaction_id  = $transactionId;
+        $this->payment_gateway        = $gateway;
+        $this->gateway_transaction_id = $transactionId;
 
-        if (! is_null($rawPayload)) {
+        if (!is_null($rawPayload)) {
             $this->gateway_meta = is_array($rawPayload) ? $rawPayload : (array) $rawPayload;
         }
 
-        // Update order status to 'paid' (not 'processing' automatically)
-        $this->updateStatus(self::STATUS_PAID, 'Payment successful via ' . strtoupper($gateway));
+        // Payment info
+        $this->payment_status = self::PAYMENT_STATUS_PAID;
+        $this->paid_at        = $this->paid_at ?? now();
 
-        if (is_null($this->paid_at)) {
-            $this->paid_at = now();
-        }
-
-        $this->save();
+        // Business status should be PROCESSING after successful payment
+        $this->updateStatus(self::STATUS_PROCESSING, 'Payment successful via ' . strtoupper($gateway));
     }
 
     /**
-     * Mark this order as failed / cancelled by gateway.
-     *
-     * This is what your PaymentController calls on failed webhooks/redirects.
+     * Payment failed / cancelled by gateway.
+     * Business status becomes CANCELLED and payment_status becomes FAILED.
      */
     public function markAsFailed(string $gateway, ?string $transactionId = null, $rawPayload = null): void
     {
-        $this->payment_gateway         = $gateway;
-        $this->payment_status          = self::PAYMENT_STATUS_FAILED;
-        $this->gateway_transaction_id  = $transactionId;
+        $this->payment_gateway        = $gateway;
+        $this->gateway_transaction_id = $transactionId;
 
-        if (! is_null($rawPayload)) {
+        if (!is_null($rawPayload)) {
             $this->gateway_meta = is_array($rawPayload) ? $rawPayload : (array) $rawPayload;
         }
 
-        // Business-level status → treat as cancelled/failed payment
-        $this->updateStatus(self::STATUS_CANCELLED, 'Payment failed via ' . strtoupper($gateway));
+        $this->payment_status = self::PAYMENT_STATUS_FAILED;
 
-        $this->save();
+        $this->updateStatus(self::STATUS_CANCELLED, 'Payment failed via ' . strtoupper($gateway));
     }
 
     /**
@@ -460,11 +468,6 @@ class Order extends Model
         return $query->where('status', self::STATUS_PENDING);
     }
 
-    public function scopePaid($query)
-    {
-        return $query->where('status', self::STATUS_PAID);
-    }
-
     public function scopeProcessing($query)
     {
         return $query->where('status', self::STATUS_PROCESSING);
@@ -473,6 +476,11 @@ class Order extends Model
     public function scopeShipped($query)
     {
         return $query->where('status', self::STATUS_SHIPPED);
+    }
+
+    public function scopeDelivered($query)
+    {
+        return $query->where('status', self::STATUS_DELIVERED);
     }
 
     public function scopeCancelled($query)
@@ -510,9 +518,9 @@ class Order extends Model
     {
         return [
             self::STATUS_PENDING,
-            self::STATUS_PAID,
             self::STATUS_PROCESSING,
             self::STATUS_SHIPPED,
+            self::STATUS_DELIVERED,
             self::STATUS_CANCELLED,
         ];
     }
@@ -528,13 +536,9 @@ class Order extends Model
             ->latest()
             ->first();
 
-        if ($lastOrder) {
-            $number = (int) substr($lastOrder->order_number, -4) + 1;
-        } else {
-            $number = 1;
-        }
+        $number = $lastOrder ? ((int) substr($lastOrder->order_number, -4) + 1) : 1;
 
-        return $prefix . $date . str_pad($number, 4, '0', STR_PAD_LEFT);
+        return $prefix . $date . str_pad((string) $number, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -549,6 +553,7 @@ class Order extends Model
                 $order->order_number = static::generateOrderNumber();
             }
 
+            // pending means: created but payment not confirmed yet
             if (empty($order->status)) {
                 $order->status = self::STATUS_PENDING;
             }

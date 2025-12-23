@@ -266,8 +266,6 @@ Route::middleware(['auth'])->group(function () {
         ->group(function () {
             Route::post('/process', 'process')->name('process');
         });
-    Route::get('/payment/stripe/success/{order}/{session_id}', [PaymentController::class, 'stripeSuccess'])
-        ->name('payment.stripe.success.path');
 
 });
 

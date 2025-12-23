@@ -771,22 +771,22 @@
                             <span class="status-text">All Orders</span>
                             <span class="status-count">{{ $orders->count() }}</span>
                         </button>
-                        <button type="button" class="status-category" data-status="pending">
-                            <span class="status-text">Pending</span>
-                            <span class="status-count">{{ $orders->where('status', 'pending')->count() }}</span>
-                        </button>
-                        <button type="button" class="status-category" data-status="paid">
-                            <span class="status-text">Paid</span>
-                            <span class="status-count">{{ $orders->where('status', 'paid')->count() }}</span>
-                        </button>
+
                         <button type="button" class="status-category" data-status="processing">
                             <span class="status-text">Processing</span>
                             <span class="status-count">{{ $orders->where('status', 'processing')->count() }}</span>
                         </button>
+
                         <button type="button" class="status-category" data-status="shipped">
                             <span class="status-text">Shipped</span>
                             <span class="status-count">{{ $orders->where('status', 'shipped')->count() }}</span>
                         </button>
+
+                        <button type="button" class="status-category" data-status="delivered">
+                            <span class="status-text">Delivered</span>
+                            <span class="status-count">{{ $orders->where('status', 'delivered')->count() }}</span>
+                        </button>
+
                         <button type="button" class="status-category" data-status="cancelled">
                             <span class="status-text">Cancelled</span>
                             <span class="status-count">{{ $orders->where('status', 'cancelled')->count() }}</span>
@@ -918,7 +918,7 @@
                                         @endif
                                     </div>
                                     <div class="order-actions">
-                                        @if(in_array($order->status, ['pending', 'processing']))
+                                        @if(in_array($order->status, ['processing']))
                                             <button class="cancel-btn" data-order-id="{{ $order->id }}">
                                                 Cancel Order
                                             </button>
@@ -1029,9 +1029,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="empty-icon">📭</div>
                 <h3>No ${capitalizeFirstLetter(status)} Orders</h3>
                 <p>You don't have any orders with "${status}" status.</p>
-                <button class="btn-primary show-all-btn">Show All Orders</button>
+                <button type="button" class="btn-primary show-all-btn">Show All Orders</button>
             `;
-            
+
             ordersContainer.appendChild(emptyState);
             
             // Add event listener to "Show All" button
@@ -1136,5 +1136,104 @@ function cancelOrder(orderId, buttonElement) {
 }
 </script>
 
-@endsection
+<style>
+/* Add some styles for the filter empty state */
+.filter-empty-state {
+    margin-top: 2rem;
+    animation: fadeIn 0.5s ease;
+}
 
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Make sure buttons are properly clickable */
+.status-category {
+    cursor: pointer !important;
+}
+
+/* Additional styles for the filtering system */
+.no-orders-state {
+    margin-top: 2rem;
+}
+
+.show-all-btn {
+    margin-top: 1rem;
+}
+
+/* Ensure buttons are properly styled */
+.status-category:focus {
+    outline: 2px solid var(--primary-green);
+    outline-offset: 2px;
+}
+
+/* Fix for pagination styling */
+.pagination .page-link {
+    padding: 0.75rem 1.25rem;
+    border: 2px solid var(--border-light);
+    background: var(--white);
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-decoration: none;
+    color: var(--dark-text);
+    display: block;
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--primary-green);
+    color: var(--white);
+    border-color: var(--primary-green);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(45, 74, 53, 0.3);
+}
+
+.pagination .page-link:hover {
+    border-color: var(--primary-green);
+    transform: translateY(-1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .orders-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .categories-column {
+        order: 2;
+        margin-top: 2rem;
+    }
+    
+    .status-categories {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .status-category {
+        width: auto;
+        min-width: 140px;
+    }
+}
+
+@media (max-width: 480px) {
+    .status-category {
+        min-width: 120px;
+        padding: 0.5rem 1rem;
+    }
+    
+    .status-text {
+        font-size: 0.8rem;
+    }
+    
+    .status-count {
+        width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+    }
+}
+</style>
+@endsection
