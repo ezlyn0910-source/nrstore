@@ -138,7 +138,7 @@
                                                 <option value="55">+55</option>
                                             </select>
                                         </div>
-                                        <input type="tel" id="edit_phone" name="phone" required>
+                                        <input type="tel" id="add_phone" name="phone" required>
                                     </div>
                                 </div>
                                 
@@ -474,9 +474,7 @@
         </div>
     </div>
 </div>
-@endsection
 
-@push('scripts')
 <script>
 (function () {
     // Helpers
@@ -974,9 +972,7 @@
     });
 })(); // IIFE
 </script>
-@endpush
 
-@section('styles')
 <style>
 .checkout-page {
     min-height: 100vh;
@@ -2248,4 +2244,5 @@
     }
 }
 </style>
+
 @endsection
