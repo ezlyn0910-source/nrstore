@@ -110,7 +110,7 @@ Route::get('/brand/{brand}/auctions', [BidController::class, 'brandAuctions'])
 
 // Static Pages (Public)
 Route::get('/about', function () {
-    return view('pages.about');
+    return view('aboutus.index');
 })->name('about');
 
 Route::get('/contact', function () {
