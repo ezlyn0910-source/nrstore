@@ -6,10 +6,27 @@
     <section class="hero-slider-section">
         <div class="hero-slider">
             <div class="slider-container">
-                <div class="slide active" style="background-image: url('/images/banner1.png')"></div>
-                <div class="slide" style="background-image: url('/images/banner2.jpg')"></div>
-                <div class="slide" style="background-image: url('/images/banner3.jpg')"></div>
-            </div>
+                <!-- Slide 1 -->
+                <div class="slide active" style="background-image: url('/images/banner/banner1.jpg')">
+                    <a href="{{ route('products.index') }}" class="shop-now-btn">
+                        Shop Now
+                    </a>
+                </div>
+
+                <!-- Slide 2 -->
+                <div class="slide active" style="background-image: url('/images/banner/banner2.jpg')">
+                    <a href="{{ route('products.index') }}" class="grab-now-link">
+                        Grab Now →
+                    </a>
+                </div>
+                
+                <!-- Slide 3 -->
+                <div class="slide" style="background-image: url('/images/banner/banner3.jpg')">
+                    <a href="{{ route('about') }}" class="learn-more-btn">
+                        Learn More
+                    </a>
+                </div>
+
             <div class="slider-indicators">
                 <span class="indicator active" data-slide="0"></span>
                 <span class="indicator" data-slide="1"></span>
@@ -165,24 +182,20 @@ document.addEventListener('DOMContentLoaded', function() {
     let slideInterval;
     
     function showSlide(index) {
-        // Hide all slides
         slides.forEach(slide => {
             slide.style.opacity = '0';
             slide.style.zIndex = '1';
         });
-        
-        // Remove active from all indicators
+
         indicators.forEach(indicator => {
             indicator.classList.remove('active');
         });
-        
-        // Show current slide
+
         if (slides[index]) {
             slides[index].style.opacity = '1';
             slides[index].style.zIndex = '2';
         }
-        
-        // Activate current indicator
+
         if (indicators[index]) {
             indicators[index].classList.add('active');
         }
@@ -194,8 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let nextSlideIndex = (currentSlide + 1) % slides.length;
         showSlide(nextSlideIndex);
     }
-    
-    // Add click events to indicators
+
     indicators.forEach((indicator, index) => {
         indicator.addEventListener('click', function() {
             clearInterval(slideInterval);
@@ -207,15 +219,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function startAutoSlide() {
         slideInterval = setInterval(nextSlide, 5000);
     }
-    
-    // Initialize - show first slide
+
     showSlide(0);
     startAutoSlide();
 
-    // Product card interactions
     const productCards = document.querySelectorAll('.product-card');
 
-    // Add click events to product cards for navigation using the correct URL
     productCards.forEach(card => {
         card.addEventListener('click', function() {
             const productUrl = this.getAttribute('data-product-url');
@@ -225,7 +234,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Explore link interactions
     const exploreLinks = document.querySelectorAll('.explore-link');
     exploreLinks.forEach(link => {
         link.addEventListener('click', function(e) {
@@ -255,7 +263,6 @@ document.addEventListener('DOMContentLoaded', function() {
         --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
     }
 
-    /* FIXED: Remove all default margins and padding from homepage */
     .homepage {
         background: #f8f9fa;
         min-height: 100vh;
@@ -275,54 +282,45 @@ document.addEventListener('DOMContentLoaded', function() {
         padding: 0 2rem;
     }
 
-    /* FIXED: Hero Slider Section - Completely remove all spacing */
     .hero-slider-section {
         width: 100%;
         padding: 0 !important;
         margin: 0 !important;
         position: relative;
+        overflow: hidden;
     }
-
     .hero-slider {
         position: relative;
-        color: var(--white);
-        overflow: hidden;
+        width: 100%;
         height: 86vh;
         min-height: 600px;
-        width: 100%;
-        margin: 0 !important;
-        padding: 0 !important;
+        max-height: 920px;
+        background: #000;
+        overflow: hidden;
     }
-
     .slider-container {
         height: 100%;
         width: 100%;
         position: relative;
-        margin: 0;
-        padding: 0;
+        overflow: hidden;
     }
-
     .slide {
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        inset: 0;
         background-position: center;
         background-size: cover;
         background-repeat: no-repeat;
         opacity: 0;
-        transition: opacity 0.5s ease-in-out;
+        transition: opacity 0.6s ease-in-out;
         z-index: 1;
-        margin: 0;
-        padding: 0;
+        justify-content: center;
+        align-items: center;
+        display: flex;
     }
-
     .slide.active {
         opacity: 1;
         z-index: 2;
     }
-
     .slider-indicators {
         position: absolute;
         bottom: 2rem;
@@ -332,7 +330,6 @@ document.addEventListener('DOMContentLoaded', function() {
         gap: 0.75rem;
         z-index: 100;
     }
-
     .indicator {
         width: 16px;
         height: 16px;
@@ -343,19 +340,69 @@ document.addEventListener('DOMContentLoaded', function() {
         border: 2px solid transparent;
         pointer-events: auto;
     }
-
     .indicator.active {
         background: var(--accent-gold);
         transform: scale(1.2);
         border-color: var(--white);
     }
-
     .indicator:hover {
         background: var(--accent-gold);
         transform: scale(1.1);
     }
 
-    /* FIXED: Categories Section - Remove top spacing */
+    .slide .shop-now-btn {
+        margin-top: 20rem;
+        padding: 1.25rem 2.25rem;
+        background: #ffffff;
+        color: #1a2412;
+        font-size: 1rem;
+        font-weight: 600;
+        line-height: 0.8;
+        text-transform: uppercase;
+        border-radius: 12rem;
+        border: 0.05rem solid #000;
+        text-decoration: none;
+    }
+
+    .slide .grab-now-link {
+        margin-top: 22rem;
+        margin-left: 8rem;
+        font-size: 1.05rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #fff;
+        text-decoration: underline;
+        text-underline-offset: 0.4rem;
+        text-decoration-thickness: 0.12rem;
+        cursor: pointer;
+    }
+    .slide .grab-now-link:hover {
+        color: #2f6032;
+        text-decoration-thickness: 0.18rem;
+    }
+
+    .slide .learn-more-btn {
+        display: inline-block;
+        margin-top: 22rem;
+        margin-right: 36rem;
+        padding: 1.1rem 2.2rem;
+        background-color: #ffffff;
+        color: #1a2412;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        line-height: 0.8;
+        border-radius: 12rem;
+        border: 0.08rem solid #2f6032;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .slide .learn-more-btn:hover {
+        background-color: #2f6032;
+        color: #ffffff;
+    }
+
     .categories-section {
         padding: 2rem 0;
         margin: 0 auto;
@@ -576,7 +623,6 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 1.125rem;
     }
 
-    /* FIXED: Responsive Design */
     @media (max-width: 1024px) {
         .categories-grid {
             grid-template-columns: repeat(2, 1fr);
@@ -591,6 +637,12 @@ document.addEventListener('DOMContentLoaded', function() {
     @media (max-width: 768px) {
         .container {
             padding: 0 1.5rem;
+        }
+
+        .hero-slider {
+            height: 56vh;
+            min-height: 360px;
+            max-height: 520px;
         }
 
         .categories-section,
@@ -669,7 +721,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    /* Homepage Specific Animations */
     @keyframes slideInUp {
         from {
             opacity: 0;
@@ -686,7 +737,6 @@ document.addEventListener('DOMContentLoaded', function() {
         animation: slideInUp 0.6s ease-out;
     }
 
-    /* Smooth transitions */
     .product-card,
     .category-card,
     .explore-link,
