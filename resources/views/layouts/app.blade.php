@@ -110,8 +110,8 @@
                                     Bid Now
                                 </a>
 
-                                <a href="/bid"
-                                class="nav-link nav-link-indicator {{ request()->is('bid*') ? 'nav-link-active' : '' }}">
+                                <a href="{{ route('about') }}"
+                                class="nav-link nav-link-indicator {{ request()->routeIs('about') ? 'nav-link-active' : '' }}">
                                     About Us
                                 </a>
 
@@ -1859,5 +1859,8 @@
             animation: badgeBounce 0.3s ease;
         }
         </style>
+
+        @stack('scripts')
+        
 </body>
 </html>
