@@ -110,7 +110,7 @@ Route::get('/brand/{brand}/auctions', [BidController::class, 'brandAuctions'])
 
 // Static Pages (Public)
 Route::get('/about', function () {
-    return view('pages.about');
+    return view('aboutus.index');
 })->name('about');
 
 Route::get('/contact', function () {
@@ -204,10 +204,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/{order}', 'show')->name('show');
         Route::get('/{order}/details', 'details')->name('details');
+        Route::get('/{order}/details-popup', 'getOrderDetailsPopup')->name('details.popup');
         Route::post('/{order}/cancel', 'cancel')->name('cancel');
-
-        // If not used anywhere, you can remove this later
         Route::post('/process-checkout', 'processCheckout')->name('process-checkout');
+
     });
 
     /*Profile Routes (My Account area)*/
