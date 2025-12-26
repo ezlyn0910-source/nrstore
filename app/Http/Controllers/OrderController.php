@@ -28,112 +28,6 @@ class OrderController extends Controller
         }
     }
 
-    public function getOrderDetailsPopup(Order $order)
-    {
-        try {
-
-            if ($order->user_id !== auth()->id()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized'
-                ], 403);
-            }
-
-            // Load all necessary relationships
-            $order->load([
-                'user',
-                'shippingAddress',
-                'billingAddress',
-                'orderItems.product',
-                'orderItems.variation',
-                'statusHistories' => function($query) {
-                    $query->orderBy('created_at', 'asc');
-                }
-            ]);
-
-            // Calculate subtotal
-            $subtotal = $order->orderItems->sum(function($item) {
-                return $item->price * $item->quantity;
-            });
-
-            // Format response data
-            $data = [
-                'success' => true,
-                'order' => [
-                    'id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'created_at' => $order->created_at->format('Y-m-d H:i:s'),
-                    'status' => $order->status,
-                    'status_label' => ucfirst($order->status),
-                    'payment_status' => $order->payment_status,
-                    'payment_status_label' => ucfirst($order->payment_status),
-                    'payment_method' => $order->payment_method,
-                    'payment_method_label' => $order->payment_method_label ?? ucfirst(str_replace('_', ' ', $order->payment_method)),
-                    'tracking_number' => $order->tracking_number,
-                    'shipping_cost' => (float) $order->shipping_cost,
-                    'tax_amount' => (float) $order->tax_amount,
-                    'discount_amount' => (float) $order->discount_amount,
-                    'total_amount' => (float) $order->total_amount,
-                ],
-                'user' => [
-                    'name' => $order->user->name ?? 'N/A',
-                    'email' => $order->user->email ?? 'N/A',
-                    'phone' => $order->user->phone ?? 'N/A',
-                ],
-                'shipping_address' => $order->shippingAddress ? [
-                    'full_name' => $order->shippingAddress->first_name . ' ' . $order->shippingAddress->last_name,
-                    'address_line_1' => $order->shippingAddress->address_line_1,
-                    'address_line_2' => $order->shippingAddress->address_line_2,
-                    'city' => $order->shippingAddress->city,
-                    'state' => $order->shippingAddress->state,
-                    'postal_code' => $order->shippingAddress->postal_code,
-                    'country' => $order->shippingAddress->country,
-                    'phone' => $order->shippingAddress->phone,
-                ] : null,
-                'billing_address' => $order->billingAddress ? [
-                    'full_name' => $order->billingAddress->first_name . ' ' . $order->billingAddress->last_name,
-                    'address_line_1' => $order->billingAddress->address_line_1,
-                    'address_line_2' => $order->billingAddress->address_line_2,
-                    'city' => $order->billingAddress->city,
-                    'state' => $order->billingAddress->state,
-                    'postal_code' => $order->billingAddress->postal_code,
-                    'country' => $order->billingAddress->country,
-                    'phone' => $order->billingAddress->phone,
-                ] : null,
-                'items' => $order->orderItems->map(function($item) {
-                    return [
-                        'product_name' => $item->product_name ?? $item->product->name ?? 'Product',
-                        'variation_name' => $item->variation_name ?? ($item->variation ? $item->variation->name : null),
-                        'price' => (float) $item->price,
-                        'quantity' => (int) $item->quantity,
-                        'total' => (float) ($item->price * $item->quantity)
-                    ];
-                }),
-                'status_history' => $order->statusHistories->map(function($history) {
-                    return [
-                        'status' => $history->status,
-                        'notes' => $history->notes,
-                        'created_at' => $history->created_at->format('Y-m-d H:i:s'),
-                    ];
-                })->toArray(),
-                'subtotal' => $subtotal,
-            ];
-
-            return response()->json($data);
-
-        } catch (\Exception $e) {
-            \Log::error('Error in getOrderDetailsPopup: ' . $e->getMessage(), [
-                'order_id' => $id ?? null,
-                'user_id' => auth()->id(),
-                'exception' => $e
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to load order details. Please try again.'
-            ], 500);
-        }
-    }
 
     public function show($orderId)
     {
@@ -157,14 +51,62 @@ class OrderController extends Controller
             'orderItems.product',
             'orderItems.variation',
             'shippingAddress',
-            'billingAddress'
+            'billingAddress',
+            'user',
+            'statusHistory',
         ])
         ->where('user_id', Auth::id())
         ->where('id', $orderId)
         ->firstOrFail();
 
-        return view('orders.details', compact('order'));
+        return response()->json([
+            'id' => $order->id,
+            'order_number' => $order->order_number,
+            'order_date' => $order->created_at->format('d M Y'),
+            'status' => ucfirst($order->status),
+            'payment_status' => ucfirst($order->payment_status),
+            'payment_method' => $order->payment_method,
+            'tracking_number' => $order->tracking_number,
+
+            'customer_name' => $order->user->name,
+            'customer_email' => $order->user->email,
+
+            'shipping_address' => $order->shippingAddress
+                ? $order->shippingAddress->first_name . ' ' .
+                $order->shippingAddress->last_name . "\n" .
+                $order->shippingAddress->phone . "\n" .
+                $order->shippingAddress->formatted_address
+                : '-',
+
+            'billing_address' => $order->shippingAddress
+                ? $order->shippingAddress->first_name . ' ' .
+                $order->shippingAddress->last_name . "\n" .
+                $order->shippingAddress->phone . "\n" .
+                $order->shippingAddress->formatted_address
+                : '-',
+
+            'items' => $order->orderItems->map(function ($item) {
+                return [
+                    'name' => $item->product_name ?? $item->product->name,
+                    'quantity' => $item->quantity,
+                    'price' => (float) $item->price
+                ];
+            }),
+
+            'status_history' => $order->statusHistory->map(function ($history) {
+                return [
+                    'status' => $history->status_label,
+                    'notes' => $history->notes,
+                    'date' => $history->created_at->format('d M Y, h:i A')
+                ];
+            }),
+
+            'shipping_cost' => (float) ($order->shipping_cost ?? 0),
+            'discount_amount' => (float) ($order->discount_amount ?? 0),
+            'total_amount' => (float) $order->total_amount,
+        ]);
     }
+
 
     public function cancel(Request $request, $orderId)
     {

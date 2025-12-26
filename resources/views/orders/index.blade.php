@@ -1522,7 +1522,7 @@
                                     </div>
                                     <div class="order-actions">
                                         @if(in_array($order->status, ['processing']))
-                                            <button class="cancel-btn" onclick="event.stopPropagation()" data-order-id="{{ $order->id }}">
+                                            <button class="cancel-btn" onclick="cancelOrder(event, {{ $order->id }})" data-order-id="{{ $order->id }}">
                                                 Cancel Order
                                             </button>
                                         @endif
@@ -1607,18 +1607,6 @@
                         <h3 class="popup-section-title">Billing Address</h3>
                         <div id="popupBillingAddress">Loading...</div>
                     </div>
-
-                    <!-- Order Status Timeline -->
-                    <div class="popup-section">
-                        <h3 class="popup-section-title">Order Status History</h3>
-                        <div class="status-timeline" id="popupStatusTimeline">
-                            <div class="timeline-item">
-                                <div class="timeline-date">Loading...</div>
-                                <div class="timeline-status">Loading status</div>
-                                <div class="timeline-notes">Loading notes</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Right Column - Invoice -->
@@ -1666,10 +1654,6 @@
                                 <span id="popupShippingCost">RM 0.00</span>
                             </div>
                             <div class="total-row">
-                                <span>Tax Amount:</span>
-                                <span id="popupTaxAmount">RM 0.00</span>
-                            </div>
-                            <div class="total-row">
                                 <span>Discount:</span>
                                 <span id="popupDiscountAmount">-RM 0.00</span>
                             </div>
@@ -1699,348 +1683,115 @@
 // Store the current order ID globally
 let currentOrderId = null;
 
-async function openOrderPopup(orderId) {
-
-    try {
-        const res = await fetch(`/orders/${orderId}/details`);
-        if (!res) throw new Error('No response from server');
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
-        const data = await res.json();
-        populateOrderPopup(data);
-    } catch (err) {
-        console.error('Failed to load order details:', err);
-        alert('Failed to load order details.');
+// Helper function to safely get DOM elements
+function getElement(id) {
+    const el = document.getElementById(id);
+    if (!el) {
+        console.warn(`Element with id "${id}" not found`);
     }
+    return el;
+}
+
+
+async function cancelOrder(event, orderId) {
+    event.stopPropagation(); // Prevent opening the popup
     
-    console.log('Opening order popup for order ID:', orderId);
-    currentOrderId = orderId;
-    const url = `/orders/${orderId}/details-popup`;
-    const popup = document.getElementById('orderPopup');
-    popup.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-
-    showPopupLoading();
-
-    fetch(url)
-        .then(res => res.json())
-        .then(data => {
-            console.log('ORDER DATA:', data);
-            hidePopupLoading();
-            populateOrderPopup(data);
-        })
-        .catch(err => {
-            hidePopupLoading();
-            alert('Error Loading Order Details');
-        });
-    
-    // Fetch order details
-    fetch(`/orders/${orderId}/details-popup`, {
-        method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-        }
-    })
-
-    .then(data => {
-        console.log('ORDER DATA:', data); // 🔍 WAJIB
-        hidePopupLoading();
-        populateOrderPopup(data);
-    })
-
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Order data received:', data);
-        
-        if (data.success) {
-            populateOrderPopup(data);
-        } else {
-            throw new Error(data.message || 'Failed to load order details');
-        }
-    })
-    .catch(error => {
-        console.error('Error fetching order details:', error);
-        showPopupError(error.message || 'Failed to load order details');
-    });
-}
-
-function showPopupLoading() {
-    document.getElementById('popupLoading').style.display = 'block';
-}
-
-function hidePopupLoading() {
-    document.getElementById('popupLoading').style.display = 'none';
-}
-
-function showPopupError(message) {
-    const popupBody = document.querySelector('.popup-body');
-    popupBody.innerHTML = `
-        <div style="display: flex; justify-content: center; align-items: center; min-height: 400px; width: 100%; grid-column: 1 / -1;">
-            <div style="text-align: center; padding: 2rem;">
-                <div style="color: #dc2626; font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
-                <h4 style="color: #dc2626; margin-bottom: 1rem;">Error Loading Order Details</h4>
-                <p style="color: #6b7280; margin-bottom: 1.5rem;">${message}</p>
-                <div style="display: flex; gap: 1rem; justify-content: center;">
-                    <button onclick="closeOrderPopup()" style="background: #6b7280; color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 0.5rem; cursor: pointer;">Close</button>
-                    <button onclick="openOrderPopup(${currentOrderId})" style="background: #2d4a35; color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 0.5rem; cursor: pointer;">Try Again</button>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function populateOrderPopup(data) {
-
-    console.log('POPUP DATA:', data);
-
-    // 🔒 SAFETY CHECK
-    if (!data || !data.order) {
-        console.error('Order data missing', data);
-        document.getElementById('popupLoading').style.display = 'none';
-        alert('Failed to load order details');
+    if (!confirm('Are you sure you want to cancel this order?')) {
         return;
     }
-
-    const order = data.order;
-
-    // ❌ MATIKAN LOADING SEAWAL MUNGKIN
-    document.getElementById('popupLoading').style.display = 'none';
-
-    /* ===============================
-       ORDER HEADER
-    =============================== */
-    document.getElementById('popupOrderNumber').textContent =
-        `Order #${order.order_number ?? '-'}`;
-
-    document.getElementById('popupOrderNum').textContent =
-        order.order_number ?? '-';
-
-    document.getElementById('popupOrderDate').textContent =
-        order.created_at
-            ? new Date(order.created_at).toLocaleString()
-            : '-';
-
-    /* ===============================
-       STATUS
-    =============================== */
-    const statusElement = document.getElementById('popupOrderStatus');
-    statusElement.textContent = order.status_label ?? '-';
-    statusElement.className = 'status-badge';
-    if (order.status) {
-        statusElement.classList.add(order.status);
-    }
-
-    const paymentStatusElement = document.getElementById('popupPaymentStatus');
-    paymentStatusElement.textContent = order.payment_status_label ?? '-';
-    paymentStatusElement.className = 'payment-status-badge';
-    if (order.payment_status) {
-        paymentStatusElement.classList.add(order.payment_status);
-    }
-
-    document.getElementById('popupTrackingNumber').textContent =
-        order.tracking_number ?? 'Not assigned yet';
-
-    document.getElementById('popupPaymentMethod').textContent =
-        order.payment_method_label ?? order.payment_method ?? '-';
-
-    /* ===============================
-       SHIPPING ADDRESS
-    =============================== */
-    const shippingAddress = data.shipping_address;
-    document.getElementById('popupShippingAddress').innerHTML = shippingAddress
-        ? `
-            <strong>${shippingAddress.full_name ?? ''}</strong><br>
-            ${shippingAddress.address_line_1 ?? ''}<br>
-            ${shippingAddress.address_line_2 ? shippingAddress.address_line_2 + '<br>' : ''}
-            ${shippingAddress.city ?? ''}, ${shippingAddress.state ?? ''} ${shippingAddress.postal_code ?? ''}<br>
-            ${shippingAddress.country ?? ''}<br>
-            ${shippingAddress.phone ? 'Phone: ' + shippingAddress.phone : ''}
-          `
-        : '—';
-
-    /* ===============================
-       BILLING ADDRESS
-    =============================== */
-    const billingAddress = data.billing_address;
-    document.getElementById('popupBillingAddress').innerHTML = billingAddress
-        ? `
-            <strong>${billingAddress.full_name ?? ''}</strong><br>
-            ${billingAddress.address_line_1 ?? ''}<br>
-            ${billingAddress.address_line_2 ? billingAddress.address_line_2 + '<br>' : ''}
-            ${billingAddress.city ?? ''}, ${billingAddress.state ?? ''} ${billingAddress.postal_code ?? ''}<br>
-            ${billingAddress.country ?? ''}<br>
-            ${billingAddress.phone ? 'Phone: ' + billingAddress.phone : ''}
-          `
-        : '—';
-
-    /* ===============================
-       CUSTOMER INFO
-    =============================== */
-    document.getElementById('popupCustomerInfo').innerHTML = data.user
-        ? `
-            <strong>${data.user.name ?? 'N/A'}</strong><br>
-            ${data.user.email ?? ''}<br>
-            ${data.user.phone ? 'Phone: ' + data.user.phone : ''}
-          `
-        : '—';
-
-    document.getElementById('popupInvoiceNumber').textContent =
-        order.order_number ? `INV-${order.order_number}` : '-';
-
-    /* ===============================
-       ORDER ITEMS
-    =============================== */
-    const itemsTbody = document.getElementById('popupOrderItems');
-    itemsTbody.innerHTML = '';
-
-    if (Array.isArray(data.items) && data.items.length > 0) {
-        data.items.forEach(item => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td class="text-left">
-                    <strong>${item.product_name ?? 'Product'}</strong>
-                    ${item.variation_name ? `<br><small>${item.variation_name}</small>` : ''}
-                </td>
-                <td class="text-center">${item.quantity ?? 0}</td>
-                <td class="text-right">RM ${(item.price ?? 0).toFixed(2)}</td>
-                <td class="text-right">RM ${(item.total ?? 0).toFixed(2)}</td>
-            `;
-            itemsTbody.appendChild(row);
-        });
-    } else {
-        itemsTbody.innerHTML =
-            `<tr><td colspan="4" class="text-center">No items found</td></tr>`;
-    }
-
-    /* ===============================
-       TOTALS
-    =============================== */
-    document.getElementById('popupSubtotal').textContent =
-        `RM ${(data.subtotal ?? 0).toFixed(2)}`;
-
-    document.getElementById('popupShippingCost').textContent =
-        `RM ${(order.shipping_cost ?? 0).toFixed(2)}`;
-
-    document.getElementById('popupTaxAmount').textContent =
-        `RM ${(order.tax_amount ?? 0).toFixed(2)}`;
-
-    document.getElementById('popupDiscountAmount').textContent =
-        `-RM ${(order.discount_amount ?? 0).toFixed(2)}`;
-
-    document.getElementById('popupGrandTotal').textContent =
-        `RM ${(order.total_amount ?? 0).toFixed(2)}`;
-
-    /* ===============================
-       STATUS TIMELINE
-    =============================== */
-    const statusTimeline = document.getElementById('popupStatusTimeline');
-    statusTimeline.innerHTML = '';
-
-    if (Array.isArray(data.status_history) && data.status_history.length > 0) {
-        data.status_history.forEach(history => {
-            const timelineItem = document.createElement('div');
-            timelineItem.className = 'timeline-item completed';
-            timelineItem.innerHTML = `
-                <div class="timeline-date">${new Date(history.created_at).toLocaleString()}</div>
-                <div class="timeline-status">${history.status.toUpperCase()}</div>
-                <div class="timeline-notes">${history.notes ?? 'Status updated'}</div>
-            `;
-            statusTimeline.appendChild(timelineItem);
-        });
-    } else {
-        statusTimeline.innerHTML = `
-            <div class="timeline-item completed">
-                <div class="timeline-date">${new Date(order.created_at).toLocaleString()}</div>
-                <div class="timeline-status">ORDER CREATED</div>
-                <div class="timeline-notes">Order was placed</div>
-            </div>
-        `;
-    }
-}
-
-
-function closeOrderPopup() {
-    const popup = document.getElementById('orderPopup');
-    popup.style.display = 'none';
-    document.body.style.overflow = 'auto';
-}
-
-function printInvoice() {
-    // Create a print-friendly version
-    const printWindow = window.open('', '_blank');
-    const orderNumber = document.getElementById('popupOrderNum').textContent;
     
-    printWindow.document.write(`
-        <html>
-        <head>
-            <title>Invoice - Order ${orderNumber}</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .invoice-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
-                .invoice-details { margin-bottom: 20px; }
-                .invoice-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                .invoice-table th, .invoice-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                .invoice-table th { background-color: #f2f2f2; }
-                .totals { margin-top: 30px; text-align: right; }
-                .total-row { margin-bottom: 10px; }
-                .grand-total { font-size: 1.2em; font-weight: bold; }
-                @media print {
-                    body { margin: 0; }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="invoice-header">
-                <h1>INVOICE</h1>
-                <h3>Order #${orderNumber}</h3>
-            </div>
-            
-            <div class="invoice-details">
-                <p><strong>Order Date:</strong> ${document.getElementById('popupOrderDate').textContent}</p>
-                <p><strong>Status:</strong> ${document.getElementById('popupOrderStatus').textContent}</p>
-                <p><strong>Payment Status:</strong> ${document.getElementById('popupPaymentStatus').textContent}</p>
-            </div>
-            
-            ${document.querySelector('.popup-body').innerHTML}
-        </body>
-        </html>
-    `);
-    
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-    }, 500);
-}
-
-function downloadInvoice() {
-    alert('PDF download functionality would be implemented here. This would typically generate a PDF invoice on the server.');
-    // In a real implementation, you would:
-    // window.open(`/orders/${currentOrderId}/invoice-pdf`, '_blank');
-}
-
-// Close popup when clicking outside
-document.getElementById('orderPopup').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeOrderPopup();
+    try {
+        const response = await fetch(`/orders/${orderId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Order cancelled successfully!');
+            location.reload(); // Refresh the page to update the order status
+        } else {
+            alert('Failed to cancel order: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        alert('An error occurred while cancelling the order.');
     }
+}
+
+// Status filtering functionality
+document.querySelectorAll('.status-category').forEach(button => {
+    button.addEventListener('click', function() {
+        const status = this.getAttribute('data-status');
+        filterOrdersByStatus(status);
+    });
 });
 
-// Close popup with Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeOrderPopup();
+function filterOrdersByStatus(status) {
+    // Remove active class from all buttons
+    document.querySelectorAll('.status-category').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Add active class to clicked button
+    const activeButton = document.querySelector(`.status-category[data-status="${status}"]`);
+    if (activeButton) {
+        activeButton.classList.add('active');
     }
-});
+    
+    // Show all orders if 'all' is selected
+    if (status === 'all') {
+        document.querySelectorAll('.order-card').forEach(card => {
+            card.style.display = 'block';
+        });
+        
+        // Remove empty state if exists
+        const emptyState = document.querySelector('.filter-empty-state');
+        if (emptyState) {
+            emptyState.remove();
+        }
+        return;
+    }
+    
+    // Filter orders by status
+    let hasVisibleOrders = false;
+    document.querySelectorAll('.order-card').forEach(card => {
+        const statusBadge = card.querySelector('.order-status-badge');
+        if (statusBadge && statusBadge.classList.contains(status)) {
+            card.style.display = 'block';
+            hasVisibleOrders = true;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // Show empty state if no orders match the filter
+    const ordersContainer = document.querySelector('.orders-container');
+    const existingEmptyState = document.querySelector('.filter-empty-state');
+    
+    if (!hasVisibleOrders) {
+        if (!existingEmptyState && ordersContainer) {
+            const emptyStateHTML = `
+                <div class="filter-empty-state empty-state">
+                    <div class="empty-icon">📦</div>
+                    <h3>No ${status} Orders</h3>
+                    <p>You don't have any orders with status "${status}".</p>
+                    <button class="btn-primary show-all-btn" onclick="filterOrdersByStatus('all')">
+                        Show All Orders
+                    </button>
+                </div>
+            `;
+            ordersContainer.insertAdjacentHTML('beforeend', emptyStateHTML);
+        }
+    } else if (existingEmptyState) {
+        existingEmptyState.remove();
+    }
+}
 
 // Add spinner animation CSS if not already present
 if (!document.querySelector('#spinner-css')) {
@@ -2051,9 +1802,153 @@ if (!document.querySelector('#spinner-css')) {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-green);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
     `;
     document.head.appendChild(spinnerCSS);
 }
-</script>
 
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Orders page loaded');
+    
+    // Make sure all order cards are clickable
+    document.querySelectorAll('.order-card').forEach(card => {
+        if (!card.hasAttribute('data-initialized')) {
+            card.style.cursor = 'pointer';
+            card.setAttribute('data-initialized', 'true');
+        }
+    });
+});
+
+async function openOrderPopup(orderId) {
+    currentOrderId = orderId;
+
+    const popup = document.getElementById('orderPopup');
+    const loading = document.getElementById('popupLoading');
+
+    popup.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    loading.style.display = 'block';
+
+    try {
+        const response = await fetch(`/orders/${orderId}/details`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load order details');
+        }
+
+        const data = await response.json();
+
+        fillPopupData(data);
+
+    } catch (error) {
+        console.error(error);
+        alert('Error loading order details');
+    } finally {
+        loading.style.display = 'none'; 
+    }
+
+    async function openOrderPopup(orderId) {
+    currentOrderId = orderId;
+
+    const popup = document.getElementById('orderPopup');
+    const loading = document.getElementById('popupLoading');
+
+    popup.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    loading.style.display = 'block';
+
+    try {
+        const response = await fetch(`/orders/${orderId}/details`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load order details');
+        }
+
+        const data = await response.json();
+
+        // Fill popup data
+        fillPopupData(data);
+
+    } catch (error) {
+        console.error(error);
+        alert('Error loading order details');
+    } finally {
+        loading.style.display = 'none';
+    }
+}
+
+function fillPopupData(order) {
+    // Header
+    document.getElementById('popupOrderNumber').innerText = `Order #${order.order_number}`;
+    document.getElementById('popupOrderNum').innerText = order.order_number;
+    document.getElementById('popupOrderDate').innerText = order.order_date;
+    document.getElementById('popupOrderStatus').innerText = order.status;
+    document.getElementById('popupPaymentStatus').innerText = order.payment_status ?? '-';
+    document.getElementById('popupPaymentMethod').innerText = order.payment_method ?? '-';
+    document.getElementById('popupTrackingNumber').innerText = order.tracking_number ?? '-';
+
+    // Address
+    document.getElementById('popupShippingAddress').innerHTML = order.shipping_address.replace(/\n/g, '<br>');
+    document.getElementById('popupBillingAddress').innerHTML = order.billing_address.replace(/\n/g, '<br>');
+
+    // Customer
+    document.getElementById('popupCustomerInfo').innerHTML = 
+        `${order.customer_name}<br>${order.customer_email}`;
+
+    // Items
+    const itemsContainer = document.getElementById('popupOrderItems');
+    itemsContainer.innerHTML = '';
+
+    let subtotal = 0;
+
+    order.items.forEach(item => {
+        const total = item.price * item.quantity;
+        subtotal += total;
+
+        itemsContainer.innerHTML += `
+            <tr>
+                <td>${item.name}</td>
+                <td class="text-center">${item.quantity}</td>
+                <td class="text-right">RM ${item.price.toFixed(2)}</td>
+                <td class="text-right">RM ${total.toFixed(2)}</td>
+            </tr>
+        `;
+    });
+
+    document.getElementById('popupSubtotal').innerText = `RM ${subtotal.toFixed(2)}`;
+    document.getElementById('popupShippingCost').innerText = `RM ${order.shipping_cost.toFixed(2)}`;
+    document.getElementById('popupDiscountAmount').innerText = `-RM ${order.discount_amount.toFixed(2)}`;
+    document.getElementById('popupGrandTotal').innerText = `RM ${order.total_amount.toFixed(2)}`;
+    document.getElementById('popupInvoiceNumber').innerText = `Invoice #${order.order_number}`;
+}
+
+
+}
+
+function closeOrderPopup() {
+    document.getElementById('orderPopup').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+</script>
 @endsection
