@@ -167,6 +167,7 @@
     border: 1px solid var(--border-light);
     transition: all 0.3s ease;
     overflow: hidden;
+    cursor: pointer;
 }
 
 .order-card:hover {
@@ -1216,130 +1217,6 @@
     }
 }
 
-/* Add to your existing CSS */
-.order-popup-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    padding: 20px;
-    overflow-y: auto;
-}
-
-.order-popup-content {
-    background: white;
-    border-radius: 12px;
-    width: 95%;
-    max-width: 1200px;
-    max-height: 90vh;
-    overflow-y: auto;
-    animation: popupFadeIn 0.3s ease;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-@keyframes popupFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.popup-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem 2rem;
-    background: var(--primary-dark);
-    color: white;
-    border-radius: 12px 12px 0 0;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.popup-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.close-popup {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.5rem;
-    cursor: pointer;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background-color 0.3s;
-}
-
-.close-popup:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.popup-body {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    padding: 2rem;
-}
-
-@media (max-width: 992px) {
-    .popup-body {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-    
-    .order-info-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 768px) {
-    .order-popup-content {
-        width: 100%;
-        max-height: 95vh;
-    }
-    
-    .popup-header {
-        padding: 1rem;
-    }
-    
-    .popup-body {
-        padding: 1rem;
-    }
-    
-    .order-actions-popup {
-        flex-direction: column;
-    }
-}
-
-/* Ensure order card is clickable */
-.order-card {
-    cursor: pointer !important;
-    transition: all 0.3s ease;
-}
-
-.order-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
 </style>
 
 <div class="orders-page">
@@ -1552,128 +1429,15 @@
         </div>
     </section>
 
-    <!-- Order Details Popup -->
+    <!-- Order Details Popup - Simplified version -->
     <div class="order-popup-overlay" id="orderPopup">
         <div class="order-popup-content">
             <div class="popup-header">
-                <h2 id="popupOrderNumber">Order Details</h2>
+                <h2>Order Details</h2>
                 <button class="close-popup" onclick="closeOrderPopup()">&times;</button>
             </div>
-            <div class="popup-body">
-                <div id="popupLoading" style="display:none; text-align:center; padding:20px;">
-                    Loading order details...
-                </div>
-                <!-- Left Column - Order Details -->
-                <div class="order-details-column">
-                    <!-- Order Information -->
-                    <div class="popup-section">
-                        <h3 class="popup-section-title">Order Information</h3>
-                        <div class="order-info-grid">
-                            <div class="info-item">
-                                <span class="info-label">Order Number</span>
-                                <span class="info-value" id="popupOrderNum"></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Order Date</span>
-                                <span class="info-value" id="popupOrderDate"></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Order Status</span>
-                                <span class="info-value" id="popupOrderStatus"></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Payment Status</span>
-                                <span class="info-value" id="popupPaymentStatus"></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Tracking Number</span>
-                                <span class="info-value" id="popupTrackingNumber"></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Payment Method</span>
-                                <span class="info-value" id="popupPaymentMethod"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Shipping Address -->
-                    <div class="popup-section">
-                        <h3 class="popup-section-title">Shipping Address</h3>
-                        <div id="popupShippingAddress">Loading...</div>
-                    </div>
-
-                    <!-- Billing Address -->
-                    <div class="popup-section">
-                        <h3 class="popup-section-title">Billing Address</h3>
-                        <div id="popupBillingAddress">Loading...</div>
-                    </div>
-                </div>
-
-                <!-- Right Column - Invoice -->
-                <div class="invoice-column">
-                    <!-- Invoice Header -->
-                    <div class="invoice-header">
-                        <h3 class="invoice-title">INVOICE</h3>
-                        <div class="invoice-number" id="popupInvoiceNumber"></div>
-                    </div>
-
-                    <!-- Customer Information -->
-                    <div class="popup-section">
-                        <h3 class="popup-section-title">Customer Information</h3>
-                        <div id="popupCustomerInfo">Loading...</div>
-                    </div>
-
-                    <!-- Order Items -->
-                    <div class="popup-section">
-                        <h3 class="popup-section-title">Order Items</h3>
-                        <table class="invoice-table">
-                            <thead>
-                                <tr>
-                                    <th class="text-left">Item</th>
-                                    <th class="text-center">Qty</th>
-                                    <th class="text-right">Price</th>
-                                    <th class="text-right">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody id="popupOrderItems">
-                                <!-- Items will be populated here -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Invoice Totals -->
-                    <div class="popup-section">
-                        <h3 class="popup-section-title">Invoice Summary</h3>
-                        <div class="invoice-totals">
-                            <div class="total-row">
-                                <span>Subtotal:</span>
-                                <span id="popupSubtotal">RM 0.00</span>
-                            </div>
-                            <div class="total-row">
-                                <span>Shipping Cost:</span>
-                                <span id="popupShippingCost">RM 0.00</span>
-                            </div>
-                            <div class="total-row">
-                                <span>Discount:</span>
-                                <span id="popupDiscountAmount">-RM 0.00</span>
-                            </div>
-                            <div class="total-row grand-total">
-                                <span>Total Amount:</span>
-                                <span id="popupGrandTotal">RM 0.00</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Invoice Actions -->
-                    <div class="order-actions-popup">
-                        <button class="btn-print" onclick="printInvoice()">
-                            <i class="fas fa-print"></i> Print Invoice
-                        </button>
-                        <button class="btn-download" onclick="downloadInvoice()">
-                            <i class="fas fa-download"></i> Download PDF
-                        </button>
-                    </div>
-                </div>
+            <div class="popup-body" id="popupBody">
+                <!-- Content will be loaded here -->
             </div>
         </div>
     </div>
@@ -1691,7 +1455,6 @@ function getElement(id) {
     }
     return el;
 }
-
 
 async function cancelOrder(event, orderId) {
     event.stopPropagation(); // Prevent opening the popup
@@ -1793,162 +1556,223 @@ function filterOrdersByStatus(status) {
     }
 }
 
-// Add spinner animation CSS if not already present
-if (!document.querySelector('#spinner-css')) {
-    const spinnerCSS = document.createElement('style');
-    spinnerCSS.id = 'spinner-css';
-    spinnerCSS.textContent = `
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--primary-green);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-    `;
-    document.head.appendChild(spinnerCSS);
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Orders page loaded');
-    
-    // Make sure all order cards are clickable
-    document.querySelectorAll('.order-card').forEach(card => {
-        if (!card.hasAttribute('data-initialized')) {
-            card.style.cursor = 'pointer';
-            card.setAttribute('data-initialized', 'true');
-        }
-    });
-});
-
+// Simplified popup functions
 async function openOrderPopup(orderId) {
     currentOrderId = orderId;
-
-    const popup = document.getElementById('orderPopup');
-    const loading = document.getElementById('popupLoading');
-
+    const popup = getElement('orderPopup');
+    const popupBody = getElement('popupBody');
+    
+    if (!popup || !popupBody) {
+        console.error('Popup elements not found');
+        return;
+    }
+    
+    // Show popup immediately
     popup.style.display = 'flex';
     document.body.style.overflow = 'hidden';
-
-    loading.style.display = 'block';
-
+    
+    // Create simple loading content
+    popupBody.innerHTML = '<div style="text-align: center; padding: 40px;">Loading order details...</div>';
+    
     try {
+        // Fetch order details
         const response = await fetch(`/orders/${orderId}/details`, {
             headers: {
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
         });
-
+        
         if (!response.ok) {
-            throw new Error('Failed to load order details');
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-
-        const data = await response.json();
-
-        fillPopupData(data);
-
-    } catch (error) {
-        console.error(error);
-        alert('Error loading order details');
-    } finally {
-        loading.style.display = 'none'; 
-    }
-
-    async function openOrderPopup(orderId) {
-    currentOrderId = orderId;
-
-    const popup = document.getElementById('orderPopup');
-    const loading = document.getElementById('popupLoading');
-
-    popup.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-
-    loading.style.display = 'block';
-
-    try {
-        const response = await fetch(`/orders/${orderId}/details`, {
-            headers: {
-                'Accept': 'application/json'
-            }
+        
+        const order = await response.json();
+        
+        // Generate popup content with the order data
+        const orderDate = new Date(order.created_at || order.order_date);
+        const formattedDate = orderDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
         });
-
-        if (!response.ok) {
-            throw new Error('Failed to load order details');
+        
+        // Calculate totals
+        let subtotal = 0;
+        const itemsHTML = order.items?.map(item => {
+            const total = item.price * item.quantity;
+            subtotal += total;
+            return `
+                <tr>
+                    <td>${item.name}</td>
+                    <td class="text-center">${item.quantity}</td>
+                    <td class="text-right">RM ${item.price.toFixed(2)}</td>
+                    <td class="text-right">RM ${total.toFixed(2)}</td>
+                </tr>
+            `;
+        }).join('') || '';
+        
+        // Update popup header
+        const popupHeader = popup.querySelector('.popup-header h2');
+        if (popupHeader) {
+            popupHeader.textContent = `Order #${order.order_number}`;
         }
+        
+        // Set popup content
+        popupBody.innerHTML = `
+            <div class="order-details-column">
+                <div class="popup-section">
+                    <h3 class="popup-section-title">Order Information</h3>
+                    <div class="order-info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Order Number</span>
+                            <span class="info-value">${order.order_number}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Order Date</span>
+                            <span class="info-value">${formattedDate}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Order Status</span>
+                            <span class="info-value">${order.status || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Payment Status</span>
+                            <span class="info-value">${order.payment_status || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Tracking Number</span>
+                            <span class="info-value">${order.tracking_number || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Payment Method</span>
+                            <span class="info-value">${order.payment_method || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
 
-        const data = await response.json();
+                <div class="popup-section">
+                    <h3 class="popup-section-title">Shipping Address</h3>
+                    <div>${(order.shipping_address || 'N/A').replace(/\n/g, '<br>')}</div>
+                </div>
 
-        // Fill popup data
-        fillPopupData(data);
+                <div class="popup-section">
+                    <h3 class="popup-section-title">Billing Address</h3>
+                    <div>${(order.billing_address || order.shipping_address || 'N/A').replace(/\n/g, '<br>')}</div>
+                </div>
+            </div>
 
-    } catch (error) {
-        console.error(error);
-        alert('Error loading order details');
-    } finally {
-        loading.style.display = 'none';
-    }
-}
+            <div class="invoice-column">
+                <div class="invoice-header">
+                    <h3 class="invoice-title">INVOICE</h3>
+                    <div class="invoice-number">Invoice #${order.order_number}</div>
+                </div>
 
-function fillPopupData(order) {
-    // Header
-    document.getElementById('popupOrderNumber').innerText = `Order #${order.order_number}`;
-    document.getElementById('popupOrderNum').innerText = order.order_number;
-    document.getElementById('popupOrderDate').innerText = order.order_date;
-    document.getElementById('popupOrderStatus').innerText = order.status;
-    document.getElementById('popupPaymentStatus').innerText = order.payment_status ?? '-';
-    document.getElementById('popupPaymentMethod').innerText = order.payment_method ?? '-';
-    document.getElementById('popupTrackingNumber').innerText = order.tracking_number ?? '-';
+                <div class="popup-section">
+                    <h3 class="popup-section-title">Customer Information</h3>
+                    <div>${order.customer_name || 'N/A'}<br>${order.customer_email || 'N/A'}</div>
+                </div>
 
-    // Address
-    document.getElementById('popupShippingAddress').innerHTML = order.shipping_address.replace(/\n/g, '<br>');
-    document.getElementById('popupBillingAddress').innerHTML = order.billing_address.replace(/\n/g, '<br>');
+                <div class="popup-section">
+                    <h3 class="popup-section-title">Order Items</h3>
+                    <table class="invoice-table">
+                        <thead>
+                            <tr>
+                                <th class="text-left">Item</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-right">Price</th>
+                                <th class="text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHTML}
+                        </tbody>
+                    </table>
+                </div>
 
-    // Customer
-    document.getElementById('popupCustomerInfo').innerHTML = 
-        `${order.customer_name}<br>${order.customer_email}`;
+                <div class="popup-section">
+                    <h3 class="popup-section-title">Invoice Summary</h3>
+                    <div class="invoice-totals">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span>RM ${subtotal.toFixed(2)}</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Shipping Cost:</span>
+                            <span>RM ${(order.shipping_cost || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Discount:</span>
+                            <span>-RM ${(order.discount_amount || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="total-row grand-total">
+                            <span>Total Amount:</span>
+                            <span>RM ${(order.total_amount || 0).toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
 
-    // Items
-    const itemsContainer = document.getElementById('popupOrderItems');
-    itemsContainer.innerHTML = '';
-
-    let subtotal = 0;
-
-    order.items.forEach(item => {
-        const total = item.price * item.quantity;
-        subtotal += total;
-
-        itemsContainer.innerHTML += `
-            <tr>
-                <td>${item.name}</td>
-                <td class="text-center">${item.quantity}</td>
-                <td class="text-right">RM ${item.price.toFixed(2)}</td>
-                <td class="text-right">RM ${total.toFixed(2)}</td>
-            </tr>
+                <div class="order-actions-popup">
+                    <button class="btn-print" onclick="printInvoice()">
+                        <i class="fas fa-print"></i> Print Invoice
+                    </button>
+                    <button class="btn-download" onclick="downloadInvoice()">
+                        <i class="fas fa-download"></i> Download PDF
+                    </button>
+                </div>
+            </div>
         `;
-    });
-
-    document.getElementById('popupSubtotal').innerText = `RM ${subtotal.toFixed(2)}`;
-    document.getElementById('popupShippingCost').innerText = `RM ${order.shipping_cost.toFixed(2)}`;
-    document.getElementById('popupDiscountAmount').innerText = `-RM ${order.discount_amount.toFixed(2)}`;
-    document.getElementById('popupGrandTotal').innerText = `RM ${order.total_amount.toFixed(2)}`;
-    document.getElementById('popupInvoiceNumber').innerText = `Invoice #${order.order_number}`;
-}
-
-
+        
+    } catch (error) {
+        console.error('Error loading order details:', error);
+        popupBody.innerHTML = `
+            <div class="popup-section" style="grid-column: 1 / -1; text-align: center;">
+                <h3>Error Loading Order Details</h3>
+                <p>Could not load order information. Please try again.</p>
+                <button onclick="closeOrderPopup()" class="btn-primary">Close</button>
+            </div>
+        `;
+    }
 }
 
 function closeOrderPopup() {
-    document.getElementById('orderPopup').style.display = 'none';
-    document.body.style.overflow = '';
+    const popup = getElement('orderPopup');
+    if (popup) {
+        popup.style.display = 'none';
+        document.body.style.overflow = '';
+    }
 }
 
+function printInvoice() {
+    window.print();
+}
+
+function downloadInvoice() {
+    alert('PDF download feature would be implemented here');
+}
+
+// Close popup when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+    const popupOverlay = getElement('orderPopup');
+    if (popupOverlay) {
+        popupOverlay.addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeOrderPopup();
+            }
+        });
+    }
+    
+    // Make order cards clickable
+    document.querySelectorAll('.order-card').forEach(card => {
+        card.style.cursor = 'pointer';
+    });
+});
+
+// Close with escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeOrderPopup();
+    }
+});
 </script>
 @endsection
