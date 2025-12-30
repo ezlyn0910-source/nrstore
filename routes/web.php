@@ -206,6 +206,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{order}/details', 'details')->name('details');
         Route::post('/{order}/cancel', 'cancel')->name('cancel');
         Route::post('/process-checkout', 'processCheckout')->name('process-checkout');
+        Route::get('/{order}/invoice/pdf', 'downloadInvoicePdf')
+            ->name('invoice.pdf');
 
     });
 

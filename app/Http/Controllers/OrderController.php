@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class OrderController extends Controller
 {
@@ -143,8 +144,33 @@ class OrderController extends Controller
         }
     }
 
+    public function downloadInvoicePdf($orderId)
+    {
+        $order = Order::with([
+            'orderItems.product',
+            'orderItems.variation',
+            'shippingAddress',
+            'billingAddress',
+            'user',
+        ])
+        ->where('id', $orderId)
+        ->where('user_id', Auth::id())
+        ->firstOrFail(); // if not yours, it becomes 404 (not 403)
 
+        $pdf = Pdf::loadView('orders.invoice-pdf', [
+            'order' => $order,
+        ])->setPaper('A4', 'portrait');
 
+        $fileName = 'invoice-' . ($order->order_number ?? $order->id) . '.pdf';
 
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="'.$fileName.'"');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        echo $pdf->output();
+        exit;
+    }
 
 }

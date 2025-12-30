@@ -1217,6 +1217,20 @@
     }
 }
 
+#orderPopup { pointer-events: auto; }
+
+#orderPopup .order-popup-content {
+    position: relative;
+    z-index: 10000;
+    pointer-events: auto;
+}
+
+#orderPopup .order-actions-popup,
+#orderPopup .order-actions-popup button {
+    position: relative;
+    z-index: 10001;
+    pointer-events: auto;
+}
 </style>
 
 <div class="orders-page">
@@ -1556,7 +1570,7 @@ function filterOrdersByStatus(status) {
     }
 }
 
-// Simplified popup functions
+// Simplified popup functions (invoice)
 async function openOrderPopup(orderId) {
     currentOrderId = orderId;
     const popup = getElement('orderPopup');
@@ -1618,7 +1632,7 @@ async function openOrderPopup(orderId) {
             popupHeader.textContent = `Order #${order.order_number}`;
         }
         
-        // Set popup content
+        // Set popup content (invoice)
         popupBody.innerHTML = `
             <div class="order-details-column">
                 <div class="popup-section">
@@ -1716,12 +1730,24 @@ async function openOrderPopup(orderId) {
                     <button class="btn-print" onclick="printInvoice()">
                         <i class="fas fa-print"></i> Print Invoice
                     </button>
-                    <button class="btn-download" onclick="downloadInvoice()">
+                    <button type="button" class="btn-download">
                         <i class="fas fa-download"></i> Download PDF
                     </button>
                 </div>
             </div>
         `;
+
+        popupBody.querySelector('.btn-print')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            printInvoice();
+        });
+
+        popupBody.querySelector('.btn-download')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            downloadInvoice();
+        });
         
     } catch (error) {
         console.error('Error loading order details:', error);
@@ -1748,7 +1774,8 @@ function printInvoice() {
 }
 
 function downloadInvoice() {
-    alert('PDF download feature would be implemented here');
+    if (!currentOrderId) return;
+    window.location.href = `/orders/${currentOrderId}/invoice/pdf`;
 }
 
 // Close popup when clicking outside
