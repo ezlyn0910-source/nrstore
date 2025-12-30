@@ -380,13 +380,15 @@ Route::middleware(['auth'])
         ->group(function () {
 
             // Stripe
-            Route::get('/stripe/success/{order}', [PaymentController::class, 'stripeSuccess'])
-                ->name('stripe.success');
+            Route::get('/stripe/success/{order}', 'stripeSuccess')
+                ->whereNumber('order')
+                ->name('stripe.success.path');
 
-            Route::get('/stripe/cancel/{order}', [PaymentController::class, 'stripeCancel'])
+            Route::get('/stripe/cancel/{order}', 'stripeCancel')
+                ->whereNumber('order')
                 ->name('stripe.cancel');
 
-            Route::post('/stripe/webhook', [PaymentController::class, 'stripeWebhook'])
+            Route::post('/stripe/webhook', 'stripeWebhook')
                 ->name('stripe.webhook');
 
             // Toyyibpay
