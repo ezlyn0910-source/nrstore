@@ -20,7 +20,45 @@
             <div class="checkout-left">
                 <!-- Shipping Address Section -->
                 <section class="checkout-section">
-                    <h2>Shipping Address</h2>
+                    <h2>Shipping Option</h2>
+
+                    <div class="delivery-toggle-wrap">
+
+                        <div class="delivery-toggle glass" role="tablist" aria-label="Delivery option">
+                            <button type="button" class="delivery-pill is-active" data-delivery="delivery" role="tab" aria-selected="true">
+                                Delivery
+                            </button>
+                            <button type="button" class="delivery-pill" data-delivery="self_pickup" role="tab" aria-selected="false">
+                                Pickup
+                            </button>
+
+                            <span class="delivery-indicator" aria-hidden="true"></span>
+                        </div>
+
+                        <h3 class="delivery-toggle-title" id="shippingAddressTitle">
+                            Shipping Address:
+                        </h3>
+
+                        <h3 class="delivery-toggle-title" id="selfPickupTitle" style="display:none;">
+                            Self Pickup at:
+                        </h3>
+
+                        <label id="pickupInfo" class="pickup-info pickup-radio-wrap" style="display:none;">
+                            <input
+                                type="radio"
+                                name="selected_address"
+                                class="pickup-radio"
+                                value="SELF_PICKUP"
+                            >
+
+                            <span class="pickup-address-text">
+                                Lot # 5-34, Imbi Plaza, 28, Jln Imbi, Bukit Bintang, 55100 Kuala Lumpur.
+                            </span>
+                        </label>
+
+                        <input type="hidden" id="ui_delivery_option" value="delivery">
+                    </div>
+
                     
                     @php
                         $userAddresses = $addresses ?? collect();
@@ -443,14 +481,14 @@
                             </div>
                         @endif
 
-                        <div class="os-row">
+                        <div class="os-row" id="osShippingRow">
                             <span class="os-label">SHIPPING</span>
-                            <span class="os-value">RM{{ number_format($shippingFee, 2) }}</span>
+                            <span class="os-value" id="osShippingValue">RM{{ number_format($shippingFee, 2) }}</span>
                         </div>
 
                         <div class="os-total">
                             <span class="os-total-label">TOTAL</span>
-                            <span class="os-total-value">
+                            <span class="os-total-value" id="osTotalValue">
                                 RM{{ number_format(($subtotal - $discountAmount) + $shippingFee, 2) }}
                             </span>
                         </div>
@@ -464,6 +502,7 @@
                     <form id="placeOrderForm" method="POST" action="{{ route('payment.process') }}" style="display:none;">
                         @csrf
                         <input type="hidden" name="selected_address" id="po_selected_address">
+                        <input type="hidden" name="delivery_option" id="po_delivery_option" value="delivery">
                         <input type="hidden" name="payment_method" id="po_payment_method">
                         <input type="hidden" name="online_banking_bank" id="po_online_banking_bank">
                         <input type="hidden" name="amount" id="po_amount" value="{{ ($subtotal - $discountAmount) + $shippingFee }}">
@@ -473,6 +512,22 @@
             </div>
         </div>
     </div>
+
+    <!-- Exit Payment Warning Modal -->
+    <div id="exitPayModal" class="exit-pay-modal" aria-hidden="true">
+        <div class="exit-pay-backdrop"></div>
+
+        <div class="exit-pay-card" role="dialog" aria-modal="true" aria-labelledby="exitPayTitle">
+            <h3 id="exitPayTitle">Are you sure want to exit?</h3>
+            <p>The payment will be failed if you leave this page.</p>
+
+            <div class="exit-pay-actions">
+                <button type="button" id="exitPayStay" class="exit-pay-btn ghost">Stay</button>
+                <button type="button" id="exitPayExit" class="exit-pay-btn primary">Exit</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -607,6 +662,17 @@
         });
     }
 
+    const shippingTitleEl = document.getElementById('shippingAddressTitle');
+    const pickupTitleEl   = document.getElementById('selfPickupTitle');
+    const pickupAddrEl    = document.getElementById('selfPickupAddress');
+
+    function toggleShippingTitle(option) {
+        if (!shippingTitleEl) return;
+
+        // show ONLY when delivery is selected
+        shippingTitleEl.style.display = option === 'delivery' ? 'block' : 'none';
+    }
+
     // ADD ADDRESS LINK TOGGLE
     const addAddressLink = document.getElementById('addAddressLink');
     const addAddressForm = document.getElementById('addAddressForm');
@@ -631,10 +697,99 @@
         const editAddressForm   = document.getElementById('editAddressForm');
         const editAddressClose  = document.getElementById('editAddressClose');
         const placeOrderBtn     = document.getElementById('placeOrderBtn');
+        
+        // ===== EXIT PAYMENT WARNING (shows after Place Order) =====
+        let paymentStarted = false;
+        let allowExit = false;
 
-        // ============================
-        // FORM HANDLING – ADD ADDRESS
-        // ============================
+        const exitModal = document.getElementById('exitPayModal');
+        const btnStay   = document.getElementById('exitPayStay');
+        const btnExit   = document.getElementById('exitPayExit');
+
+        function openExitModal() {
+            if (!exitModal) return;
+            exitModal.classList.add('show');
+            exitModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeExitModal() {
+            if (!exitModal) return;
+            exitModal.classList.remove('show');
+            exitModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+
+        function confirmExitIfNeeded(e, goBackFn) {
+            if (!paymentStarted || allowExit) return false;
+            if (e) e.preventDefault();
+            openExitModal();
+
+            btnStay?.addEventListener('click', () => {
+                closeExitModal();
+            }, { once: true });
+
+            btnExit?.addEventListener('click', () => {
+                allowExit = true;
+                closeExitModal();
+                if (typeof goBackFn === 'function') goBackFn();
+            }, { once: true });
+
+            return true;
+        }
+
+        // Intercept your top-left back link (cart back arrow)
+        const backLink = document.querySelector('.back-link');
+        if (backLink) {
+            backLink.addEventListener('click', function (e) {
+                confirmExitIfNeeded(e, () => window.location.href = this.getAttribute('href'));
+            });
+        }
+
+        // Intercept browser back (history back)
+        history.pushState({ checkout: true }, '', window.location.href);
+        window.addEventListener('popstate', function (e) {
+            if (confirmExitIfNeeded(null, () => history.back())) {
+                history.pushState({ checkout: true }, '', window.location.href);
+            }
+        });
+
+        // When user clicks place order, mark payment as started
+        if (placeOrderBtn) {
+            placeOrderBtn.addEventListener('click', function () {
+                paymentStarted = true;
+            }, { capture: true });
+        }
+        
+        const paymentBoxes = document.querySelectorAll('.payment-method-box');
+        paymentBoxes.forEach(box => {
+            box.addEventListener('click', () => {
+                paymentBoxes.forEach(b => b.classList.remove('selected'));
+                box.classList.add('selected');
+            });
+        });
+
+        const toggleEl = document.querySelector('.delivery-toggle');
+        const pills    = document.querySelectorAll('.delivery-pill');
+        const pickupInfo = document.getElementById('pickupInfo');
+
+        const addressListEl   = document.getElementById('addressList');
+        const addAddressSecEl = document.querySelector('.add-address-section');
+        
+        let lastSelectedAddressId =
+            document.querySelector('input[name="selected_address"]:checked')?.value || '';
+
+        const osShippingValue = document.getElementById('osShippingValue');
+        const osTotalValue    = document.getElementById('osTotalValue');
+
+        const poDeliveryOption = document.getElementById('po_delivery_option');
+        const poAmount         = document.getElementById('po_amount');
+
+        const baseShippingFee = parseFloat('{{ (float) $shippingFee }}') || 0;
+        const subtotalJs      = parseFloat('{{ (float) $subtotal }}') || 0;
+        const discountJs      = parseFloat('{{ (float) $discountAmount }}') || 0;
+
+        // === FORM HANDLING – ADD ADDRESS === //
         if (addressForm) {
             attachLiveClear(addressForm);
 
@@ -744,9 +899,7 @@
             });
         }
 
-        // ============================
-        // EDIT ADDRESS – OPEN + SUBMIT
-        // ============================
+        // === EDIT ADDRESS – OPEN + SUBMIT === //
         function openEditAddressModal(trigger) {
             if (!editAddressModal || !editAddressForm) return;
 
@@ -896,25 +1049,99 @@
             });
         }
 
-        // ============================
-        // PAYMENT METHOD SELECT (CARD / ONLINE)
-        // ============================
-        const paymentBoxes = document.querySelectorAll('.payment-method-box');
-        paymentBoxes.forEach(box => {
-            box.addEventListener('click', function () {
-                paymentBoxes.forEach(b => b.classList.remove('selected'));
-                this.classList.add('selected');
+        // === SELF PICK UP OPTION === //
+        function formatRM(n){
+            return 'RM' + Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        function restoreDeliveryAddressSelection() {
+            const addressRadios = document.querySelectorAll('.address-radio');
+            if (!addressRadios.length) return;
+
+            const checked = document.querySelector('.address-radio:checked');
+            if (checked) return;
+
+            if (lastSelectedAddressId) {
+                const match = document.querySelector(`.address-radio[value="${lastSelectedAddressId}"]`);
+                if (match) {
+                    match.checked = true;
+                    return;
+                }
+            }
+
+            addressRadios[0].checked = true;
+        }
+
+        function applyDeliveryOption(option){
+            const isPickup = option === 'self_pickup';
+            const osShippingRow = document.getElementById('osShippingRow');
+            const pickupRadio = document.querySelector('.pickup-radio');
+
+            if (isPickup) {
+                lastSelectedAddressId =
+                    document.querySelector('.address-radio:checked')?.value || lastSelectedAddressId;
+            }
+
+            if (addressListEl)   addressListEl.style.display   = isPickup ? 'none' : 'flex';
+            if (addAddressSecEl) addAddressSecEl.style.display = isPickup ? 'none' : 'block';
+
+            if (shippingTitleEl) shippingTitleEl.style.display = isPickup ? 'none' : 'block';
+            if (pickupTitleEl)   pickupTitleEl.style.display   = isPickup ? 'block' : 'none';
+            if (pickupAddrEl)    pickupAddrEl.style.display    = isPickup ? 'block' : 'none';
+            if (pickupInfo)      pickupInfo.style.display      = isPickup ? 'block' : 'none';
+            
+            if (isPickup && pickupRadio) {
+                pickupRadio.checked = true;
+            }
+
+            if (osShippingRow) {
+                osShippingRow.style.display = isPickup ? 'none' : 'flex';
+            }
+
+            toggleShippingTitle(option);
+
+            // totals
+            const ship = isPickup ? 0 : baseShippingFee;
+            const total = (subtotalJs - discountJs) + ship;
+
+            if (osShippingValue) osShippingValue.textContent = formatRM(ship);
+            if (osTotalValue)    osTotalValue.textContent    = formatRM(total);
+
+            // hidden values
+            if (poDeliveryOption) poDeliveryOption.value = option;
+            if (poAmount) poAmount.value = total.toFixed(2);
+
+            // toggle state + aria
+            if (toggleEl) toggleEl.setAttribute('data-state', option);
+            pills.forEach(btn => {
+                const active = btn.dataset.delivery === option;
+                btn.classList.toggle('is-active', active);
+                btn.setAttribute('aria-selected', active ? 'true' : 'false');
             });
+
+            if (!isPickup) {
+                if (pickupRadio) pickupRadio.checked = false;
+                restoreDeliveryAddressSelection();
+            }
+
+        }
+
+        pills.forEach(btn => {
+            btn.addEventListener('click', () => applyDeliveryOption(btn.dataset.delivery));
         });
 
-        // ============================
-        // PLACE ORDER → PAYMENT.PROCESS
-        // ============================
+        // initial
+        applyDeliveryOption(poDeliveryOption?.value || 'delivery');
+
+        // === PLACE ORDER → PAYMENT.PROCESS === //
         if (placeOrderBtn) {
             placeOrderBtn.addEventListener('click', function () {
 
+                const selectedDelivery = document.getElementById('po_delivery_option')?.value || 'delivery';
+                const isPickup = selectedDelivery === 'self_pickup';
+
                 const addressRadio = document.querySelector('input[name="selected_address"]:checked');
-                if (!addressRadio) {
+                if (!isPickup && !addressRadio) {
                     alert('Please select a shipping address.');
                     return;
                 }
@@ -930,8 +1157,9 @@
                 const form      = document.getElementById('placeOrderForm');
                 const addrInput = document.getElementById('po_selected_address');
                 const pmInput   = document.getElementById('po_payment_method');
+                const delInput  = document.getElementById('po_delivery_option');
 
-                if (!form || !addrInput || !pmInput) {
+                if (!form || !addrInput || !pmInput || !delInput) {
                     alert('Something went wrong. Please refresh and try again.');
                     return;
                 }
@@ -950,7 +1178,8 @@
                     toyyibpay: 'online_banking',
                 };
 
-                addrInput.value = addressRadio.value;
+                addrInput.value = isPickup ? 'SELF_PICKUP' : addressRadio.value;
+                delInput.value  = selectedDelivery;
                 pmInput.value   = paymentMethodMap[paymentMethodKey] || paymentMethodKey;
 
                 if (paymentMethodKey === 'online') {
@@ -966,7 +1195,6 @@
                     }
                 }
 
-                // ✅ NOW disable only when everything is valid
                 placeOrderBtn.disabled = true;
                 placeOrderBtn.innerText = 'Processing...';
 
@@ -1070,9 +1298,117 @@
     padding-bottom: 0.75rem;
 }
 
+/* ===== SELF PICKUP STYLE ===== */
+
+/* Wrapper */
+.delivery-toggle-wrap{ margin: 0 0 1.75rem 0; }
+.delivery-toggle-title{
+    font-size: 1rem; font-weight: 700; margin: 0 0 .75rem 0; color:#1f2937;
+}
+
+.delivery-toggle.glass{
+    position: relative;
+    width: 260px;
+    height: 44px;
+    padding: 6px;
+    border-radius: 999px;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    background: #ffffff;
+    border: 1px solid rgba(229,231,235,0.9);
+    box-shadow:
+        0 20px 45px rgba(15,23,42,0.12),
+        0 4px 14px rgba(15,23,42,0.08);
+
+    overflow: hidden;
+}
+
+.delivery-pill{
+    position: relative;
+    z-index: 2;
+    border: 0;
+    background: transparent;
+    border-radius: 999px;
+    cursor: pointer;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-weight: 800;
+    font-size: 0.9rem;
+
+    color: rgba(17,24,39,0.55);
+    transition: color .2s ease;
+}
+
+.delivery-pill.is-active{
+    color: rgba(17,24,39,0.95);
+}
+
+.delivery-pill:focus{
+    outline: none;
+}
+
+.delivery-indicator{
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    height: calc(100% - 12px);
+    width: calc((100% - 12px) / 2);
+    border-radius: 999px;
+    z-index: 1;
+
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+
+    border: 1px solid rgba(255,255,255,0.75);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.95),
+        0 14px 30px rgba(15,23,42,0.14);
+
+    transform: translateX(0);
+    transition: transform .25s cubic-bezier(.2,.9,.2,1);
+}
+
+.delivery-toggle[data-state="self_pickup"] .delivery-indicator{
+    transform: translateX(100%);
+}
+
+#shippingAddressTitle,
+#selfPickupTitle{
+    margin-top: 2rem;
+}
+
+.pickup-radio-wrap {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    cursor: pointer;
+}
+
+.pickup-radio {
+    width: 12px;
+    height: 12px;
+    accent-color: #1f2937;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.pickup-address-text {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #374151;
+    line-height: 1.3;
+}
+
 /* ===== ADD ADDRESS LINK STYLES ===== */
 .add-address-section {
-    margin-top: 1.5rem;
+    margin-top: 1rem;
 }
 
 .add-address-link {
@@ -1090,7 +1426,7 @@
 }
 
 .add-address-link:hover {
-    color: #1d4ed8; /* Darker blue on hover */
+    color: #1d4ed8;
     text-decoration: underline;
 }
 
@@ -1648,9 +1984,9 @@
 
 .address-edit-dialog .country-code {
     width: 80px;
-    height: auto;           /* match select default height */
-    padding: 10px 12px;     /* match .address-edit-dialog select padding */
-    font-size: 0.9rem;      /* match .address-edit-dialog select font-size */
+    height: auto;
+    padding: 10px 12px;
+    font-size: 0.9rem;
 }
 
 /* Optional: make focus same as other edit modal fields */
@@ -1960,7 +2296,6 @@
     letter-spacing: 0.5px;
 }
 
-/* ✅ Scroll area for products only */
 .order-items-scroll{
     flex: 1;
     overflow-y: auto;
@@ -2112,13 +2447,11 @@
     color: #111827;
 }
 
-/* ✅ Footer pinned bottom inside the box (no divider above button) */
 .os-footer{
     margin-top: 0.65rem;
     padding-top: 14px;
 }
 
-/* Keep your existing button style */
 .btn-place-order{
     padding: 1rem;
     font-size: 1.05rem;
@@ -2136,6 +2469,81 @@
     background: #374151;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.exit-pay-modal{
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+.exit-pay-modal.show{ display:flex; }
+
+.exit-pay-backdrop{
+    position:absolute;
+    inset:0;
+    background: rgba(0,0,0,0.35);
+}
+
+.exit-pay-card{
+    position: relative;
+    width: min(520px, calc(100% - 40px));
+    padding: 26px 24px;
+    border-radius: 22px;
+
+    background: rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.35);
+
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+}
+
+.exit-pay-card h3{
+    margin: 0 0 8px 0;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+.exit-pay-card p{
+    margin: 0 0 18px 0;
+    color: rgba(15,23,42,0.75);
+    font-weight: 600;
+}
+
+.exit-pay-actions{
+    display:flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.exit-pay-btn{
+    border: 0;
+    cursor: pointer;
+    border-radius: 999px;
+    padding: 12px 18px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.exit-pay-btn.ghost{
+    background: rgba(255,255,255,0.35);
+    color: #0f172a;
+    border: 1px solid rgba(255,255,255,0.45);
+}
+
+.exit-pay-btn.primary{
+    background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+    color: #fff;
+}
+
+.exit-pay-btn:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
 }
 
 /* Responsive Design */

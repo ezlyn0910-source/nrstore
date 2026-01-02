@@ -36,7 +36,8 @@ class PaymentController extends Controller
 
         $validated = $request->validate([
             'payment_method'   => 'required|in:credit_card,debit_card,online_banking',
-            'selected_address' => 'required|integer',
+            'delivery_option'  => 'required|in:delivery,self_pickup',
+            'selected_address' => 'required_if:delivery_option,delivery|nullable|integer',
         ]);
 
         $cart = Cart::where('user_id', $user->id)
@@ -54,16 +55,17 @@ class PaymentController extends Controller
             return (float)$item->price * (int)$item->quantity;
         });
 
-        $shippingFee = 0;
+        $isPickup = ($validated['delivery_option'] === 'self_pickup');
+        $addressId = $isPickup ? null : (int) $validated['selected_address'];
+        $shippingFee = $isPickup ? 0 : 10.99;
         $discount    = 0;
-
         $finalAmount = max(0, $subtotal + $shippingFee - $discount);
 
         $order = Order::where('user_id', $user->id)
             ->where('status', Order::STATUS_PENDING)
             ->where('payment_status', Order::PAYMENT_STATUS_PENDING)
             ->where('total_amount', $finalAmount)
-            ->where('shipping_address_id', $validated['selected_address'])
+            ->where('shipping_address_id', $addressId)
             ->where('payment_method', $validated['payment_method'])
             ->latest('id')
             ->first();
@@ -71,8 +73,8 @@ class PaymentController extends Controller
         if (!$order) {
             $order = Order::create([
                 'user_id'             => $user->id,
-                'shipping_address_id' => $validated['selected_address'],
-                'billing_address_id'  => $validated['selected_address'],
+                'shipping_address_id' => $addressId,
+                'billing_address_id'  => $addressId,
                 'total_amount'        => $finalAmount,
                 'shipping_cost'       => $shippingFee,
                 'tax_amount'          => 0,

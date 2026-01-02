@@ -38,7 +38,7 @@ class CheckoutController extends Controller
         $total = 0;
         $tax = 0;
         $discount = 0;
-        $shippingFee = 0;
+        $shippingFee = 10.99;
 
         // 2. Check for Buy Now Session Data first
         $buyNowOrder = session('buy_now_order');
@@ -97,7 +97,7 @@ class CheckoutController extends Controller
             })->filter()->values();
 
             $subtotal = $cartItems->sum('total');
-            $shippingFee = 0;
+            $shippingFee = 10.99;
             $total = $subtotal + $shippingFee;
 
         } else {
@@ -110,7 +110,7 @@ class CheckoutController extends Controller
 
             $cartItems = $cart->items()->with(['product.images', 'variation'])->get();
             $subtotal = $cart->total_amount;
-            $shippingFee = 0;
+            $shippingFee = 10.99;
             $total = $subtotal + $shippingFee;
         }
 
@@ -559,7 +559,7 @@ class CheckoutController extends Controller
             // Get cart items or buy now items
             $cartItems = collect([]);
             $subtotal = 0;
-            $shippingFee = 0;
+            $shippingFee = 10.99;
 
             // Check if using buy now or cart
             $buyNowOrder = session('buy_now_order');
