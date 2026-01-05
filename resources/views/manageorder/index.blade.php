@@ -337,6 +337,7 @@
 .status-delivered { background: var(--success); color: var(--white); }
 .status-cancelled { background: #f8d7da; color: #721c24; }
 .status-paid { background: #d4edda; color: #155724; }
+.status-refunded { background: #e0f2fe; color: #075985; }
 
 .payment-pending { background: #fff3cd; color: #856404; }
 .payment-paid { background: #d4edda; color: #155724; }
@@ -743,7 +744,7 @@ input[type="number"]:focus {
         @php
             $filters = request()->all(); // Preserve all filters
         @endphp
-        @foreach(['' => 'All Orders', 'paid' => 'Paid', 'processing' => 'Processing', 'shipped' => 'Shipped', 'cancelled' => 'Cancelled'] as $key => $label)
+        @foreach(['' => 'All Orders', 'paid' => 'Paid', 'processing' => 'Processing', 'shipped' => 'Shipped', 'refunded' => 'Refunded', 'cancelled' => 'Cancelled'] as $key => $label)
             @php
                 $params = array_merge($filters, ['status' => $key ?: null]);
             @endphp

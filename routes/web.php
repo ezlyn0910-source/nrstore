@@ -178,7 +178,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/review', [CheckoutController::class, 'review'])->name('review');
 
         // Checkout actions
-        Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('place-order');
         Route::post('/validate', [CheckoutController::class, 'validateCheckout'])->name('validate');
         Route::post('/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('calculate-shipping');
         Route::post('/apply-promo', [CheckoutController::class, 'applyPromo'])->name('apply-promo');

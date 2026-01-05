@@ -423,7 +423,47 @@ class CheckoutController extends Controller
     
     public function deleteAddress($id)
     {
-        return response()->json(['success' => true]);
+        try {
+            $user = Auth::user();
+
+            $address = Address::where('id', $id)
+                ->where('user_id', $user->id)
+                ->where('type', 'shipping')
+                ->firstOrFail();
+
+            $wasDefault = (bool) $address->is_default;
+
+            $address->delete();
+
+            // If deleted address was default, set newest address as default (optional but recommended)
+            if ($wasDefault) {
+                $next = Address::where('user_id', $user->id)
+                    ->where('type', 'shipping')
+                    ->orderByDesc('created_at')
+                    ->first();
+
+                if ($next) {
+                    $next->is_default = true;
+                    $next->save();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Address deleted successfully.'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Delete address error: ' . $e->getMessage(), [
+                'address_id' => $id,
+                'user_id' => optional(Auth::user())->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete address.'
+            ], 500);
+        }
     }
 
     public function storeAddress(Request $request)
@@ -538,128 +578,6 @@ class CheckoutController extends Controller
     public function failed()
     {
         return view('checkout.failed');
-    }
-
-    public function placeOrder(Request $request)
-    {
-        $request->validate([
-            'address_id' => 'required|exists:addresses,id',
-            'payment_method' => 'required|in:tng_ewallet,online_banking,credit_card',
-        ]);
-
-        try {
-            $user = Auth::user();
-
-            $address = Address::where('id', $request->address_id)
-                ->where('user_id', $user->id)
-                ->firstOrFail();
-
-            \DB::beginTransaction();
-
-            // Get cart items or buy now items
-            $cartItems = collect([]);
-            $subtotal = 0;
-            $shippingFee = 10.99;
-
-            // Check if using buy now or cart
-            $buyNowOrder = session('buy_now_order');
-            $shouldUseBuyNow = false;
-
-            if ($buyNowOrder && isset($buyNowOrder['is_buy_now']) && $buyNowOrder['is_buy_now']) {
-                $buyNowTime = $buyNowOrder['timestamp'] ?? 0;
-                $currentTime = now()->timestamp;
-                
-                if (($currentTime - $buyNowTime) < 300) {
-                    $shouldUseBuyNow = true;
-                }
-            }
-
-            if ($shouldUseBuyNow) {
-                // Use buy now items
-                $cartItems = collect($buyNowOrder['items'] ?? []);
-                $subtotal = $buyNowOrder['total'] ?? 0;
-            } else {
-                // Use cart items
-                $cart = $this->getOrCreateCart();
-                if (!$cart || $cart->items->isEmpty()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Your cart is empty.'
-                    ], 400);
-                }
-                
-                $cartItems = $cart->items;
-                $subtotal = $cart->total_amount;
-            }
-
-            // Calculate totals
-            $total = $subtotal + $shippingFee;
-
-            // Generate order number
-            $orderNumber = 'ORD' . date('Y') . strtoupper(uniqid());
-
-            // Create the order
-            $order = Order::create([
-                'order_number' => $orderNumber,
-                'user_id' => $user->id,
-                'shipping_address_id' => $address->id,
-                'billing_address_id' => $address->id,
-                'subtotal_amount' => $subtotal,
-                'shipping_amount' => $shippingFee,
-                'total_amount' => $total,
-                'payment_method' => $request->payment_method,
-                'payment_status' => Order::PAYMENT_STATUS_PENDING,
-                'status' => Order::STATUS_PENDING,
-            ]);
-
-            // Create order items
-            foreach ($cartItems as $item) {
-                $product = Product::find($item->product_id ?? $item['product_id']);
-                $variation = null;
-                
-                if ($item->variation_id ?? $item['variation_id']) {
-                    $variation = Variation::find($item->variation_id ?? $item['variation_id']);
-                }
-
-                $order->orderItems()->create([
-                    'product_id' => $item->product_id ?? $item['product_id'],
-                    'variation_id' => $item->variation_id ?? $item['variation_id'] ?? null,
-                    'product_name' => $product->name,
-                    'variation_name' => $variation ? $this->getVariationName($variation) : null,
-                    'quantity' => $item->quantity ?? $item['quantity'],
-                    'unit_price' => $item->price ?? $item['price'],
-                    'total_price' => ($item->price ?? $item['price']) * ($item->quantity ?? $item['quantity']),
-                ]);
-            }
-
-            // Clear session data
-            session()->forget('buy_now_order');
-            
-            // If using cart, clear cart
-            if (!$shouldUseBuyNow) {
-                $cart->items()->delete();
-                $cart->delete();
-            }
-
-            \DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Order placed successfully!',
-                'redirect_url' => route('order.confirmation', $order->id)
-            ]);
-
-        } catch (\Exception $e) {
-            \DB::rollBack();
-            \Log::error('Order placement error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to place order. Please try again. Error: ' . $e->getMessage()
-            ], 500);
-        }
     }
 
     public function applyPromo(Request $request)

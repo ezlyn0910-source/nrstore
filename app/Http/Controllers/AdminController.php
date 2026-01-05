@@ -50,7 +50,7 @@ class AdminController extends Controller
         // Get counts for status navigation
         $statusCounts = [
             'all' => Order::count(),
-            'paid' => Order::paid()->count(),
+            'paid' => Order::paymentPaid()->count(),
             'processing' => Order::processing()->count(),
             'shipped' => Order::shipped()->count(),
             'cancelled' => Order::cancelled()->count(),
@@ -63,7 +63,7 @@ class AdminController extends Controller
                 ->whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
                 ->sum('total_amount'),
-            'uncomplete_orders'=> Order::where('status', '!=','shipped')->count(),
+            'uncomplete_orders' => Order::whereIn('status', ['pending','processing'])->count(),
         ];
 
         return view('admin.dashboard', compact('stats', 'users', 'recentOrders', 'ordersByStatus', 'statusCounts', 'status', 'ordersQuery'));

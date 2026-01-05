@@ -1216,7 +1216,7 @@
         flex-direction: column;
     }
 }
-f
+
 #orderPopup { pointer-events: auto; }
 
 #orderPopup .order-popup-content {
@@ -1263,27 +1263,27 @@ f
                     <div class="status-categories">
                         <button type="button" class="status-category active" data-status="all">
                             <span class="status-text">All Orders</span>
-                            <span class="status-count">{{ $orders->count() }}</span>
+                            <span class="status-count">{{ method_exists($orders,'total') ? $orders->total() : $orders->count() }}</span>
                         </button>
 
                         <button type="button" class="status-category" data-status="processing">
                             <span class="status-text">Processing</span>
-                            <span class="status-count">{{ $orders->where('status', 'processing')->count() }}</span>
+                            <span class="status-count">{{ $orders->getCollection()->where('status', 'processing')->count() }}</span>
                         </button>
 
                         <button type="button" class="status-category" data-status="shipped">
                             <span class="status-text">Shipped</span>
-                            <span class="status-count">{{ $orders->where('status', 'shipped')->count() }}</span>
+                            <span class="status-count">{{ $orders->getCollection()->where('status', 'shipped')->count() }}</span>
                         </button>
 
                         <button type="button" class="status-category" data-status="delivered">
                             <span class="status-text">Delivered</span>
-                            <span class="status-count">{{ $orders->where('status', 'delivered')->count() }}</span>
+                            <span class="status-count">{{ $orders->getCollection()->where('status', 'delivered')->count() }}</span>
                         </button>
 
-                        <button type="button" class="status-category" data-status="cancelled">
-                            <span class="status-text">Cancelled</span>
-                            <span class="status-count">{{ $orders->where('status', 'cancelled')->count() }}</span>
+                        <button type="button" class="status-category" data-status="refunded">
+                            <span class="status-text">Refunded</span>
+                            <span class="status-count">{{ $orders->getCollection()->where('status', 'refunded')->count() }}</span>
                         </button>
                     </div>
                 </div>
@@ -1308,25 +1308,29 @@ f
                                             Ordered on: {{ $order->created_at->format('M d, Y') }}
                                         </div>
                                         <div class="shipping-address">
-                                            Deliver to: 
-                                            @if($order->shippingAddress)
+                                            Deliver to:
+                                            @php $sa = $order->shippingAddress; @endphp
+
+                                            @if($sa)
                                                 @php
-                                                    $addressParts = [
-                                                        $order->shippingAddress->full_name,
-                                                        $order->shippingAddress->address_line_1,
-                                                        $order->shippingAddress->address_line_2,
-                                                        $order->shippingAddress->city,
-                                                        $order->shippingAddress->state,
-                                                        $order->shippingAddress->postal_code,
-                                                        $order->shippingAddress->country
-                                                    ];
-                                                    $addressLine = implode(', ', array_filter($addressParts, function($part) {
-                                                        return !empty($part);
-                                                    }));
+                                                    $name = trim(($sa->full_name ?? trim(($sa->first_name ?? '').' '.($sa->last_name ?? ''))));
+                                                    $addr = $sa->formatted_address
+                                                        ?? implode(', ', array_filter([
+                                                            $sa->address_line_1 ?? null,
+                                                            $sa->address_line_2 ?? null,
+                                                            $sa->city ?? null,
+                                                            $sa->state ?? null,
+                                                            $sa->postal_code ?? null,
+                                                            $sa->country ?? null,
+                                                        ]));
+
+                                                    $display = trim(implode("\n", array_filter([$name, $addr])));
                                                 @endphp
-                                                {{ $addressLine }}
-                                                @if($order->shippingAddress->phone)
-                                                    <br><small>Phone: {{ $order->shippingAddress->phone }}</small>
+
+                                                {!! nl2br(e($display ?: 'Address not available')) !!}
+
+                                                @if(!empty($sa->phone))
+                                                    <br><small>Phone: {{ $sa->phone }}</small>
                                                 @endif
                                             @else
                                                 Address not available

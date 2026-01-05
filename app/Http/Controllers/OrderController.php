@@ -11,24 +11,27 @@ class OrderController extends Controller
 {
     public function index()
     {
+        $isGuest = !Auth::check();
+
         if (Auth::check()) {
-            $orders = Order::with([
+           $orders = Order::with([
                 'orderItems.product',
                 'orderItems.variation',
                 'shippingAddress',
             ])
             ->where('user_id', Auth::id())
+
+            ->where('payment_status', Order::PAYMENT_STATUS_PAID)
+
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10);
 
-            return view('orders.index', compact('orders'));
         } else {
-            $orders = collect();
-            $isGuest = true;
-            return view('orders.index', compact('orders', 'isGuest'));
+            $orders = Order::whereRaw('1=0')->paginate(10);
         }
-    }
 
+        return view('orders.index', compact('orders', 'isGuest'));
+    }
 
     public function show($orderId)
     {
@@ -88,7 +91,7 @@ class OrderController extends Controller
 
             'items' => $order->orderItems->map(function ($item) {
                 return [
-                    'name' => $item->product_name ?? $item->product->name,
+                    'name' => $item->product_name ?? optional($item->product)->name ?? 'Product Not Available',
                     'quantity' => $item->quantity,
                     'price' => (float) $item->price
                 ];
@@ -128,7 +131,7 @@ class OrderController extends Controller
         try {
             $order->updateStatus(
                 Order::STATUS_CANCELLED,
-                'Order cancelled by customer'
+                'Cancellation requested by customer'
             );
 
             return response()->json([

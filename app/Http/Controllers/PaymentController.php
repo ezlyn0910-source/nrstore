@@ -505,7 +505,7 @@ class PaymentController extends Controller
                     'body'   => $response->body(),
                 ]);
 
-                $order->markAsFailed('Unable to create Toyyibpay bill');
+                $order->markAsFailed('toyyibpay', null, ['error' => 'Unable to create Toyyibpay bill']);
 
                 return redirect()
                     ->route('checkout.failed')
@@ -518,7 +518,7 @@ class PaymentController extends Controller
 
             if (!$billCode) {
                 Log::error('Toyyibpay BillCode missing in response', ['response' => $data]);
-                $order->markAsFailed('Toyyibpay response invalid');
+                $order->markAsFailed('toyyibpay', null, ['error' => 'Toyyibpay response invalid', 'response' => $data]);
 
                 return redirect()
                     ->route('checkout.failed')
@@ -537,7 +537,7 @@ class PaymentController extends Controller
                 'error'    => $e->getMessage(),
             ]);
 
-            $order->markAsFailed('Toyyibpay initialisation failed');
+            $order->markAsFailed('toyyibpay', null, ['error' => 'Toyyibpay initialisation failed']);
 
             return redirect()
                 ->route('checkout.failed')

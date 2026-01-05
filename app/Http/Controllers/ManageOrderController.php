@@ -28,7 +28,8 @@ class ManageOrderController extends Controller
             Order::STATUS_PAID,
             Order::STATUS_PROCESSING,
             Order::STATUS_SHIPPED,
-            Order::STATUS_CANCELLED
+            Order::STATUS_CANCELLED,
+            Order::STATUS_REFUNDED,
         ])) {
             $query->where('status', $request->status);
         }
@@ -75,6 +76,7 @@ class ManageOrderController extends Controller
             'processing' => Order::where('status', Order::STATUS_PROCESSING)->count(),
             'shipped'    => Order::where('status', Order::STATUS_SHIPPED)->count(),
             'cancelled'  => Order::where('status', Order::STATUS_CANCELLED)->count(),
+            'refunded'   => Order::where('status', Order::STATUS_REFUNDED)->count(),
         ];
 
         return view('manageorder.index', compact('orders', 'stats'));
@@ -98,7 +100,8 @@ class ManageOrderController extends Controller
             Order::STATUS_PAID => 'Paid',
             Order::STATUS_PROCESSING => 'Processing',
             Order::STATUS_SHIPPED => 'Shipped',
-            Order::STATUS_CANCELLED => 'Cancelled'
+            Order::STATUS_CANCELLED => 'Cancelled',
+            Order::STATUS_REFUNDED => 'Refunded',
         ];
 
         return view('manageorder.show', compact('order', 'statusOptions'));
@@ -122,7 +125,8 @@ class ManageOrderController extends Controller
             Order::STATUS_PAID => 'Paid',
             Order::STATUS_PROCESSING => 'Processing',
             Order::STATUS_SHIPPED => 'Shipped',
-            Order::STATUS_CANCELLED => 'Cancelled'
+            Order::STATUS_CANCELLED => 'Cancelled',
+            Order::STATUS_REFUNDED => 'Refunded',
         ];
 
         return view('manageorder.edit', compact('order', 'statusOptions'));
@@ -135,7 +139,8 @@ class ManageOrderController extends Controller
                 Order::STATUS_PAID,
                 Order::STATUS_PROCESSING,
                 Order::STATUS_SHIPPED,
-                Order::STATUS_CANCELLED
+                Order::STATUS_CANCELLED,
+                Order::STATUS_REFUNDED,
             ]),
             'tracking_number' => 'nullable|string|max:255|required_if:status,' . Order::STATUS_SHIPPED
         ], [
@@ -215,7 +220,8 @@ class ManageOrderController extends Controller
                 Order::STATUS_PAID,
                 Order::STATUS_PROCESSING,
                 Order::STATUS_SHIPPED,
-                Order::STATUS_CANCELLED
+                Order::STATUS_CANCELLED,
+                Order::STATUS_REFUNDED,
             ])
         ]);
 
@@ -295,7 +301,8 @@ class ManageOrderController extends Controller
                             Order::STATUS_PAID,
                             Order::STATUS_PROCESSING,
                             Order::STATUS_SHIPPED,
-                            Order::STATUS_CANCELLED
+                            Order::STATUS_CANCELLED,
+                            Order::STATUS_REFUNDED,
                         ])
                     ]);
                     

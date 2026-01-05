@@ -72,17 +72,14 @@ class Order extends Model
 
     /**
      * STATUS (business fulfilment flow)
-     * pending = internal only (payment not confirmed yet)
-     * processing = payment confirmed, preparing order
-     * shipped = parcel shipped
-     * delivered = parcel delivered
-     * cancelled = admin only
      */
     public const STATUS_PENDING    = 'pending';
     public const STATUS_PROCESSING = 'processing';
     public const STATUS_SHIPPED    = 'shipped';
     public const STATUS_DELIVERED  = 'delivered';
     public const STATUS_CANCELLED  = 'cancelled';
+    public const STATUS_REFUNDED = 'refunded';
+    public const STATUS_PAID = 'paid';
 
     /**
      * Order status progression (lower → earlier, higher → later)
@@ -92,7 +89,8 @@ class Order extends Model
         self::STATUS_PROCESSING => 2,
         self::STATUS_SHIPPED    => 3,
         self::STATUS_DELIVERED  => 4,
-        self::STATUS_CANCELLED  => 99,
+        self::STATUS_CANCELLED  => 98,
+        self::STATUS_REFUNDED   => 99,
     ];
 
     /**
@@ -156,10 +154,12 @@ class Order extends Model
     {
         return match ($this->status) {
             self::STATUS_PENDING    => 'Pending',
+            self::STATUS_PAID       => 'Paid',
             self::STATUS_PROCESSING => 'Processing',
             self::STATUS_SHIPPED    => 'Shipped',
             self::STATUS_DELIVERED  => 'Delivered',
             self::STATUS_CANCELLED  => 'Cancelled',
+            self::STATUS_REFUNDED => 'Refunded',
             default                 => ucfirst((string) $this->status),
         };
     }
@@ -261,7 +261,8 @@ class Order extends Model
 
         $this->payment_status = self::PAYMENT_STATUS_FAILED;
 
-        $this->updateStatus(self::STATUS_CANCELLED, 'Payment failed via ' . strtoupper($gateway));
+        $this->updateStatus(self::STATUS_PENDING, 'Payment failed via ' . strtoupper($gateway));
+
     }
 
     /**
@@ -317,14 +318,9 @@ class Order extends Model
 
                     case self::STATUS_CANCELLED:
                         $this->cancelled_at = $this->cancelled_at ?? now();
-                        if (in_array($oldStatus, [self::STATUS_PROCESSING, self::STATUS_PAID, self::STATUS_SHIPPED])) {
+                        if (in_array($oldStatus, [self::STATUS_PROCESSING, self::STATUS_SHIPPED])) {
                             $this->restoreStock();
                         }
-                        break;
-
-                    case self::STATUS_PAID:
-                        $this->payment_status = self::PAYMENT_STATUS_PAID;
-                        $this->paid_at = $this->paid_at ?? now();
                         break;
                 }
 
@@ -522,6 +518,7 @@ class Order extends Model
             self::STATUS_SHIPPED,
             self::STATUS_DELIVERED,
             self::STATUS_CANCELLED,
+            self::STATUS_REFUNDED,
         ];
     }
 

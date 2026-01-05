@@ -113,6 +113,7 @@
                                             data-country-code="{{ $address->country_code }}"
                                             data-is-default="{{ $address->is_default ? '1' : '0' }}"
                                             data-update-url="{{ route('checkout.address.update', $address->id) }}"
+                                            data-delete-url="{{ route('checkout.address.delete', $address->id) }}" 
                                         >
                                             Edit
                                         </button>
@@ -360,11 +361,21 @@
                                 <label for="edit_is_default" class="form-check-label">Set as default address</label>
                             </div>
 
+                            <div class="delete-address-wrap">
+                                <a href="#"
+                                id="deleteAddressLink"
+                                class="delete-address-link"
+                                data-delete-url="">
+                                    Delete Address
+                                </a>
+                            </div>
+
                             <div class="form-actions edit-form-actions">
                                 <button type="submit" class="btn btn-primary save-btn" id="editAddressSave">
                                     Save Changes
                                 </button>
                             </div>
+
                         </form>
                     </div>
                 </div>
@@ -769,6 +780,47 @@
             });
         });
 
+        const deleteAddressLink = document.getElementById('deleteAddressLink');
+        if (deleteAddressLink) {
+            deleteAddressLink.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const deleteUrl = this.dataset.deleteUrl || '';
+                if (!deleteUrl) {
+                    alert('Delete link is not ready. Please reopen the edit modal.');
+                    return;
+                }
+
+                if (!confirm('Are you sure you want to delete this address?')) return;
+
+                fetch(deleteUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(async res => {
+                    const contentType = res.headers.get('content-type') || '';
+                    const isJson = contentType.includes('application/json');
+                    const data = isJson ? await res.json() : null;
+
+                    if (res.ok && data && data.success) {
+                        alert(data.message || 'Address deleted successfully!');
+                        window.location.reload();
+                        return;
+                    }
+
+                    alert((data && data.message) ? data.message : 'Failed to delete address.');
+                })
+                .catch(err => {
+                    console.error('Delete address error:', err);
+                    alert('Network error. Please try again.');
+                });
+            });
+        }
+
         const toggleEl = document.querySelector('.delivery-toggle');
         const pills    = document.querySelectorAll('.delivery-pill');
         const pickupInfo = document.getElementById('pickupInfo');
@@ -923,6 +975,15 @@
                 trigger.dataset.country || 'Malaysia';
             editAddressForm.querySelector('#edit_country_code').value =
                 trigger.dataset.countryCode || '60';
+
+            const deleteLink = document.getElementById('deleteAddressLink');
+            if (deleteLink) {
+                // If your route name exists: checkout.address.delete
+                // We'll build the delete URL from the update URL by replacing '/address/{id}' with '/address/{id}'
+                // Best: pass delete route in data attr. Add data-delete-url in the Edit button.
+                deleteLink.dataset.deleteUrl = trigger.dataset.deleteUrl || '';
+                deleteLink.setAttribute('data-address-id', trigger.getAttribute('data-id') || '');
+            }
 
             const stateSelect = editAddressForm.querySelector('#edit_state');
             if (stateSelect) {
@@ -1522,6 +1583,21 @@
     border: 1px solid transparent;
     cursor: pointer;
     transition: all 0.2s ease;
+}
+
+.delete-address-wrap{
+    margin-top: 10px;
+    text-align: left;
+}
+.delete-address-link{
+    color: #dc2626;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    display: inline-block;
+}
+.delete-address-link:hover{
+    color: #b91c1c;
 }
 
 .add-address-form .btn-primary{
