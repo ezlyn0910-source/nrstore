@@ -9,7 +9,8 @@
 
     <title>{{ config('app.name', 'NR Store') }}</title>
 
-    <link rel="icon" type="image/png" href="{{ asset('images/tablogo.png') }}">
+    <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
@@ -83,9 +84,12 @@
                 <div class="container">
                     <div class="header-bottom-content">
                         <!-- Left Column - Logo -->
-                        <div class="logo-section-wrapper">
-                            <a href="/" class="logo-link">NR INTELLITECH</a>
-                        </div>
+                        <a href="/" class="logo-link">
+                            <img src="{{ asset('images/logo/company_logo.png') }}" alt="NRIT Store Logo" class="logo-img">
+                            <span class="logo-text">
+                                <span class="logo-highlight">NRIT</span> Store
+                            </span>
+                        </a>
 
                         <!-- Center Column - Navigation -->
                         <div class="nav-section-wrapper">
@@ -582,17 +586,30 @@
         }
 
         .logo-section-wrapper {
-            flex: 0 0 auto;
-            margin-right: auto;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-img {
+            height: 36px;
+            width: auto;
+            object-fit: contain;
+            flex-shrink: 0;
         }
 
         .logo-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
             font-size: 2rem;
             font-weight: 700;
             color: var(--white);
             text-decoration: none;
             transition: color 0.3s ease;
-            display: block;
+        }
+
+        .logo-highlight {
+            color: var(--light-green);
         }
 
         .logo-link:hover {
