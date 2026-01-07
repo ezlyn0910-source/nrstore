@@ -332,7 +332,7 @@
 
 .status-pending { background: #fff3cd; color: #856404; }
 .status-confirmed { background: #d1ecf1; color: #0c5460; }
-.status-processing { background: #cce7ff; color: #004085; }
+.status-processing { background: #fff3cd; color: #856404; }
 .status-shipped { background: #d4edda; color: #155724; }
 .status-delivered { background: var(--success); color: var(--white); }
 .status-cancelled { background: #f8d7da; color: #721c24; }

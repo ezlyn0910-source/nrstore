@@ -238,9 +238,9 @@
 }
 
 .order-status-badge.processing {
-    background: #dbeafe;
-    color: #1e40af;
-    border: 1px solid #3b82f6;
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #6d5304ff;
 }
 
 .order-status-badge.shipped {
@@ -265,6 +265,18 @@
     background: #fee2e2;
     color: #991b1b;
     border: 1px solid #ef4444;
+}
+
+.order-status-badge.refunded {
+    background: #e0f2fe; 
+    color: #075985; 
+    border: 1px solid #053c59ff; 
+}
+
+.status-badge.refunded { 
+    background: #e0f2fe; 
+    color: #075985; 
+    border: 1px solid #053c59ff; 
 }
 
 /* Ensure filter empty state styles */
@@ -541,18 +553,6 @@
     box-shadow: 0 6px 20px rgba(45, 74, 53, 0.4);
 }
 
-.order-status-badge.refunded {
-    background: #f3e8ff;
-    color: #6b21a8;
-    border: 1px solid #9333ea;
-}
-
-.status-badge.refunded { 
-    background: #f3e8ff; 
-    color: #6b21a8; 
-    border-color: #9333ea;
-}
-
 /* Pagination */
 .pagination-container {
     display: flex;
@@ -622,6 +622,7 @@
     color: #991b1b; 
     border-color: #ef4444;
 }
+
 
 /* CSS Variables */
 :root {

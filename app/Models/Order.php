@@ -13,9 +13,7 @@ class Order extends Model
 {
     use HasFactory;
 
-    /**
-     * Mass assignable attributes.
-     */
+    /**  Mass assignable attributes **/
     protected $fillable = [
         'user_id',
         'delivery_method',
@@ -43,9 +41,7 @@ class Order extends Model
         'paid_at',
     ];
 
-    /**
-     * Attribute casting.
-     */
+    /** Attribute casting **/
     protected $casts = [
         'total_amount'    => 'decimal:2',
         'shipping_cost'   => 'decimal:2',
@@ -58,9 +54,7 @@ class Order extends Model
         'gateway_meta'    => 'array',
     ];
 
-    /**
-     * Accessors automatically appended when model is converted to array / JSON.
-     */
+    /** Accessors automatically appended when model is converted to array / JSON **/
     protected $appends = [
         'formatted_total_amount',
         'status_label',
@@ -70,9 +64,7 @@ class Order extends Model
         'is_paid',
     ];
 
-    /**
-     * STATUS (business fulfilment flow)
-     */
+    /** STATUS (business fulfilment flow) **/
     public const STATUS_PENDING    = 'pending';
     public const STATUS_PROCESSING = 'processing';
     public const STATUS_PAID       = 'paid';
@@ -81,9 +73,7 @@ class Order extends Model
     public const STATUS_CANCELLED  = 'cancelled';
     public const STATUS_REFUNDED = 'refunded';
 
-    /**
-     * Order status progression (lower → earlier, higher → later)
-     */
+    /** Order status progression (lower → earlier, higher → later) **/
     public const STATUS_FLOW = [
         self::STATUS_PENDING    => 1,
         self::STATUS_PROCESSING => 2,
@@ -93,22 +83,16 @@ class Order extends Model
         self::STATUS_REFUNDED   => 99,
     ];
 
-    /**
-     * Payment method constants (optional / if you standardize later)
-     */
+    /** Payment method constants (optional / if you standardize later) **/
     public const PAYMENT_METHOD_STRIPE    = 'stripe';
     public const PAYMENT_METHOD_TOYYIBPAY = 'toyyibpay';
 
-    /**
-     * Payment status constants.
-     */
+    /** Payment status constants **/
     public const PAYMENT_STATUS_PENDING = 'pending';
     public const PAYMENT_STATUS_PAID    = 'paid';
     public const PAYMENT_STATUS_FAILED  = 'failed';
 
-    /**
-     * Relationships
-     */
+    /** Relationships **/
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -259,51 +243,61 @@ class Order extends Model
 
     }
 
-    /**
-     * Update order status safely with proper checks and logging.
-     */
+    /** Update order status safely with proper checks and logging **/
     public function updateStatus(string $status, string $notes = null): bool
     {
         try {
             if (! array_key_exists($status, self::STATUS_FLOW)) {
                 \Log::warning("Attempted to set invalid order status", [
                     'order_id' => $this->id,
-                    'status' => $status,
+                    'status'   => $status,
                 ]);
                 return false;
             }
 
             $oldStatus = $this->status;
 
-            // Prevent backward transition
             if (
+                $status !== self::STATUS_REFUNDED &&
                 isset(self::STATUS_FLOW[$oldStatus]) &&
                 self::STATUS_FLOW[$status] < self::STATUS_FLOW[$oldStatus]
             ) {
                 \Log::warning("Cannot revert order status", [
                     'order_id' => $this->id,
-                    'from' => $oldStatus,
-                    'to' => $status,
+                    'from'     => $oldStatus,
+                    'to'       => $status,
                 ]);
                 return false;
             }
 
-            // Prevent changes to shipped or cancelled orders
-            if ($oldStatus === self::STATUS_SHIPPED && $status !== self::STATUS_SHIPPED) {
-                \Log::warning("Shipped orders cannot be modified", ['order_id' => $this->id]);
+            if (
+                $oldStatus === self::STATUS_SHIPPED &&
+                ! in_array($status, [self::STATUS_SHIPPED, self::STATUS_REFUNDED], true)
+            ) {
+                \Log::warning("Shipped orders cannot be modified", [
+                    'order_id' => $this->id,
+                    'from'     => $oldStatus,
+                    'to'       => $status,
+                ]);
                 return false;
             }
 
-            if ($oldStatus === self::STATUS_CANCELLED) {
-                \Log::warning("Cancelled orders cannot be modified", ['order_id' => $this->id]);
+            if ($oldStatus === self::STATUS_CANCELLED && $status !== self::STATUS_REFUNDED) {
+                \Log::warning("Cancelled orders cannot be modified", [
+                    'order_id' => $this->id,
+                    'from'     => $oldStatus,
+                    'to'       => $status,
+                ]);
                 return false;
             }
 
             $this->status = $status;
 
             DB::transaction(function () use ($status, $oldStatus, $notes) {
+
                 switch ($status) {
                     case self::STATUS_SHIPPED:
+                        // Deduct stock only once
                         if ($oldStatus !== self::STATUS_SHIPPED) {
                             $this->deductStockSafe();
                         }
@@ -312,9 +306,13 @@ class Order extends Model
 
                     case self::STATUS_CANCELLED:
                         $this->cancelled_at = $this->cancelled_at ?? now();
-                        if (in_array($oldStatus, [self::STATUS_PROCESSING, self::STATUS_SHIPPED])) {
+
+                        if (in_array($oldStatus, [self::STATUS_PROCESSING, self::STATUS_SHIPPED], true)) {
                             $this->restoreStock();
                         }
+                        break;
+
+                    case self::STATUS_REFUNDED:
                         break;
                 }
 
@@ -334,17 +332,15 @@ class Order extends Model
         } catch (\Exception $e) {
             \Log::error("Failed to update order status", [
                 'order_id' => $this->id,
-                'from' => $this->status,
-                'to' => $status,
-                'error' => $e->getMessage()
+                'from'     => $this->status,
+                'to'       => $status,
+                'error'    => $e->getMessage(),
             ]);
             return false;
         }
     }
 
-    /**
-     * Safe stock deduction to avoid exceptions that cause 500.
-     */
+    /** Safe stock deduction to avoid exceptions that cause 500 **/
     public function deductStockSafe(): void
     {
         $this->loadMissing('orderItems.product', 'orderItems.variation');
