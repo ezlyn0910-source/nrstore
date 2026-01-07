@@ -16,28 +16,27 @@ use Stripe\Checkout\Session as StripeSession;
 class PaymentController extends Controller
 {
 
-    public const METHOD_STRIPE      = 'stripe_card';
-    public const METHOD_TOYYIBPAY   = 'fpx_toyyibpay';
-
-    /* Map frontend payment method to internal gateway */
-    private function mapToGateway(string $frontendMethod): string
-    {
-        return match($frontendMethod) {
-            'credit_card', 'debit_card' => self::METHOD_STRIPE,
-            'online_banking' => self::METHOD_TOYYIBPAY,
-            default => $frontendMethod
-        };
-    }
+    public const METHOD_STRIPE      = 'stripe';
+    public const METHOD_TOYYIBPAY   = 'toyyibpay';
 
     /* Main entry: called by Place Order button (POST /payment/process) */
     public function process(Request $request)
     {
+
+        \Log::info('PAYMENT PROCESS INPUT', [ 'payload' => $request->all(), 'user_id' => optional($request->user())->id, ]);
+
         $user = $request->user();
 
         $validated = $request->validate([
             'payment_method'   => 'required|in:credit_card,debit_card,online_banking',
             'delivery_option'  => 'required|in:delivery,self_pickup',
-            'selected_address' => 'required_if:delivery_option,delivery|nullable|integer',
+            'selected_address' => 'exclude_unless:delivery_option,delivery|required|integer|exists:addresses,id',
+        ]);
+
+        \Log::info('PAYMENT PROCESS INPUT', [
+            'payload'   => $request->all(),
+            'validated' => $validated,
+            'user_id'   => optional($request->user())->id,
         ]);
 
         $cart = Cart::where('user_id', $user->id)
@@ -52,36 +51,64 @@ class PaymentController extends Controller
         }
 
         $subtotal = $cart->items->sum(function ($item) {
-            return (float)$item->price * (int)$item->quantity;
+            return (float) $item->price * (int) $item->quantity;
         });
 
-        $isPickup = ($validated['delivery_option'] === 'self_pickup');
-        $addressId = $isPickup ? null : (int) $validated['selected_address'];
-        $shippingFee = $isPickup ? 0 : 10.99;
+        $isPickup   = ($validated['delivery_option'] === 'self_pickup');
+        $addressId  = $isPickup ? null : (int) $validated['selected_address'];
+        $shippingFee = $this->getShippingFee($isPickup);
         $discount    = 0;
         $finalAmount = max(0, $subtotal + $shippingFee - $discount);
 
-        $order = Order::where('user_id', $user->id)
-            ->where('status', Order::STATUS_PENDING)
-            ->where('payment_status', Order::PAYMENT_STATUS_PENDING)
-            ->where('total_amount', $finalAmount)
-            ->where('shipping_address_id', $addressId)
-            ->where('payment_method', $validated['payment_method'])
-            ->latest('id')
-            ->first();
+        $order = null;
+        $existingOrderId = session('buy_now_order');
+
+        if ($existingOrderId) {
+            $order = Order::where('id', $existingOrderId)
+                ->where('user_id', $user->id)
+                ->first();
+        }
 
         if (!$order) {
+            $isPickup = ($validated['delivery_option'] === 'self_pickup');
+
+            // If self pickup, take user's default shipping address for billing
+            $billingId = null;
+
+            if ($isPickup) {
+                $defaultBilling = \App\Models\Address::where('user_id', $user->id)
+                    ->where('type', 'shipping')
+                    ->where('is_default', 1)
+                    ->first();
+
+                // fallback: if no default, take latest shipping address
+                if (!$defaultBilling) {
+                    $defaultBilling = \App\Models\Address::where('user_id', $user->id)
+                        ->where('type', 'shipping')
+                        ->latest('id')
+                        ->first();
+                }
+
+                $billingId = $defaultBilling?->id;
+            } else {
+                $billingId = (int) $validated['selected_address'];
+            }
+
             $order = Order::create([
                 'user_id'             => $user->id,
+                'shipping_method' => $isPickup ? 'self_pickup' : 'standard',
+                'delivery_method'     => $validated['delivery_option'],
                 'shipping_address_id' => $addressId,
-                'billing_address_id'  => $addressId,
+                'billing_address_id'  => $billingId,
                 'total_amount'        => $finalAmount,
                 'shipping_cost'       => $shippingFee,
                 'tax_amount'          => 0,
                 'discount_amount'     => $discount,
                 'status'              => Order::STATUS_PENDING,
                 'payment_method'      => $validated['payment_method'],
-                'payment_gateway'     => $this->mapGatewayName($validated['payment_method']),
+                'payment_gateway'     => in_array($validated['payment_method'], ['credit_card', 'debit_card'], true)
+                    ? self::METHOD_STRIPE
+                    : self::METHOD_TOYYIBPAY,
                 'payment_status'      => Order::PAYMENT_STATUS_PENDING,
                 'currency'            => strtoupper(config('services.stripe.currency', 'myr')),
             ]);
@@ -168,11 +195,8 @@ class PaymentController extends Controller
                 }
             }
 
-            $successUrl = route('payment.stripe.success.path', [
-                'order'      => $order->id,
-                'session_id' => 'SESSION_ID_PLACEHOLDER',
-            ]);
-            $successUrl = str_replace('SESSION_ID_PLACEHOLDER', '{CHECKOUT_SESSION_ID}', $successUrl);
+            $successUrl = route('payment.stripe.success.path', ['order' => $order->id])
+                . '?sid={CHECKOUT_SESSION_ID}';
 
             $cancelUrl = route('payment.stripe.cancel', ['order' => $order->id]);
 
@@ -248,17 +272,16 @@ class PaymentController extends Controller
     }
 
     /* Stripe success redirect (browser) */
-    public function stripeSuccess(Request $request, Order $order, string $session_id)
+    public function stripeSuccess(Request $request, Order $order)
     {
         Log::info('STRIPE SUCCESS HIT', [
-            'order_id'   => $order->id,
-            'url'        => $request->fullUrl(),
-            'session_id' => $session_id,
+            'order_id' => $order->id,
+            'url'      => $request->fullUrl(),
         ]);
 
-        $sessionId = $session_id;
+        $sessionId = (string) $request->query('sid', '');
 
-        if (empty($sessionId)) {
+        if ($sessionId === '') {
             return redirect()
                 ->route('checkout.success', ['order' => $order->id])
                 ->with('info', 'We are verifying your payment. If it does not appear, please contact support.');
@@ -309,6 +332,7 @@ class PaymentController extends Controller
                 return redirect()->route('checkout.success', ['order' => $order->id]);
             }
 
+            // still pending verification
             $order->payment_status = Order::PAYMENT_STATUS_PENDING;
             $order->save();
 
@@ -392,7 +416,7 @@ class PaymentController extends Controller
                     return response('Order not found', 200);
                 }
 
-                if ($order->payment_status === \App\Models\Order::PAYMENT_STATUS_PAID) {
+                if ($order->payment_status === Order::PAYMENT_STATUS_PAID) {
                     return response('Already processed', 200);
                 }
 
@@ -432,7 +456,7 @@ class PaymentController extends Controller
                     return response('OK', 200);
                 }
 
-                if ($order->payment_status === \App\Models\Order::PAYMENT_STATUS_PAID) {
+                if ($order->payment_status === Order::PAYMENT_STATUS_PAID) {
                     return response('Already processed', 200);
                 }
 
@@ -605,22 +629,6 @@ class PaymentController extends Controller
         return redirect()->route('checkout.failed')->with('error', 'Payment was cancelled or failed.');
     }
 
-    /* ===== GENERIC SUCCESS / CANCEL PAGES (OPTIONAL) =====*/
-
-    public function success()
-    {
-        return redirect()
-            ->route('orders.index')
-            ->with('success', 'Payment processed. You can review your order details in your account.');
-    }
-
-    public function cancel()
-    {
-        return redirect()
-            ->route('checkout.failed')
-            ->with('error', 'Payment was cancelled. You can try again or choose another method.');
-    }
-
     /* Generic webhook receiver */
     public function webhook(Request $request, string $gateway)
     {
@@ -629,16 +637,17 @@ class PaymentController extends Controller
         return response('OK', 200);
     }
 
+    private function getShippingFee(bool $isPickup = false): float
+    {
+        return $isPickup ? 0.0 : (float) config('shipping.shipping_fee', 0);
+    }
+
     private function clearUserCart($user): void
     {
         $carts = Cart::where('user_id', $user->id)->get();
 
         foreach ($carts as $cart) {
-            if (method_exists($cart, 'items')) {
-                $cart->items()->delete();
-            } else {
-                $cart->cartItems()->delete();
-            }
+            $cart->items()->delete();
         }
 
         session()->forget('buy_now_order');

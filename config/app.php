@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'pickup_address' => env('PICKUP_ADDRESS'),
+
 ];

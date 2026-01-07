@@ -24,7 +24,7 @@
             </p>
         @endisset
 
-        <a href="{{ route('orders.show', $order->id ?? null) }}" class="btn-go-order">
+        <a href="{{ route('orders.index') }}" class="btn btn-primary">
             Go to Order
         </a>
 

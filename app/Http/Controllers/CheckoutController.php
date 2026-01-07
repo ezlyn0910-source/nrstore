@@ -38,7 +38,7 @@ class CheckoutController extends Controller
         $total = 0;
         $tax = 0;
         $discount = 0;
-        $shippingFee = 10.99;
+        $shippingFee = $this->getShippingFee(false);
 
         // 2. Check for Buy Now Session Data first
         $buyNowOrder = session('buy_now_order');
@@ -97,7 +97,7 @@ class CheckoutController extends Controller
             })->filter()->values();
 
             $subtotal = $cartItems->sum('total');
-            $shippingFee = 10.99;
+            $shippingFee = $this->getShippingFee(false);
             $total = $subtotal + $shippingFee;
 
         } else {
@@ -110,7 +110,6 @@ class CheckoutController extends Controller
 
             $cartItems = $cart->items()->with(['product.images', 'variation'])->get();
             $subtotal = $cart->total_amount;
-            $shippingFee = 10.99;
             $total = $subtotal + $shippingFee;
         }
 
@@ -266,6 +265,11 @@ class CheckoutController extends Controller
         return response()->json(['success' => true]);
     }
 
+    private function getShippingFee(bool $isPickup = false): float
+    {
+        return $isPickup ? 0.0 : (float) config('shipping.shipping_fee', 0);
+    }
+
     private function getVariationName(Variation $variation): string
     {
         return trim(implode(' • ', array_filter([
@@ -314,22 +318,9 @@ class CheckoutController extends Controller
         return response()->json(['valid' => true]);
     }
     
-    public function calculateShipping(Request $request)
-    {
-        return response()->json(['shipping' => 5.99]);
-    }
-    
     public function removePromoCode(Request $request)
     {
         return response()->json(['success' => true]);
-    }
-    
-    public function getShippingMethods()
-    {
-        return response()->json([
-            ['id' => 'standard', 'name' => 'Standard Shipping', 'price' => 5.99, 'days' => '3-5'],
-            ['id' => 'express', 'name' => 'Express Shipping', 'price' => 12.99, 'days' => '1-2']
-        ]);
     }
     
     public function getPaymentMethods()
@@ -568,11 +559,7 @@ class CheckoutController extends Controller
 
     public function success(Order $order)
     {
-        // Show success page regardless of authentication
-        return view('checkout.success', [
-            'order' => $order,
-            'message' => 'Your payment was successful!'
-        ]);
+        return view('checkout.success', compact('order'));
     }
 
     public function failed()

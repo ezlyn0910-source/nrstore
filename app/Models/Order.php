@@ -18,6 +18,8 @@ class Order extends Model
      */
     protected $fillable = [
         'user_id',
+        'delivery_method',
+        'shipping_method',
         'shipping_address_id',
         'billing_address_id',
         'order_number',
@@ -28,14 +30,12 @@ class Order extends Model
         'status',
         'tracking_number',
         'payment_method',
+        'payment_status',
         'notes',
         'shipped_at',
         'delivered_at',
         'cancelled_at',
-        'payment_status',
         'currency',
-
-        // Payment-related
         'payment_gateway',
         'gateway_transaction_id',
         'payment_reference',
@@ -75,11 +75,11 @@ class Order extends Model
      */
     public const STATUS_PENDING    = 'pending';
     public const STATUS_PROCESSING = 'processing';
+    public const STATUS_PAID       = 'paid';
     public const STATUS_SHIPPED    = 'shipped';
     public const STATUS_DELIVERED  = 'delivered';
     public const STATUS_CANCELLED  = 'cancelled';
     public const STATUS_REFUNDED = 'refunded';
-    public const STATUS_PAID = 'paid';
 
     /**
      * Order status progression (lower → earlier, higher → later)
@@ -154,12 +154,11 @@ class Order extends Model
     {
         return match ($this->status) {
             self::STATUS_PENDING    => 'Pending',
-            self::STATUS_PAID       => 'Paid',
             self::STATUS_PROCESSING => 'Processing',
             self::STATUS_SHIPPED    => 'Shipped',
             self::STATUS_DELIVERED  => 'Delivered',
             self::STATUS_CANCELLED  => 'Cancelled',
-            self::STATUS_REFUNDED => 'Refunded',
+            self::STATUS_REFUNDED   => 'Refunded', // Make sure this exists
             default                 => ucfirst((string) $this->status),
         };
     }
@@ -221,14 +220,9 @@ class Order extends Model
             + (float) $this->tax_amount
             - (float) $this->discount_amount;
 
-        $this->save();
     }
 
-    /**
-     * ✅ IMPORTANT: Payment confirmed → move order into fulfilment flow.
-     * Your desired flow:
-     * successful payment → processing → shipped → delivered
-     */
+    /** successful payment → processing → shipped → delivered **/
     public function markAsPaid(string $gateway, ?string $transactionId = null, $rawPayload = null): void
     {
         $this->payment_gateway        = $gateway;
@@ -238,18 +232,18 @@ class Order extends Model
             $this->gateway_meta = is_array($rawPayload) ? $rawPayload : (array) $rawPayload;
         }
 
-        // Payment info
         $this->payment_status = self::PAYMENT_STATUS_PAID;
         $this->paid_at        = $this->paid_at ?? now();
 
-        // Business status should be PROCESSING after successful payment
-        $this->updateStatus(self::STATUS_PROCESSING, 'Payment successful via ' . strtoupper($gateway));
+        $ok = $this->updateStatus(self::STATUS_PROCESSING, 'Payment successful via ' . strtoupper($gateway));
+
+        if (!$ok) {
+            $this->status = self::STATUS_PROCESSING;
+            $this->save();
+        }
     }
 
-    /**
-     * Payment failed / cancelled by gateway.
-     * Business status becomes CANCELLED and payment_status becomes FAILED.
-     */
+    /** Payment failed / cancelled by gateway. **/
     public function markAsFailed(string $gateway, ?string $transactionId = null, $rawPayload = null): void
     {
         $this->payment_gateway        = $gateway;

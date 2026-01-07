@@ -21,16 +21,14 @@ class ManageOrderController extends Controller
             'billingAddress', 
             'orderItems.product',
         ])
-        ->where('status', '!=', Order::STATUS_PENDING);
+        ->where('payment_status', '!=', Order::PAYMENT_STATUS_PENDING);
         
         // Filter by status if provided
-        if ($request->has('status') && $request->status != '' && in_array($request->status, [
-            Order::STATUS_PAID,
+        if ($request->filled('status') && in_array($request->status, [
             Order::STATUS_PROCESSING,
             Order::STATUS_SHIPPED,
-            Order::STATUS_CANCELLED,
             Order::STATUS_REFUNDED,
-        ])) {
+        ], true)) {
             $query->where('status', $request->status);
         }
 
@@ -72,9 +70,10 @@ class ManageOrderController extends Controller
 
         $stats = [
             'total'      => Order::where('status', '!=', Order::STATUS_PENDING)->count(),
-            'paid'       => Order::where('status', Order::STATUS_PAID)->count(),
+            'paid'       => Order::where('payment_status', Order::PAYMENT_STATUS_PAID)->count(),
             'processing' => Order::where('status', Order::STATUS_PROCESSING)->count(),
             'shipped'    => Order::where('status', Order::STATUS_SHIPPED)->count(),
+            'delivered'  => Order::where('status', Order::STATUS_DELIVERED)->count(),
             'cancelled'  => Order::where('status', Order::STATUS_CANCELLED)->count(),
             'refunded'   => Order::where('status', Order::STATUS_REFUNDED)->count(),
         ];
@@ -82,9 +81,7 @@ class ManageOrderController extends Controller
         return view('manageorder.index', compact('orders', 'stats'));
     }
 
-    /**
-     * Display the specified order.
-     */
+    /** Display the specified order. **/
     public function show(Order $order): View
     {
         $order->load([
@@ -97,19 +94,14 @@ class ManageOrderController extends Controller
         ]);
 
         $statusOptions = [
-            Order::STATUS_PAID => 'Paid',
-            Order::STATUS_PROCESSING => 'Processing',
             Order::STATUS_SHIPPED => 'Shipped',
-            Order::STATUS_CANCELLED => 'Cancelled',
             Order::STATUS_REFUNDED => 'Refunded',
         ];
 
         return view('manageorder.show', compact('order', 'statusOptions'));
     }
 
-    /**
-     * Show the form for editing the order.
-     */
+    /** Show the form for editing the order. **/
     public function edit(Order $order): View
     {
         $order->load([
@@ -122,7 +114,6 @@ class ManageOrderController extends Controller
         ]);
 
         $statusOptions = [
-            Order::STATUS_PAID => 'Paid',
             Order::STATUS_PROCESSING => 'Processing',
             Order::STATUS_SHIPPED => 'Shipped',
             Order::STATUS_CANCELLED => 'Cancelled',
@@ -136,10 +127,7 @@ class ManageOrderController extends Controller
     {
         $request->validate([
             'status' => 'required|in:' . implode(',', [
-                Order::STATUS_PAID,
-                Order::STATUS_PROCESSING,
                 Order::STATUS_SHIPPED,
-                Order::STATUS_CANCELLED,
                 Order::STATUS_REFUNDED,
             ]),
             'tracking_number' => 'nullable|string|max:255|required_if:status,' . Order::STATUS_SHIPPED

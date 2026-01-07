@@ -21,34 +21,35 @@ class OrderStatusHistory extends Model
         'created_at' => 'datetime',
     ];
 
-    /**
-     * Get the order that owns the status history.
-     */
+    /** Get the order that owns the status history. **/
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
     }
 
-    /**
-     * Get the user who changed the status.
-     */
+    /** Get the user who changed the status. **/
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    /**
-     * Get status label
-     */
-    public function getStatusLabelAttribute()
+    /** Get status label **/
+    public function getStatusLabelAttribute(): string
     {
-        return match($this->status) {
-            Order::STATUS_PENDING    => 'Pending',
-            Order::STATUS_PAID => 'Paid',
-            Order::STATUS_PROCESSING => 'Processing',
-            Order::STATUS_SHIPPED => 'Shipped',
-            Order::STATUS_CANCELLED => 'Cancelled',
-            default => ucfirst($this->status)
-        };
+        $status = strtolower((string) ($this->status ?? ''));
+
+        $map = [
+            'pending'    => 'Pending',
+            'processing' => 'Processing',
+            'paid'       => 'Paid',
+            'shipped'    => 'Shipped',
+            'delivered'  => 'Delivered',
+            'cancelled'  => 'Cancelled',
+            'refunded'   => 'Refunded',
+            'failed'     => 'Failed',
+        ];
+
+        return $map[$status] ?? ucfirst($status ?: 'unknown');
     }
+
 }

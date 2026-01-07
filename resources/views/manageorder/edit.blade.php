@@ -380,16 +380,16 @@
                 @foreach($order->orderItems as $item)
                 <div class="order-item readonly">
                     <div class="item-image">
-                        <img src="{{ $item->product->main_image_url ?? asset('images/default-product.png') }}" 
-                             alt="{{ $item->product->name ?? 'Product' }}"
-                             onerror="this.src='{{ asset('images/default-product.png') }}'">
+                        <img src="{{ optional($item->product)->main_image_url ?? asset('images/default-product.png') }}" 
+                            alt="{{ optional($item->product)->name ?? ($item->product_name ?? 'Product') }}"
+                            onerror="this.src='{{ asset('images/default-product.png') }}'">
                     </div>
                     <div class="item-details">
-                        <h4 class="item-name">{{ $item->product->name ?? 'Product' }}</h4>
-                        @if($item->variation && $item->variation->specifications_html)
+                        <h4 class="item-name">{{ optional($item->product)->name ?? ($item->product_name ?? 'Product') }}</h4>
+                        @if(optional($item->variation)->specifications_html)
                             <p class="item-variation">{!! $item->variation->specifications_html !!}</p>
                         @endif
-                        <p class="item-sku">SKU: {{ $item->variation->sku ?? $item->product->sku ?? 'N/A' }}</p>
+                        <p class="item-sku">SKU: {{ optional($item->variation)->sku ?? optional($item->product)->sku ?? 'N/A' }}</p>
                     </div>
                     <div class="item-quantity">
                         <strong>Qty:</strong> {{ $item->quantity }}

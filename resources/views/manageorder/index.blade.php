@@ -744,7 +744,15 @@ input[type="number"]:focus {
         @php
             $filters = request()->all(); // Preserve all filters
         @endphp
-        @foreach(['' => 'All Orders', 'paid' => 'Paid', 'processing' => 'Processing', 'shipped' => 'Shipped', 'refunded' => 'Refunded', 'cancelled' => 'Cancelled'] as $key => $label)
+        
+        @foreach([
+            '' => 'All Orders',
+            'processing' => 'Processing',
+            'shipped' => 'Shipped',
+            'delivered' => 'Delivered',
+            'refunded' => 'Refunded',
+        ] as $key => $label)
+
             @php
                 $params = array_merge($filters, ['status' => $key ?: null]);
             @endphp
@@ -792,11 +800,14 @@ input[type="number"]:focus {
                         <td class="order-products">
                             @foreach($order->orderItems as $item)
                                 <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
-                                    <img src="{{ $item->product->main_image_url ?? '/placeholder.png' }}" 
-                                         alt="{{ $item->product_name ?? $item->product->name }}" 
-                                         style="width:40px;height:40px;object-fit:cover;border-radius:6px;">
+                                    <img src="{{ optional($item->product)->main_image_url ?? '/placeholder.png' }}"
+                                        alt="{{ $item->product_name ?? optional($item->product)->name ?? 'Product' }}"
+                                        style="width:40px;height:40px;object-fit:cover;border-radius:6px;"
+                                        onerror="this.src='/placeholder.png'">
                                     <div>
-                                        <div style="font-weight:600;">{{ $item->product_name ?? $item->product->name }}</div>
+                                        <div style="font-weight:600;">
+                                            {{ $item->product_name ?? optional($item->product)->name ?? 'Product' }}
+                                        </div>
                                         @if($item->variation_name)
                                             <div style="font-size:0.8rem;color:#6b7c72;">{{ $item->variation_name }}</div>
                                         @endif
@@ -812,7 +823,14 @@ input[type="number"]:focus {
                             {{ $order->created_at->format('M d, Y') }}
                             <div class="order-time">{{ $order->created_at->format('h:i A') }}</div>
                         </td>
-                        <td class="order-amount">RM {{ number_format($order->total_amount,2) }}</td>
+                        <td class="order-amount">
+                            @if(($order->payment_status ?? '') === 'paid')
+                                <div style="font-size:0.75rem;font-weight:700;letter-spacing:.6px;color:#16a34a;margin-bottom:4px;">
+                                    PAID
+                                </div>
+                            @endif
+                            RM {{ number_format($order->total_amount, 2) }}
+                        </td>
                         <td class="order-status">
                             <span class="status-badge status-{{ $order->status }}">
                                 {{ ucfirst($order->status) }}

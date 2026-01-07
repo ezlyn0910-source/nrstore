@@ -84,9 +84,6 @@ class OrderItem extends Model
             $orderItem->total = $orderItem->price * $orderItem->quantity;
         });
 
-        static::updating(function ($orderItem) {
-            $orderItem->total = $orderItem->price * $orderItem->quantity;
-        });
     }
 
     /**

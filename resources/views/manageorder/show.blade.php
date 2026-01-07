@@ -471,7 +471,26 @@
         <div class="info-card">
             <h3 class="card-title">Shipping Address</h3>
             <div class="info-content">
-                @if($order->shippingAddress)
+                @php
+                    $method = strtolower((string) ($order->shipping_method ?? $order->delivery_method ?? ''));
+                    $isSelfPickup =
+                        empty($order->shipping_address_id)
+                        || in_array($method, [
+                            'self_pickup',
+                            'selfpickup',
+                            'pickup',
+                            'collect',
+                            'store_pickup',
+                            'self_collection',
+                        ], true);
+                @endphp
+
+                @if($isSelfPickup)
+                    <div class="address-block">
+                        <strong>Self pickup at:</strong><br>
+                        {{ config('app.pickup_address', 'NR IT Store (Main Branch), Kuala Lumpur') }}
+                    </div>
+                @elseif($order->shippingAddress)
                     <div class="address-block">
                         <strong>{{ $order->shippingAddress->full_name }}</strong><br>
                         {{ $order->shippingAddress->address_line_1 }}<br>

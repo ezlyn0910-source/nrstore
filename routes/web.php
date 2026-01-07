@@ -72,16 +72,20 @@ Route::controller(CartController::class)
     ->prefix('cart')
     ->name('cart.')
     ->group(function () {
+
         Route::get('/', 'index')->name('index');
-        Route::post('/add', 'add')->name('add');
-        Route::post('/update/{id}', 'update')->name('update');
-        Route::post('/increase/{id}', 'increase')->name('increase');
-        Route::post('/decrease/{id}', 'decrease')->name('decrease');
-        Route::delete('/remove/{id}', 'remove')->name('remove');
-        Route::post('/clear', 'clear')->name('clear');
         Route::get('/count', 'getCount')->name('count');
-        Route::get('/validate-stock', 'validateStock')->name('validate.stock');
-        Route::get('/validate-quantities', 'validateQuantities')->name('validate.quantities');
+
+        Route::middleware(['auth'])->group(function () {
+            Route::post('/add', 'add')->name('add');
+            Route::post('/update/{id}', 'update')->name('update');
+            Route::post('/increase/{id}', 'increase')->name('increase');
+            Route::post('/decrease/{id}', 'decrease')->name('decrease');
+            Route::delete('/remove/{id}', 'remove')->name('remove');
+            Route::post('/clear', 'clear')->name('clear');
+            Route::get('/validate-stock', 'validateStock')->name('validate.stock');
+            Route::get('/validate-quantities', 'validateQuantities')->name('validate.quantities');
+        });
     });
 
 // Checkout result pages
@@ -205,9 +209,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{order}/details', 'details')->name('details');
         Route::post('/{order}/cancel', 'cancel')->name('cancel');
         Route::post('/process-checkout', 'processCheckout')->name('process-checkout');
-        Route::get('/{order}/invoice/pdf', 'downloadInvoicePdf')
-            ->name('invoice.pdf');
-
+        Route::get('/{order}/invoice/pdf', 'downloadInvoicePdf')->name('invoice.pdf');
     });
 
     /*Profile Routes (My Account area)*/

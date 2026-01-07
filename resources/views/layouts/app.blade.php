@@ -186,7 +186,7 @@
                                     <img src="{{ asset('images/social/carousell.png') }}" class="social-logo" alt="Carousell">
                                 </a>
 
-                                <a href="https://www.tiktok.com/@nr.intellitech?_r=1&_t=ZS-924SNipKiyA"
+                                <a href="https://www.tiktok.com/@nr.intellitech?_r=1&_t=ZS-92rc6Cxoq4i"
                                 class="social-link social-icon-box"
                                 target="_blank" rel="noopener noreferrer">
                                     <img src="{{ asset('images/social/tiktok.png') }}" class="social-logo" alt="TikTok">

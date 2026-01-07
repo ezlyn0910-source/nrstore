@@ -56,58 +56,68 @@ class OrderController extends Controller
             'orderItems.variation',
             'shippingAddress',
             'billingAddress',
-            'user',
-            'statusHistory',
         ])
-        ->where('user_id', Auth::id())
+        ->where('user_id', auth()->id())
         ->where('id', $orderId)
         ->firstOrFail();
 
+        $deliveryMethod =
+            $order->delivery_method ??
+            $order->shipping_method ??
+            $order->shipping_type ??
+            null;
+
+        $user = auth()->user();
+        $defaultAddressText = null;
+
+        if ($user && method_exists($user, 'addresses')) {
+            $da = $user->addresses()->where('is_default', 1)->first();
+            if ($da) {
+                $defaultAddressText = $da->formatted_address ?? implode(', ', array_filter([
+                    $da->address_line_1 ?? null,
+                    $da->address_line_2 ?? null,
+                    $da->city ?? null,
+                    $da->state ?? null,
+                    $da->postal_code ?? null,
+                    $da->country ?? null,
+                ]));
+            }
+        }
+
+        $isSelfPickup =
+            in_array(strtolower((string)($deliveryMethod ?? '')), ['self_pickup','self-pickup','pickup','collect','store_pickup','self_collection'], true)
+            || is_null($order->shipping_address_id);
+
         return response()->json([
-            'id' => $order->id,
             'order_number' => $order->order_number,
-            'order_date' => $order->created_at->format('d M Y'),
-            'status' => ucfirst($order->status),
-            'payment_status' => ucfirst($order->payment_status),
+            'status' => $order->status,
+            'is_self_pickup' => $isSelfPickup,
+            'payment_status' => $order->payment_status,
             'payment_method' => $order->payment_method,
             'tracking_number' => $order->tracking_number,
+            'order_date' => optional($order->created_at)->format('d M Y'),
+            'created_at' => $order->created_at,
 
-            'customer_name' => $order->user->name,
-            'customer_email' => $order->user->email,
+            // 🔑 IMPORTANT
+            'delivery_method' => $deliveryMethod,
+            'user_default_address' => $defaultAddressText,
 
-            'shipping_address' => $order->shippingAddress
-                ? $order->shippingAddress->first_name . ' ' .
-                $order->shippingAddress->last_name . "\n" .
-                $order->shippingAddress->phone . "\n" .
-                $order->shippingAddress->formatted_address
-                : '-',
-
-            'billing_address' => $order->shippingAddress
-                ? $order->shippingAddress->first_name . ' ' .
-                $order->shippingAddress->last_name . "\n" .
-                $order->shippingAddress->phone . "\n" .
-                $order->shippingAddress->formatted_address
-                : '-',
-
-            'items' => $order->orderItems->map(function ($item) {
-                return [
-                    'name' => $item->product_name ?? optional($item->product)->name ?? 'Product Not Available',
-                    'quantity' => $item->quantity,
-                    'price' => (float) $item->price
-                ];
-            }),
-
-            'status_history' => $order->statusHistory->map(function ($history) {
-                return [
-                    'status' => $history->status_label,
-                    'notes' => $history->notes,
-                    'date' => $history->created_at->format('d M Y, h:i A')
-                ];
-            }),
+            // Addresses (keep your current logic if already exists)
+            'shipping_address' => $order->shipping_address_text ?? null,
+            'billing_address'  => $order->billing_address_text ?? null,
 
             'shipping_cost' => (float) ($order->shipping_cost ?? 0),
             'discount_amount' => (float) ($order->discount_amount ?? 0),
-            'total_amount' => (float) $order->total_amount,
+            'total_amount' => (float) ($order->total_amount ?? 0),
+
+            'customer_name' => $user?->name,
+            'customer_email' => $user?->email,
+
+            'items' => $order->orderItems->map(fn ($item) => [
+                'name' => $item->product_name ?? ($item->product->name ?? 'Item'),
+                'quantity' => (int) $item->quantity,
+                'price' => (float) $item->price,
+            ]),
         ]);
     }
 

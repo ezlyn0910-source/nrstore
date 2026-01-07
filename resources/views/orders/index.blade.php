@@ -541,6 +541,18 @@
     box-shadow: 0 6px 20px rgba(45, 74, 53, 0.4);
 }
 
+.order-status-badge.refunded {
+    background: #f3e8ff;
+    color: #6b21a8;
+    border: 1px solid #9333ea;
+}
+
+.status-badge.refunded { 
+    background: #f3e8ff; 
+    color: #6b21a8; 
+    border-color: #9333ea;
+}
+
 /* Pagination */
 .pagination-container {
     display: flex;
@@ -1299,7 +1311,7 @@
                             </div>
                         @elseif($orders->count() > 0)
                             @foreach($orders as $order)
-                            <div class="order-card" onclick="openOrderPopup({{ $order->id }})">
+                            <div class="order-card" data-order-id="{{ $order->id }}">
                                 <div class="order-header">
                                     <div class="order-id-section">
                                         <div class="order-id-label">Order ID</div>
@@ -1308,32 +1320,46 @@
                                             Ordered on: {{ $order->created_at->format('M d, Y') }}
                                         </div>
                                         <div class="shipping-address">
-                                            Deliver to:
-                                            @php $sa = $order->shippingAddress; @endphp
+                                            @php
+                                                $method = strtolower($order->delivery_method ?? $order->shipping_method ?? $order->fulfillment_method ?? $order->shipping_type ?? '');
+                                                $isSelfPickup =
+                                                    in_array($method, ['self_pickup', 'self-pickup', 'pickup', 'collect', 'self pickup', 'store_pickup', 'self_collection'])
+                                                    || is_null($order->shipping_address_id); // ✅ IMPORTANT (fallback)
 
-                                            @if($sa)
-                                                @php
-                                                    $name = trim(($sa->full_name ?? trim(($sa->first_name ?? '').' '.($sa->last_name ?? ''))));
-                                                    $addr = $sa->formatted_address
-                                                        ?? implode(', ', array_filter([
-                                                            $sa->address_line_1 ?? null,
-                                                            $sa->address_line_2 ?? null,
-                                                            $sa->city ?? null,
-                                                            $sa->state ?? null,
-                                                            $sa->postal_code ?? null,
-                                                            $sa->country ?? null,
-                                                        ]));
+                                                $pickupAddress = 'Lot # 5-34, Imbi Plaza, 28, Jln Imbi, Bukit Bintang, 55100 Kuala Lumpur.';
+                                            @endphp
 
-                                                    $display = trim(implode("\n", array_filter([$name, $addr])));
-                                                @endphp
-
-                                                {!! nl2br(e($display ?: 'Address not available')) !!}
-
-                                                @if(!empty($sa->phone))
-                                                    <br><small>Phone: {{ $sa->phone }}</small>
-                                                @endif
+                                            @if($isSelfPickup)
+                                                <strong>Self Pickup at:</strong><br>
+                                                {{ $pickupAddress }}
                                             @else
-                                                Address not available
+                                                <strong>Deliver to:</strong>
+                                                @php $sa = $order->shippingAddress; @endphp
+
+                                                @if($sa)
+                                                    @php
+                                                        $name = trim(($sa->full_name ?? trim(($sa->first_name ?? '').' '.($sa->last_name ?? ''))));
+                                                        $addr = $sa->formatted_address
+                                                            ?? implode(', ', array_filter([
+                                                                $sa->address_line_1 ?? null,
+                                                                $sa->address_line_2 ?? null,
+                                                                $sa->city ?? null,
+                                                                $sa->state ?? null,
+                                                                $sa->postal_code ?? null,
+                                                                $sa->country ?? null,
+                                                            ]));
+
+                                                        $display = trim(implode("\n", array_filter([$name, $addr])));
+                                                    @endphp
+
+                                                    {!! nl2br(e($display ?: 'Address not available')) !!}
+
+                                                    @if(!empty($sa->phone))
+                                                        <br><small>Phone: {{ $sa->phone }}</small>
+                                                    @endif
+                                                @else
+                                                    Address not available
+                                                @endif
                                             @endif
                                         </div>
                                     </div>
@@ -1593,27 +1619,97 @@ async function openOrderPopup(orderId) {
     popupBody.innerHTML = '<div style="text-align: center; padding: 40px;">Loading order details...</div>';
     
     try {
-        // Fetch order details
+        console.log(`Fetching order details for ID: ${orderId}`);
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        
+        // Fetch order details with better headers
         const response = await fetch(`/orders/${orderId}/details`, {
+            method: 'GET',
+            credentials: 'same-origin',
             headers: {
                 'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken
             }
         });
+
+        if (response.status === 401 || response.status === 403) {
+            // User is not authenticated
+            throw new Error('Please log in to view order details');
+        }
+        
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error('Response error:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
         
         const order = await response.json();
+        const pickupAddress = 'Lot # 5-34, Imbi Plaza, 28, Jln Imbi, Bukit Bintang, 55100 Kuala Lumpur.';
+        
+        const methodRaw =
+            order.delivery_method ||
+            order.shipping_method ||
+            order.fulfillment_method ||
+            order.shipping_type ||
+            order.delivery_type ||
+            order.collection_method ||
+            order.shipping_option ||
+            order.delivery_option ||
+            order.shipping_mode ||
+            order.pickup_method ||
+            '';
+
+        const method = String(methodRaw).toLowerCase().trim().replace(/\s+/g, '_').replace(/-+/g, '_');
+
+        const isSelfPickup =
+        [
+            'self_pickup',
+            'selfpickup',
+            'pickup',
+            'collect',
+            'store_pickup',
+            'self_collection',
+        ].includes(method)
+        || order.shipping_address_id === null;
+
+        const shippingTitle = isSelfPickup ? 'Self Pickup at' : 'Shipping Address';
+        const shippingValue = isSelfPickup
+            ? pickupAddress
+            : (order.shipping_address || 'N/A');
+
+        // Try to use user's default address for billing when self pickup
+        const billingFallback =
+            order.user_default_address ||
+            order.default_address ||
+            order.customer_default_address ||
+            order.profile_address ||
+            order.user_address ||
+            ''; // fallback if backend doesn't send anything
+
+        const billingAddressText = (order.billing_address && String(order.billing_address).trim())
+            ? order.billing_address
+            : (isSelfPickup && billingFallback.trim())
+                ? billingFallback
+                : (order.shipping_address && String(order.shipping_address).trim())
+                    ? order.shipping_address
+                    : 'N/A';
+
+        console.log('Order data received:', order);
+        
+        // Check if order data is valid
+        if (!order || !order.order_number) {
+            throw new Error('Invalid order data received');
+        }
         
         // Generate popup content with the order data
-        const orderDate = new Date(order.created_at || order.order_date);
-        const formattedDate = orderDate.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
+        const orderDate = order.created_at ? new Date(order.created_at) : null;
+        const formattedDate = order.order_date || 'N/A';
         
         // Calculate totals
         let subtotal = 0;
@@ -1670,14 +1766,20 @@ async function openOrderPopup(orderId) {
                 </div>
 
                 <div class="popup-section">
-                    <h3 class="popup-section-title">Shipping Address</h3>
-                    <div>${(order.shipping_address || 'N/A').replace(/\n/g, '<br>')}</div>
+                    <h3 class="popup-section-title">${isSelfPickup ? 'Self Pickup' : 'Shipping Address'}</h3>
+                    <div>
+                        ${isSelfPickup
+                            ? `<strong>Self Pickup at:</strong><br>${pickupAddress}`
+                            : (order.shipping_address || 'N/A').replace(/\n/g, '<br>')
+                        }
+                    </div>
                 </div>
 
                 <div class="popup-section">
                     <h3 class="popup-section-title">Billing Address</h3>
-                    <div>${(order.billing_address || order.shipping_address || 'N/A').replace(/\n/g, '<br>')}</div>
+                    <div>${String(billingAddressText).replace(/\n/g, '<br>')}</div>
                 </div>
+
             </div>
 
             <div class="invoice-column">
@@ -1756,10 +1858,11 @@ async function openOrderPopup(orderId) {
     } catch (error) {
         console.error('Error loading order details:', error);
         popupBody.innerHTML = `
-            <div class="popup-section" style="grid-column: 1 / -1; text-align: center;">
-                <h3>Error Loading Order Details</h3>
+            <div class="popup-section" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                <h3 style="color: #dc2626;">Error Loading Order Details</h3>
                 <p>Could not load order information. Please try again.</p>
-                <button onclick="closeOrderPopup()" class="btn-primary">Close</button>
+                <p style="font-size: 0.875rem; color: #6b7280; margin-top: 1rem;">Error: ${error.message}</p>
+                <button onclick="closeOrderPopup()" class="btn-primary" style="margin-top: 1.5rem;">Close</button>
             </div>
         `;
     }
@@ -1783,19 +1886,23 @@ function downloadInvoice() {
 }
 
 // Close popup when clicking outside
-document.addEventListener('DOMContentLoaded', function() {
-    const popupOverlay = getElement('orderPopup');
+document.addEventListener('DOMContentLoaded', function () {
+    const popupOverlay = document.getElementById('orderPopup');
     if (popupOverlay) {
-        popupOverlay.addEventListener('click', function(event) {
-            if (event.target === this) {
-                closeOrderPopup();
-            }
+        popupOverlay.addEventListener('click', function (event) {
+            if (event.target === this) closeOrderPopup();
         });
     }
-    
-    // Make order cards clickable
+
     document.querySelectorAll('.order-card').forEach(card => {
         card.style.cursor = 'pointer';
+        card.addEventListener('click', function (e) {
+            // ignore clicks from buttons inside card
+            if (e.target.closest('button')) return;
+
+            const id = this.dataset.orderId;
+            if (id) openOrderPopup(id);
+        });
     });
 });
 
