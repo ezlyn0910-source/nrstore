@@ -519,7 +519,7 @@
         }
 
         .auth-link:hover {
-            color: var(--light-green);
+            color: #AFE1AF;
         }
 
         .auth-divider {
@@ -552,7 +552,7 @@
         }
 
         .header-link:hover {
-            color: var(--light-green);
+            color: #AFE1AF;
         }
 
         /* Second Header */
@@ -613,7 +613,7 @@
         }
 
         .logo-link:hover {
-            color: var(--light-green);
+            color: #AFE1AF;
         }
 
         /* Navigation in the center */
@@ -643,21 +643,18 @@
         }
 
         .nav-link:hover {
-            color: var(--light-green);
+            color: #AFE1AF;
         }
 
-        /* Base wrapper so we can draw fancy indicator without breaking layout */
         .nav-link-indicator {
             position: relative;
             overflow: visible;
         }
 
-        /* ACTIVE STATE – soft pill + diamond + glow */
         .nav-link-active {
             color: #AFE1AF !important;
         }
 
-        /* glowing pill behind text */
         .nav-link-active::before {
             content: "";
             position: absolute;
@@ -674,7 +671,6 @@
             z-index: -1;
         }
 
-        /* small floating diamond under the text */
         .nav-link-active::after {
             content: "";
             position: absolute;
@@ -769,7 +765,7 @@
         }
 
         .search-btn:hover {
-            background: #f8f9fa;
+            background: #AFE1AF;
             transform: translateY(-50%) scale(1.05);
         }
 
@@ -787,7 +783,7 @@
         }
 
         .action-icon:hover {
-            color: var(--light-green);
+            color: #AFE1AF;
             transform: translateY(-2px);
         }
 
@@ -937,7 +933,7 @@
         }
 
         .footer-link:hover {
-            color: var(--light-green);
+            color: #AFE1AF;
             transform: translateX(5px);
         }
 
@@ -1422,7 +1418,7 @@
         }
 
         .cart-item-name:hover {
-            color: var(--light-green);
+            color: #AFE1AF;
         }
 
         .cart-item-specs {
@@ -1625,7 +1621,7 @@
         }
 
         .continue-shopping:hover {
-            color: var(--light-green);
+            color: #AFE1AF;
         }
 
         /* Empty Cart State */

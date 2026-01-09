@@ -393,7 +393,7 @@
                                     </div>
                                 @endif
 
-                                <div style="font-weight:700; color:#daa112;">
+                                <div style="font-weight:700; color:#5FBF87;">
                                     {{ $rel->formatted_price }}
                                 </div>
                             </div>

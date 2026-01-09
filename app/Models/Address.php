@@ -30,6 +30,7 @@ class Address extends Model
 
     protected $casts = [
         'is_default' => 'boolean',
+        'user_id' => 'integer',
     ];
 
     protected $appends = [

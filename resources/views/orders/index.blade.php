@@ -100,7 +100,7 @@
 }
 
 .status-category:hover {
-    border-color: var(--primary-green);
+    border-color: #AFE1AF;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(45, 74, 53, 0.15);
 }
@@ -173,7 +173,7 @@
 .order-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    border-color: var(--primary-green);
+    border-color: #AFE1AF;
 }
 
 /* Order Header */
@@ -345,7 +345,7 @@
 }
 
 .order-item:hover {
-    border-color: var(--primary-green);
+    border-color: #AFE1AF;
     transform: translateX(4px);
 }
 
@@ -1091,17 +1091,17 @@
 .total-row {
     display: flex;
     justify-content: space-between;
-    padding: 0.5rem 0;
-    font-size: 0.875rem;
+    padding: 6px 0;
+    font-size: 0.9rem;
 }
 
 .total-row.grand-total {
-    font-size: 1.125rem;
-    font-weight: 700;
+    font-size: 1.25rem;
+    font-weight: 800;
     color: var(--primary-dark);
     border-top: 2px solid #dee2e6;
-    margin-top: 0.5rem;
-    padding-top: 0.75rem;
+    margin-top: 10px;
+    padding-top: 12px;
 }
 
 .order-actions-popup {
@@ -1129,19 +1129,15 @@
 }
 
 .btn-download {
-    background: #6c757d;
-    color: white;
-    border: none;
+    background: #ffffff;
+    color: var(--primary-green);
+    border-color: ; var(--primary-green);
     padding: 0.75rem 1.5rem;
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.3s;
     flex: 1;
-}
-
-.btn-download:hover {
-    background: #5a6268;
 }
 
 /* Status Timeline */
@@ -1322,44 +1318,53 @@
                                         </div>
                                         <div class="shipping-address">
                                             @php
-                                                $method = strtolower($order->delivery_method ?? $order->shipping_method ?? $order->fulfillment_method ?? $order->shipping_type ?? '');
-                                                $isSelfPickup =
-                                                    in_array($method, ['self_pickup', 'self-pickup', 'pickup', 'collect', 'self pickup', 'store_pickup', 'self_collection'])
-                                                    || is_null($order->shipping_address_id); // ✅ IMPORTANT (fallback)
-
                                                 $pickupAddress = 'Lot # 5-34, Imbi Plaza, 28, Jln Imbi, Bukit Bintang, 55100 Kuala Lumpur.';
+
+                                                $methodRaw =
+                                                    $order->delivery_method
+                                                    ?? $order->shipping_method
+                                                    ?? $order->fulfillment_method
+                                                    ?? $order->shipping_type
+                                                    ?? '';
+
+                                                $method = strtolower(trim((string)$methodRaw));
+
+                                                $isSelfPickup =
+                                                    in_array($method, [
+                                                        'self_pickup', 'self-pickup', 'pickup', 'collect',
+                                                        'self pickup', 'store_pickup', 'self_collection'
+                                                    ], true)
+                                                    || is_null($order->shipping_address_id);
+
+                                                $sa = $order->shippingAddress; // may be null
+
+                                                $shipName = $sa
+                                                    ? trim(($sa->full_name ?? trim(($sa->first_name ?? '').' '.($sa->last_name ?? ''))))
+                                                    : '';
+
+                                                $shipAddr = $sa
+                                                    ? ($sa->formatted_address ?? implode(', ', array_filter([
+                                                        $sa->address_line_1 ?? null,
+                                                        $sa->address_line_2 ?? null,
+                                                        $sa->city ?? null,
+                                                        $sa->state ?? null,
+                                                        $sa->postal_code ?? null,
+                                                        $sa->country ?? null,
+                                                    ])))
+                                                    : '';
+
+                                                $shipPhone = optional($sa)->phone;
                                             @endphp
 
                                             @if($isSelfPickup)
                                                 <strong>Self Pickup at:</strong><br>
                                                 {{ $pickupAddress }}
                                             @else
-                                                <strong>Deliver to:</strong>
-                                                @php $sa = $order->shippingAddress; @endphp
-
-                                                @if($sa)
-                                                    @php
-                                                        $name = trim(($sa->full_name ?? trim(($sa->first_name ?? '').' '.($sa->last_name ?? ''))));
-                                                        $addr = $sa->formatted_address
-                                                            ?? implode(', ', array_filter([
-                                                                $sa->address_line_1 ?? null,
-                                                                $sa->address_line_2 ?? null,
-                                                                $sa->city ?? null,
-                                                                $sa->state ?? null,
-                                                                $sa->postal_code ?? null,
-                                                                $sa->country ?? null,
-                                                            ]));
-
-                                                        $display = trim(implode("\n", array_filter([$name, $addr])));
-                                                    @endphp
-
-                                                    {!! nl2br(e($display ?: 'Address not available')) !!}
-
-                                                    @if(!empty($sa->phone))
-                                                        <br><small>Phone: {{ $sa->phone }}</small>
-                                                    @endif
-                                                @else
-                                                    Address not available
+                                                <strong>Deliver to:</strong><br>
+                                                @if($shipName) {{ $shipName }}<br> @endif
+                                                {!! nl2br(e($shipAddr ?: 'Address not available')) !!}
+                                                @if(!empty($shipPhone))
+                                                    <br><small>Phone: {{ $shipPhone }}</small>
                                                 @endif
                                             @endif
                                         </div>
@@ -1740,27 +1745,27 @@ async function openOrderPopup(orderId) {
                     <h3 class="popup-section-title">Order Information</h3>
                     <div class="order-info-grid">
                         <div class="info-item">
-                            <span class="info-label">Order Number</span>
+                            <span class="info-label">Order Number:</span>
                             <span class="info-value">${order.order_number}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Order Date</span>
+                            <span class="info-label">Order Date:</span>
                             <span class="info-value">${formattedDate}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Order Status</span>
+                            <span class="info-label">Order Status:</span>
                             <span class="info-value">${order.status || 'N/A'}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Payment Status</span>
+                            <span class="info-label">Payment Status:</span>
                             <span class="info-value">${order.payment_status || 'N/A'}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Tracking Number</span>
+                            <span class="info-label">Tracking Number:</span>
                             <span class="info-value">${order.tracking_number || 'N/A'}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Payment Method</span>
+                            <span class="info-label">Payment Method:</span>
                             <span class="info-value">${order.payment_method || 'N/A'}</span>
                         </div>
                     </div>
@@ -1784,14 +1789,19 @@ async function openOrderPopup(orderId) {
             </div>
 
             <div class="invoice-column">
-                <div class="invoice-header">
-                    <h3 class="invoice-title">INVOICE</h3>
-                    <div class="invoice-number">Invoice #${order.order_number}</div>
-                </div>
 
                 <div class="popup-section">
                     <h3 class="popup-section-title">Customer Information</h3>
-                    <div>${order.customer_name || 'N/A'}<br>${order.customer_email || 'N/A'}</div>
+
+                    <div class="info-item">
+                        <span class="info-label">Customer Name:</span>
+                        <span class="info-value">${order.customer_name || 'N/A'}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Email Address:</span>
+                        <span class="info-value">${order.customer_email || 'N/A'}</span>
+                    </div>
                 </div>
 
                 <div class="popup-section">
@@ -1834,7 +1844,7 @@ async function openOrderPopup(orderId) {
                 </div>
 
                 <div class="order-actions-popup">
-                    <button class="btn-print" onclick="printInvoice()">
+                    <button type="button" class="btn-print">
                         <i class="fas fa-print"></i> Print Invoice
                     </button>
                     <button type="button" class="btn-download">
@@ -1878,7 +1888,57 @@ function closeOrderPopup() {
 }
 
 function printInvoice() {
-    window.print();
+    const popupBody = document.getElementById('popupBody');
+    if (!popupBody) return;
+
+    const printTarget = popupBody;
+
+    const w = window.open('', '_blank', 'width=900,height=650');
+    if (!w) return;
+
+    const html = `
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Invoice</title>
+<style>
+    body { font-family: Arial, sans-serif; font-size: 12px; color:#111; padding: 18px; }
+
+    /* section layout */
+    .popup-section { margin-bottom: 14px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background:#f8f9fa; }
+    .popup-section-title { font-weight:700; margin: 0 0 10px 0; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; background:#fff; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; }
+    th { background: #f3f4f6; text-align: left; }
+    .text-right { text-align:right; }
+    .text-center { text-align:center; }
+
+    /* force single column for print */
+    .popup-body { display:block !important; padding: 0 !important; }
+    .order-details-column, .invoice-column { width:100% !important; }
+
+    /* hide buttons */
+    .order-actions-popup { display:none !important; }
+
+    @page { size: A4 portrait; margin: 12mm; }
+</style>
+</head>
+<body>
+${printTarget.outerHTML}
+</body>
+</html>`;
+
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+
+    w.onload = () => {
+        w.focus();
+        w.print();
+        w.close();
+    };
 }
 
 function downloadInvoice() {

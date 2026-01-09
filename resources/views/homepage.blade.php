@@ -377,7 +377,7 @@ document.addEventListener('DOMContentLoaded', function() {
         cursor: pointer;
     }
     .slide .grab-now-link:hover {
-        color: #2f6032;
+        color: #AFE1AF;
         text-decoration-thickness: 0.18rem;
     }
 
@@ -399,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
         transition: background-color 0.2s ease, color 0.2s ease;
     }
     .slide .learn-more-btn:hover {
-        background-color: #2f6032;
+        background-color: #AFE1AF;
         color: #ffffff;
     }
 
@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .category-card:hover {
         transform: translateY(-5px);
         box-shadow: var(--shadow-hover);
-        border-color: var(--primary-green);
+        border-color: #AFE1AF;
     }
 
     .category-content {
@@ -481,7 +481,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     .explore-link:hover {
         gap: 0.75rem;
-        color: var(--primary-green);
+        color: #AFE1AF;
     }
 
     .category-image {
@@ -571,7 +571,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .product-card:hover {
         transform: translateY(-5px);
         box-shadow: var(--shadow-hover);
-        border-color: var(--primary-green);
+        border-color: #AFE1AF;
     }
 
     .product-info {

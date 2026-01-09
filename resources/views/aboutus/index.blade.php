@@ -238,12 +238,11 @@
     overflow:hidden;
   }
   .kpi-ic img{
-    width:24px;
-    height:24px;
+    width:100%;
+    height:100%;
     object-fit:contain;
+    padding:0;
     opacity:.95;
-    transform: translateZ(0);
-    animation: icPulse 2.8s ease-in-out infinite;
   }
   @keyframes icPulse{
     0%,100%{ transform: scale(1); opacity:.92; }
@@ -522,6 +521,12 @@
   .reveal--from-bottom{ transform:translate3d(0,28px,0); }
   .reveal--pop{ transform:translate3d(0,22px,0) scale(.98); }
 
+  @media (min-width: 1100px){
+    .hero-kpis{
+      grid-template-columns:repeat(2, minmax(0,1fr));
+    }
+  }
+
   @media (max-width:980px){
     .hero-inner{ align-items: start; }
     .hero-card{ height: auto; animation: none; }
@@ -590,41 +595,85 @@
           <div class="hero-kpis">
             <div class="kpi">
               <div class="kpi-ic">
-                <img src="{{ asset('images/icons/shield.png') }}" alt="Experience">
+                <img src="{{ asset('images/aboutus/yearsexperience.png') }}" alt="Experience">
               </div>
               <div class="kpi-body">
                 <div class="num"><span class="count" data-to="19">0</span></div>
-                <div class="lbl">Years of experience</div>
+                <div class="lbl">Years of Experience</div>
               </div>
             </div>
 
             <div class="kpi">
               <div class="kpi-ic">
-                <img src="{{ asset('images/icons/globe.png') }}" alt="Countries">
+                <img src="{{ asset('images/aboutus/crossborder.png') }}" alt="Countries">
               </div>
               <div class="kpi-body">
                 <div class="num"><span class="count" data-to="10" data-suffix="+">0</span></div>
-                <div class="lbl">Countries reached</div>
+                <div class="lbl">Cross-Border Coverage</div>
               </div>
             </div>
 
             <div class="kpi">
               <div class="kpi-ic">
-                <img src="{{ asset('images/icons/briefcase.png') }}" alt="Projects">
+                <img src="{{ asset('images/aboutus/projectsdelivered.png') }}" alt="Projects">
               </div>
               <div class="kpi-body">
                 <div class="num"><span class="count" data-to="150" data-suffix="+">0</span></div>
-                <div class="lbl">Projects delivered</div>
+                <div class="lbl">Projects Delivered</div>
               </div>
             </div>
 
             <div class="kpi">
               <div class="kpi-ic">
-                <img src="{{ asset('images/icons/handshake.png') }}" alt="Client-first">
+                <img src="{{ asset('images/aboutus/securedbidding.png') }}" alt="Bidding system">
               </div>
               <div class="kpi-body">
-                <div class="num"><span class="count" data-to="50" data-suffix="%">0</span></div>
-                <div class="lbl">Client-first execution</div>
+                <div class="num">
+                  <span class="count" data-to="100" data-suffix="%">0</span>
+                </div>
+                <div class="lbl">Secured Bidding System</div>
+              </div>
+            </div>
+
+            <div class="kpi">
+              <div class="kpi-ic">
+                <img src="{{ asset('images/aboutus/trustedclients.png') }}" alt="Trusted">
+              </div>
+              <div class="kpi-body">
+                <div class="num"><span class="count" data-to="100" data-suffix="+">0</span></div>
+                <div class="lbl">Trusted Clients</div>
+              </div>
+            </div>
+
+            <div class="kpi">
+              <div class="kpi-ic">
+                <img src="{{ asset('images/aboutus/securedpayment.png') }}" alt="Payment gateways">
+              </div>
+              <div class="kpi-body">
+                <div class="num">
+                  <span class="count" data-to="100" data-suffix="%">0</span>
+                </div>
+                <div class="lbl">Secured Payment Gateways</div>
+              </div>
+            </div>
+
+            <div class="kpi">
+              <div class="kpi-ic">
+                <img src="{{ asset('images/aboutus/satisfaction.png') }}" alt="Satisfaction">
+              </div>
+              <div class="kpi-body">
+                <div class="num"><span class="count" data-to="95" data-suffix="%">0</span></div>
+                <div class="lbl">Client Satisfaction</div>
+              </div>
+            </div>
+
+            <div class="kpi">
+              <div class="kpi-ic">
+                <img src="{{ asset('images/aboutus/delivery.png') }}" alt="On-time">
+              </div>
+              <div class="kpi-body">
+                <div class="num"><span class="count" data-to="98" data-suffix="%">0</span></div>
+                <div class="lbl">On-time Delivery</div>
               </div>
             </div>
           </div>

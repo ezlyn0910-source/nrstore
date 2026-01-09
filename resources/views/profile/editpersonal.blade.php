@@ -398,13 +398,11 @@
                     </div>
 
                     <div class="account-form-group">
-                        <label>Gender</label>
-                        <select name="gender" class="account-form-select">
-                            <option value="">Select</option>
-                            <option value="male"   {{ old('gender', $user->gender) == 'male' ? 'selected' : '' }}>Male</option>
-                            <option value="female" {{ old('gender', $user->gender) == 'female' ? 'selected' : '' }}>Female</option>
-                            <option value="other"  {{ old('gender', $user->gender) == 'other' ? 'selected' : '' }}>Other</option>
-                        </select>
+                        <label>Birthday</label>
+                        <input type="date"
+                            name="birthday"
+                            class="account-form-control"
+                            value="{{ old('birthday', $user->birthday ? \Carbon\Carbon::parse($user->birthday)->format('Y-m-d') : '') }}">
                     </div>
                 </div>
 

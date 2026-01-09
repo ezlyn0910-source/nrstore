@@ -226,12 +226,47 @@
         text-decoration:underline;
     }
 
+    /* ===== Edit Address Form Card ===== */
+    .edit-address-form {
+        background: #ffffff;
+        border-radius: 10px;
+        padding: 18px 20px 22px;
+        margin-top: 16px;
+
+        border: 1px solid var(--border-light);
+        box-shadow:
+            0 10px 25px rgba(0, 0, 0, 0.08),
+            0 4px 10px rgba(0, 0, 0, 0.04);
+
+        transition: box-shadow 0.2s ease, transform 0.15s ease;
+    }
+
+    .edit-address-form:hover {
+        box-shadow:
+            0 14px 32px rgba(0, 0, 0, 0.10),
+            0 6px 14px rgba(0, 0, 0, 0.06);
+        transform: translateY(-1px);
+    }
+
+    /* Phone validation UI */
+    .field-error{
+        margin-top: 6px;
+        font-size: 0.85rem;
+        color: #dc2626;
+        font-weight: 600;
+    }
+
+    .input-invalid{
+        border-color: #dc2626 !important;
+        box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.20) !important;
+    }
+
     /* ===== Confirmation Modal ===== */
     .confirm-overlay {
         position: fixed;
         inset: 0;
         background: rgba(15, 23, 42, 0.45);
-        display: none;                      /* hidden by default */
+        display: none;
         align-items: center;
         justify-content: center;
         z-index: 9999;
@@ -355,7 +390,21 @@
 
         {{-- Content --}}
         <section class="account-content">
-            <h2 class="account-section-title">Manage Address</h2>
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                <h2 class="account-section-title" style="margin:0;">Manage Address</h2>
+
+                <span id="addressDeleteWarn"
+                    style="display:none; color:#dc2626; font-weight:700; font-size:0.95rem;">
+                    Address can't be empty. Try again
+                </span>
+
+                @if(session('address_delete_error'))
+                    <span id="addressDeleteWarnServer"
+                        style="color:#dc2626; font-weight:700; font-size:0.95rem;">
+                        {{ session('address_delete_error') }}
+                    </span>
+                @endif
+            </div>
 
             {{-- Existing addresses --}}
             <div style="margin-bottom:24px;">
@@ -398,7 +447,7 @@
 
                                 <button type="button"
                                         class="link-button link-delete"
-                                        onclick="openConfirmModal('Delete this address?', () => document.getElementById('delete-address-{{ $address->id }}').submit());">
+                                        onclick="handleDeleteAddress({{ $address->id }})">
                                     Delete
                                 </button>
                             </div>
@@ -407,8 +456,9 @@
                         {{-- Inline EDIT form (hidden by default) --}}
                         <form id="editAddressForm-{{ $address->id }}"
                             method="POST"
-                            action="{{ route('profile.addresses.update', $address) }}"
-                            style="display:none; margin-top:16px; border-top:1px solid #f3f4f6; padding-top:12px;">
+                            action="{{ route('profile.addresses.update', $address->id) }}"
+                            class="edit-address-form"
+                            style="display:none;">
                             @csrf
                             @method('PUT')
 
@@ -474,28 +524,71 @@
 
                                 <div class="account-form-group">
                                     <label>Country Code <span class="required">*</span></label>
-                                    <input type="text" name="country_code" 
-                                        class="account-form-control"
-                                        value="{{ old('country_code', $address->country_code) }}" 
-                                        placeholder="MY" 
-                                        required>
+
+                                    <select name="country_code"
+                                            class="account-form-select"
+                                            required>
+
+                                        @php
+                                            $codes = [
+                                                'Malaysia' => '+60',
+                                                'Singapore' => '+65',
+                                                'Indonesia' => '+62',
+                                                'Thailand' => '+66',
+                                                'Philippines' => '+63',
+                                                'Vietnam' => '+84',
+                                                'China' => '+86',
+                                                'India' => '+91',
+                                                'Pakistan' => '+92',
+                                                'Bangladesh' => '+880',
+                                                'United Arab Emirates' => '+971',
+                                                'United States' => '+1',
+                                                'Canada' => '+1',
+                                                'United Kingdom' => '+44',
+                                                'Australia' => '+61',
+                                            ];
+
+                                            $selectedCode = old(
+                                                'country_code',
+                                                $address->display_country_code ?? $address->country_code ?? ''
+                                            );
+                                        @endphp
+
+                                        <option value="">Select country code</option>
+
+                                        @foreach ($codes as $countryName => $dial)
+                                            <option value="{{ $dial }}"
+                                                {{ $selectedCode === $dial ? 'selected' : '' }}>
+                                                {{ $countryName }} ({{ $dial }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+
                                     <small style="color: var(--text-muted); font-size: 0.8rem;">
-                                        ISO country code (e.g., MY for Malaysia)
+                                        Choose your phone dial code
                                     </small>
                                 </div>
                                 
                                 <div class="account-form-group">
                                     <label>Phone <span class="required">*</span></label>
+
                                     <input type="text" name="phone"
-                                        class="account-form-control"
-                                        value="{{ old('phone', $address->phone) }}" required>
+                                        class="account-form-control js-phone"
+                                        value="{{ old('phone', $address->display_phone ?? $address->phone ?? '') }}"
+                                        placeholder="172396858"
+                                        required>
+
+                                    <div class="field-error js-phone-error" style="display:none;">
+                                        Phone number is invalid
+                                    </div>
                                 </div>
                                 
                                 <div class="account-form-group">
                                     <label>Email <span class="required">*</span></label>
                                     <input type="email" name="email"
                                         class="account-form-control"
-                                        value="{{ old('email', $address->email) }}" required>
+                                        value="{{ old('email', $address->display_email ?? $address->email ?? $user->email ?? '') }}"
+                                        required>
                                 </div>
                             </div>
 
@@ -522,7 +615,7 @@
                 @endforelse
             </div>
 
-            {{-- ADD NEW ADDRESS (Hidden by default) --}}
+            {{-- ADD NEW ADDRESS --}}
             <h3 style="font-size:1.05rem; font-weight:700; margin-bottom:8px; color:var(--text-main);">
                 <a id="toggleAddAddress"
                    style="color:#2563eb; cursor:pointer; font-weight:600; display:inline-flex; align-items:center; gap:6px;">
@@ -545,21 +638,20 @@
                     </div>
 
                     <div class="account-form-grid">
-                        <div class="account-form-group">
-                            <label>First Name <span class="required">*</span></label>
-                            <input type="text" name="first_name" class="account-form-control" required>
-                        </div>
-                        <div class="account-form-group">
-                            <label>Last Name <span class="required">*</span></label>
-                            <input type="text" name="last_name" class="account-form-control" required>
-                        </div>
-                        <div class="account-form-group">
+                        <input type="text" name="first_name" class="account-form-control"
+                            value="{{ old('first_name', $user->first_name ?? '') }}" required>
+
+                        <input type="text" name="last_name" class="account-form-control"
+                            value="{{ old('last_name', $user->last_name ?? '') }}" required>
+                        
+                            <div class="account-form-group">
                             <label>Country <span class="required">*</span></label>
                             <select name="country" class="account-form-select" required>
                                 <option value="">Select Country</option>
                                 <option value="Malaysia">Malaysia</option>
                             </select>
                         </div>
+
                         <div class="account-form-group">
                             <label>Country Code <span class="required">*</span></label>
                             <input type="text" name="country_code" 
@@ -571,6 +663,7 @@
                                 ISO country code (e.g., MY for Malaysia)
                             </small>
                         </div>
+
                         <div class="account-form-group" style="grid-column: span 2;">
                             <label>Address Line 1 <span class="required">*</span></label>
                             <input type="text" name="address_line_1" class="account-form-control" required placeholder="Street address, P.O. box, company name">
@@ -580,35 +673,38 @@
                             <label>Address Line 2 (Optional)</label>
                             <input type="text" name="address_line_2" class="account-form-control" placeholder="Apartment, suite, unit, building, floor, etc.">
                         </div>
+
                         <div class="account-form-group">
                             <label>City <span class="required">*</span></label>
                             <input type="text" name="city" class="account-form-control" required>
                         </div>
+
                         <div class="account-form-group">
                             <label>State <span class="required">*</span></label>
                             <input type="text" name="state" class="account-form-control" required>
                         </div>
+
                         <div class="account-form-group">
                             <label>Postal Code <span class="required">*</span></label>
                             <input type="text" name="postal_code" class="account-form-control" required>
                         </div>
+
                         <div class="account-form-group">
                             <label>Phone <span class="required">*</span></label>
-                            <input type="text" name="phone" class="account-form-control" required>
-                        </div>
-                        <div class="account-form-group">
-                            <label>Email <span class="required">*</span></label>
-                            <input type="email" name="email" class="account-form-control" required>
-                        </div>
-                    </div>
 
-                    <div style="font-weight:600; color:var(--text-main); margin-bottom:4px;">
-                        {{ $address->first_name }} {{ $address->last_name }}
-                        @if($address->is_default)
-                            <span style="font-size:0.7rem; padding:3px 8px; border-radius:999px; background:#dcfce7; color:#15803d; margin-left:8px;">
-                                Default
-                            </span>
-                        @endif
+                            <input type="text" name="phone"
+                                class="account-form-control js-phone"
+                                value="{{ old('phone') }}"
+                                placeholder="172396858"
+                                required>
+
+                            <div class="field-error js-phone-error" style="display:none;">
+                                Phone number is invalid
+                            </div>
+                        </div>
+
+                        <input type="email" name="email" class="account-form-control"
+                            value="{{ old('email', $user->email ?? '') }}" required>
                     </div>
 
                     <div class="account-actions">
@@ -652,12 +748,9 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        
         const logoutLink  = document.getElementById('logoutLink');
         const logoutForm  = document.getElementById('logoutForm');
-        const addBtn      = document.getElementById('toggleAddAddress');
-        const addBox      = document.getElementById('addAddressWrapper');
-
-        // Logout with confirmation modal
         if (logoutLink && logoutForm) {
             logoutLink.addEventListener('click', function () {
                 openConfirmModal('Are you sure you want to logout?', function () {
@@ -666,16 +759,47 @@
             });
         }
 
-        // Show / hide add-address form
+        const addBtn      = document.getElementById('toggleAddAddress');
+        const addBox      = document.getElementById('addAddressWrapper');
         if (addBtn && addBox) {
             addBtn.addEventListener('click', function () {
                 const isHidden = (addBox.style.display === 'none' || addBox.style.display === '');
                 addBox.style.display = isHidden ? 'block' : 'none';
             });
         }
+
+        document.querySelectorAll('.js-phone').forEach((input) => {
+            input.addEventListener('input', () => validatePhoneGroup(input));
+            input.addEventListener('blur', () => validatePhoneGroup(input));
+        });
+
+        document.querySelectorAll('select[name="country_code"]').forEach((sel) => {
+            sel.addEventListener('change', () => {
+                const form = sel.closest('form');
+                const phone = form ? form.querySelector('.js-phone') : null;
+                if (phone) validatePhoneGroup(phone);
+            });
+        });
+
+        document.querySelectorAll('form').forEach((form) => {
+            form.addEventListener('submit', function (e) {
+                const phone = form.querySelector('.js-phone');
+                if (phone && !validatePhoneGroup(phone)) {
+                    e.preventDefault();
+                    phone.focus();
+                }
+            });
+        });
+
+        const serverEl = document.getElementById('addressDeleteWarnServer');
+        if (serverEl) {
+            setTimeout(() => {
+                serverEl.style.display = 'none';
+            }, 5000);
+        }
+
     });
 
-    // Toggle a single address edit form
     function toggleEditAddress(id) {
         const form = document.getElementById('editAddressForm-' + id);
         if (!form) return;
@@ -683,7 +807,6 @@
         form.style.display = isHidden ? 'block' : 'none';
     }
 
-    // ===== Confirmation Modal Logic (ONE place, reused) =====
     let confirmCallback = null;
 
     function openConfirmModal(message, callback) {
@@ -709,5 +832,108 @@
         if (overlay) overlay.style.display = 'none';
         confirmCallback = null;
     }
+
+    function normalizeDigits(str) {
+        return (str || '').toString().replace(/\D+/g, '');
+    }
+
+    function isPhoneValidByDial(dial, nationalDigits) {
+        const len = nationalDigits.length;
+
+        switch ((dial || '').trim()) {
+            case '+60': // Malaysia: commonly 9-10 digits
+                return len >= 9 && len <= 10;
+            case '+65': // Singapore: 8 digits
+                return len === 8;
+            case '+62': // Indonesia: 9-12 digits
+                return len >= 9 && len <= 12;
+            case '+66': // Thailand: 9-10 digits
+                return len >= 9 && len <= 10;
+            case '+63': // Philippines: 10 digits
+                return len === 10;
+            case '+84': // Vietnam: 9-10 digits
+                return len >= 9 && len <= 10;
+            case '+86': // China: 11 digits
+                return len === 11;
+            case '+91': // India: 10 digits
+                return len === 10;
+            case '+92': // Pakistan: 10 digits (without leading 0)
+                return len === 10;
+            case '+971': // UAE: 9 digits
+                return len === 9;
+            case '+44': // UK: 9-10 digits (national significant)
+                return len >= 9 && len <= 10;
+            case '+1': // US/Canada: 10 digits
+                return len === 10;
+            case '+61': // Australia: 9 digits (national significant)
+                return len === 9;
+            case '+880': // Bangladesh: 10 digits
+                return len === 10;
+            default:
+                // generic fallback: 7-15 digits
+                return len >= 7 && len <= 15;
+        }
+    }
+
+    function validatePhoneGroup(phoneInput) {
+        if (!phoneInput) return true;
+
+        const form = phoneInput.closest('form');
+        const errorEl = form ? form.querySelector('.js-phone-error') : null;
+
+        // Find country code selector INSIDE the same form (your dropdown name="country_code")
+        const dialSelect = form ? form.querySelector('select[name="country_code"]') : null;
+        const dial = dialSelect ? dialSelect.value : '';
+
+        // Phone input contains NATIONAL part only (as you designed)
+        let digits = normalizeDigits(phoneInput.value);
+
+        // Remove one leading 0 if user typed it (common trunk prefix)
+        if (digits.startsWith('0')) digits = digits.replace(/^0+/, '');
+
+        const ok = isPhoneValidByDial(dial, digits);
+
+        if (!ok) {
+            phoneInput.classList.add('input-invalid');
+            if (errorEl) errorEl.style.display = 'block';
+        } else {
+            phoneInput.classList.remove('input-invalid');
+            if (errorEl) errorEl.style.display = 'none';
+        }
+
+        return ok;
+    }
+
+    function showDeleteWarn(msg) {
+        const el = document.getElementById('addressDeleteWarn');
+        const serverEl = document.getElementById('addressDeleteWarnServer');
+
+        // hide server warning if present (so only one shows)
+        if (serverEl) serverEl.style.display = 'none';
+
+        if (!el) return;
+        el.textContent = msg || "Address can't be empty. Try again";
+        el.style.display = 'inline';
+
+        setTimeout(() => {
+            el.style.display = 'none';
+        }, 3000);
+    }
+
+    function handleDeleteAddress(addressId) {
+        const addressCards = document.querySelectorAll('.address-card');
+        const count = addressCards ? addressCards.length : 0;
+
+        if (count <= 1) {
+            showDeleteWarn("Address can't be empty. Try again");
+            return;
+        }
+
+        openConfirmModal('Delete this address?', () => {
+            const form = document.getElementById('delete-address-' + addressId);
+            if (form) form.submit();
+        });
+    }
+
 </script>
 @endpush

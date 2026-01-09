@@ -168,7 +168,7 @@ class OrderController extends Controller
         ])
         ->where('id', $orderId)
         ->where('user_id', Auth::id())
-        ->firstOrFail(); // if not yours, it becomes 404 (not 403)
+        ->firstOrFail();
 
         $pdf = Pdf::loadView('orders.invoice-pdf', [
             'order' => $order,
@@ -176,14 +176,7 @@ class OrderController extends Controller
 
         $fileName = 'invoice-' . ($order->order_number ?? $order->id) . '.pdf';
 
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="'.$fileName.'"');
-        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-
-        echo $pdf->output();
-        exit;
+        return $pdf->download($fileName);
     }
 
 }

@@ -23,6 +23,7 @@
         /* Customer block (no box/table) */
         .customer-block { margin: 6px 0 12px 0; }
         .customer-title { font-weight: bold; margin-bottom: 4px; }
+
     </style>
 </head>
 <body>
@@ -68,8 +69,37 @@
         return $out !== '' ? $out : null;
     };
 
-    $billingText  = $formatAddress($order->billingAddress) ?? $formatAddress($order->shippingAddress) ?? 'N/A';
-    $shippingText = $formatAddress($order->shippingAddress) ?? 'N/A';
+    $pickupAddress = 'Lot # 5-34, Imbi Plaza, 28, Jln Imbi, Bukit Bintang, 55100 Kuala Lumpur.';
+
+    $methodRaw =
+        $order->delivery_method
+        ?? $order->shipping_method
+        ?? $order->shipping_type
+        ?? '';
+
+    $method = strtolower(trim((string) $methodRaw));
+
+    $isSelfPickup =
+        in_array($method, [
+            'self_pickup',
+            'self-pickup',
+            'pickup',
+            'collect',
+            'store_pickup',
+            'self_collection',
+        ], true)
+        || is_null($order->shipping_address_id);
+
+    $billingText =
+        $formatAddress($order->billingAddress)
+        ?? ($isSelfPickup ? $formatAddress(optional($order->user)->addresses()->where('is_default',1)->first()) : null)
+        ?? $formatAddress($order->shippingAddress)
+        ?? 'N/A';
+
+    $shippingText = $isSelfPickup
+        ? $pickupAddress
+        : ($formatAddress($order->shippingAddress) ?? 'N/A');
+
 @endphp
 
 <div class="top">
@@ -106,7 +136,9 @@
         <div>{!! nl2br(e($billingText)) !!}</div>
     </div>
     <div class="col box">
-        <div style="font-weight:bold; margin-bottom:6px;">Shipping Address</div>
+        <div style="font-weight:bold; margin-bottom:6px;">
+            {{ $isSelfPickup ? 'Self Pickup Location' : 'Shipping Address' }}
+        </div>
         <div>{!! nl2br(e($shippingText)) !!}</div>
     </div>
 </div>

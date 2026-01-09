@@ -200,7 +200,7 @@
         .product-card:hover {
             transform: translateY(-5px);
             box-shadow: var(--shadow-hover);
-            border-color: var(--accent-gold);
+            border-color: #AFE1AF;
         }
 
         .product-image-container {
