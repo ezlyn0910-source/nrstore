@@ -10,9 +10,7 @@ use Illuminate\Support\Facades\Session;
 
 class ProductController extends Controller
 {
-    /**
-     * Display products for public (customer) view
-     */
+    /**Display products for public (customer) view**/
     public function index(Request $request)
     {
         $category = $request->get('category');
@@ -26,12 +24,15 @@ class ProductController extends Controller
         $query = Product::query()->active();
 
         // Search
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                ->orWhere('description', 'like', "%{$search}%")
-                ->orWhere('brand', 'like', "%{$search}%");
+        if ($request->filled('search')) {
+            $keywords = preg_split('/\s+/', trim($request->search));
+
+            $query->where(function ($q) use ($keywords) {
+                foreach ($keywords as $word) {
+                    $q->orWhere('name', 'like', "%{$word}%")
+                    ->orWhere('description', 'like', "%{$word}%")
+                    ->orWhere('brand', 'like', "%{$word}%");
+                }
             });
         }
 
@@ -94,12 +95,39 @@ class ProductController extends Controller
         // Get unique brands for filter dropdown
         $brandsList = Product::active()->select('brand')->distinct()->pluck('brand')->filter();
 
-        return view('products.index', compact('products', 'recommendedProducts', 'categories', 'brandsList'));
+        $searchText = trim((string) $request->get('search', ''));
+        $seoH1 = 'Refurbished Laptops Malaysia'; // default keyword target
+        $seoTitle = 'Refurbished Laptops Malaysia | Warranty Tested | NR Store';
+        $seoDesc  = 'Shop refurbished laptops in Malaysia. Fully tested and ready for daily use. Great value for students and business users.';
+
+        if ($searchText !== '') {
+            $seoH1 = "Search: " . $searchText;
+            $seoTitle = $searchText . " | Refurbished Laptops Malaysia | NR Store";
+            $seoDesc  = "Browse results for {$searchText}. Shop refurbished laptops in Malaysia with tested units and great value.";
+        }
+
+        if ($brand) {
+            $seoH1 = "{$brand} Refurbished Laptops";
+            $seoTitle = "{$brand} Refurbished Laptops Malaysia | NR Store";
+            $seoDesc  = "Explore {$brand} refurbished laptops in Malaysia. Tested performance and reliable value.";
+        }
+
+        if ($category) {
+            $seoH1 = ucfirst(str_replace('-', ' ', $category)) . " Products";
+            $seoTitle = ucfirst(str_replace('-', ' ', $category)) . " | NR Store";
+        }
+
+        $seo = [
+            'title' => $seoTitle,
+            'description' => $seoDesc,
+            'h1' => $seoH1,
+            'canonical' => url('/products'),
+        ];
+
+        return view('products.index', compact('products', 'recommendedProducts', 'categories', 'brandsList', 'seo'));
     }
 
-    /**
-     * Display single product for public (customer) view
-     */
+    /**Display single product for public (customer) view*/
     public function show($slug)
     {
         $product = Product::with(['category', 'images', 'variations' => function($query) {

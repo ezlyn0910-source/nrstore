@@ -3,11 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="index,follow">
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'NR Store') }}</title>
+    <title>@yield('title', config('app.name', 'NR Store'))</title>
+
+    @yield('meta')
 
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
@@ -22,7 +25,7 @@
     <!-- SweetAlert2 for beautiful dialogs -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    @yield('styles') {{-- Page-specific styles only --}}
+    @yield('styles')
 </head>
 <body>
     <div id="app">

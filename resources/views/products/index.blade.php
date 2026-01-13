@@ -1087,10 +1087,20 @@
     </style>
 @endsection
 
+@section('title', 'Refurbished Laptops & Computers in Malaysia | NR Store')
+
+@section('meta')
+    <meta name="description" content="Buy refurbished laptops and computers in Malaysia from NR Store. Trusted brands like Dell, HP, Lenovo with warranty and affordable prices.">
+
+    <meta name="keywords" content="refurbished laptops malaysia, used laptops malaysia, refurbished dell laptop, refurbished hp laptop, refurbished lenovo laptop, cheap laptops malaysia, second hand laptops malaysia, business laptops malaysia, refurbished computers malaysia">
+
+    <link rel="canonical" href="{{ url('/products') }}">
+@endsection
+
 @section('content')
 <div class="product-page">
     <section class="hero-section" style="position: relative; height: 350px; background-color: #1f2937; overflow: hidden; margin-bottom: 0;">
-        <img src="{{ asset('/images/productbanner.png') }}" alt="Products Banner" 
+        <img src="{{ asset('/images/background/product_bg.png') }}" alt="Products Banner" 
             style="width: 100%; height: 100%; object-fit: cover; opacity: 1;">
         <div style="position: absolute; bottom: 5px; left: 0; right: 0; text-align: center;">
             <h1 style="font-size: 14rem; font-weight: bold; color: white; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7); margin: 0;">
